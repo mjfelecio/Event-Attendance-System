@@ -11,18 +11,33 @@ import { LuCalendar } from "react-icons/lu";
 import { FiUsers } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
 
+/**
+ * Represents a single navigation item in the sidebar.
+ */
 type NavigationItem = {
+  /** Display text for the navigation item */
   text: string;
+  /** Icon component for the navigation item */
   icon: IconType;
+  /** Route path associated with this navigation item */
   route: string;
 };
 
+/**
+ * Props for the SidebarButtons component.
+ */
 type SidebarButtonProps = NavigationItem & {
+  /** Whether the sidebar is currently expanded */
   isExpanded: boolean;
+  /** Click handler triggered when the button is clicked */
   onClick: () => void;
+  /** Whether this button represents the active route */
   active: boolean;
 };
 
+/**
+ * Defines the list of available navigation items for the sidebar.
+ */
 const navigationItems: NavigationItem[] = [
   { text: "Dashboard", route: "/dashboard", icon: RxDashboard },
   { text: "Calendar", route: "/calendar", icon: LuCalendar },
@@ -30,6 +45,12 @@ const navigationItems: NavigationItem[] = [
   { text: "Settings", route: "/settings", icon: IoSettingsOutline },
 ];
 
+/**
+ * Renders a single button inside the sidebar.
+ *
+ * @param {SidebarButtonProps} props - Button properties including text, icon, and active state.
+ * @returns {JSX.Element} Sidebar button component.
+ */
 const SidebarButtons = ({
   text,
   icon: Icon,
@@ -66,6 +87,15 @@ const SidebarButtons = ({
   );
 };
 
+/**
+ * Sidebar component containing navigation links and a collapsible toggle.
+ *
+ * - Supports expand/collapse functionality.
+ * - Uses Next.js router for client-side navigation.
+ * - Highlights the active route.
+ *
+ * @returns {JSX.Element} Sidebar layout component.
+ */
 const Sidebar = () => {
   const [expanded, setExpanded] = useState(true);
   const router = useRouter();
@@ -77,7 +107,7 @@ const Sidebar = () => {
     <div
       className={`min-h-screen bg-black flex flex-col p-2 transition-all duration-300 ${conditionalSidebarStyles}`}
     >
-      {/* Sidebar Header */}
+      {/* Sidebar Header (hamburger toggle) */}
       <div
         className="mb-6 bg-black rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
         onClick={() => setExpanded((prev) => !prev)}
