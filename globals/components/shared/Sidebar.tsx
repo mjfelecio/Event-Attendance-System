@@ -4,13 +4,10 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IconType } from "react-icons/lib";
-
-// Navigation Icons
 import { RxDashboard } from "react-icons/rx";
-import { LuCalendar } from "react-icons/lu";
+import { LuCalendar, LuLogOut, LuSunMedium, LuMoon } from "react-icons/lu";
 import { FiUsers } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
-import { LuLogOut } from "react-icons/lu";
 
 /**
  * Represents a single navigation item in the sidebar.
@@ -21,28 +18,25 @@ type NavigationItem = {
   route: string;
 };
 
-/**
- * Props for the SidebarButton component.
- */
 type SidebarButtonProps = {
   text: string;
   icon: IconType;
   isExpanded: boolean;
   onClick: () => void;
   active?: boolean;
+  theme: "light" | "dark";
 };
 
-/**
- * Props for the LogoutButton component.
- */
 type LogoutButtonProps = {
   isExpanded: boolean;
   onClick: () => void;
 };
 
-/**
- * Defines the list of available navigation items for the sidebar.
- */
+type ThemeSwitchProps = {
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
+};
+
 const navigationItems: NavigationItem[] = [
   { text: "Dashboard", route: "/dashboard", icon: RxDashboard },
   { text: "Calendar", route: "/calendar", icon: LuCalendar },
@@ -50,37 +44,35 @@ const navigationItems: NavigationItem[] = [
   { text: "Settings", route: "/settings", icon: IoSettingsOutline },
 ];
 
-/**
- * Renders a single navigation button inside the sidebar.
- */
 const SidebarButton = ({
   text,
   icon: Icon,
   onClick,
   isExpanded,
   active = false,
+  theme,
 }: SidebarButtonProps) => {
   const conditionalStyles = isExpanded ? "hover:translate-x-1" : "";
+  const baseColors =
+  theme === "dark"
+    ? active
+      ? "bg-gray-700 text-blue-400"
+      : "bg-black text-gray-300 hover:bg-gray-700"
+    : active
+    ? "bg-blue-100 text-blue-700 font-medium"
+    : "bg-white text-gray-800 hover:bg-slate-200 border border-transparent";
+
 
   return (
     <button
       onClick={onClick}
-      className={`rounded-md p-2 flex items-center gap-3 transition-all duration-300 ${conditionalStyles}
-        ${
-          active
-            ? "bg-gray-500 text-white"
-            : "bg-black text-gray-300 hover:bg-gray-700 hover:cursor-grab"
-        }`}
+      className={`rounded-md p-2 flex items-center gap-3 transition-all hover:cursor-grab duration-300 ${conditionalStyles} ${baseColors}`}
     >
       <div className="size-8 flex items-center justify-center shrink-0">
-        <Icon size={28} />
+        <Icon size={24} />
       </div>
       {isExpanded && (
-        <p
-          className={`font-medium text-md overflow-hidden whitespace-nowrap transition-all duration-300 ${
-            isExpanded ? "opacity-100" : "opacity-0"
-          }`}
-        >
+        <p className="font-medium text-md overflow-hidden whitespace-nowrap transition-opacity duration-300 opacity-100">
           {text}
         </p>
       )}
@@ -88,59 +80,62 @@ const SidebarButton = ({
   );
 };
 
-/**
- * Renders a dedicated Logout button.
- * Always styled in red to indicate destructive action.
- */
-const LogoutButton = ({ isExpanded, onClick }: LogoutButtonProps) => {
+const LogoutButton = ({ isExpanded, onClick }: LogoutButtonProps) => (
+  <button
+    onClick={onClick}
+    className={`rounded-md p-2 flex items-center gap-3 transition-all duration-300 hover:translate-x-1
+      bg-red-600 text-white hover:bg-red-700 hover:cursor-grab`}
+  >
+    <div className="size-8 flex items-center justify-center shrink-0">
+      <LuLogOut size={24} />
+    </div>
+    {isExpanded && (
+      <p className="font-medium text-md overflow-hidden whitespace-nowrap transition-opacity duration-300 opacity-100">
+        Logout
+      </p>
+    )}
+  </button>
+);
+
+const ThemeSwitch = ({ theme, setTheme }: ThemeSwitchProps) => {
   return (
-    <button
-      onClick={onClick}
-      className={`rounded-md p-2 ${isExpanded && "pr-4"} flex items-center gap-3 transition-all duration-300 hover:translate-x-1
-        bg-red-600 text-white hover:bg-red-700 hover:cursor-grab`}
+    <div
+      className={`rounded-lg size-10 flex justify-center items-center hover:cursor-pointer ${theme === "light" ? "hover:bg-gray-300": "hover:bg-gray-600"}`}
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
-      <div className="size-8 flex items-center justify-center shrink-0">
-        <LuLogOut size={28} />
-      </div>
-      {isExpanded && (
-        <p
-          className={`font-medium text-md overflow-hidden whitespace-nowrap transition-all duration-300 ${
-            isExpanded ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          Logout
-        </p>
-      )}
-    </button>
+      {theme === "dark" ? <LuSunMedium size={22} /> : <LuMoon size={22} />}
+    </div>
   );
 };
 
-/**
- * Sidebar component containing navigation links and a collapsible toggle.
- */
 const Sidebar = () => {
   const [expanded, setExpanded] = useState(true);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const router = useRouter();
   const pathname = usePathname();
 
   const conditionalSidebarStyles = expanded ? "w-64" : "w-16";
 
-  /** Placeholder logout handler */
+  const sidebarBase =
+    theme === "dark"
+      ? "bg-black text-white"
+      : "bg-gray-100 text-black border-r border-gray-300";
+
   const handleLogout = () => {
     alert("Logging out...");
   };
 
   return (
     <div
-      className={`min-h-screen bg-black flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles}`}
+      className={`min-h-screen flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
     >
       <div>
-        {/* Sidebar Header (hamburger toggle) */}
+        {/* Sidebar Header */}
         <div
-          className="mb-6 bg-black rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
+          className="mb-6 rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
           onClick={() => setExpanded((prev) => !prev)}
         >
-          <GiHamburgerMenu color="white" size={24} />
+          <GiHamburgerMenu size={22} />
         </div>
 
         {/* Sidebar Navigations */}
@@ -153,14 +148,18 @@ const Sidebar = () => {
               isExpanded={expanded}
               onClick={() => item.route !== pathname && router.push(item.route)}
               active={pathname === item.route}
+              theme={theme}
             />
           ))}
         </div>
       </div>
 
       {/* Logout Button pinned at bottom */}
-      <div className="mt-4 flex flex-col">
+      <div className="mb-2 flex flex-row justify-between items-center">
         <LogoutButton isExpanded={expanded} onClick={handleLogout} />
+        {/* {expanded && (
+          <ThemeSwitch theme={theme} setTheme={(theme) => setTheme(theme)} />
+        )} */}
       </div>
     </div>
   );
