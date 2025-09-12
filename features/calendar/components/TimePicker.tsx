@@ -3,7 +3,7 @@ import { useState } from "react";
 type Props = {
   unit: "hour" | "minute" | "second";
   value: number;
-  onChange?: (val: number) => void;
+  onChange: (val: number) => void;
 };
 
 const TimePicker = ({ unit, value, onChange }: Props) => {
@@ -24,7 +24,7 @@ const TimePicker = ({ unit, value, onChange }: Props) => {
       } else {
         next = type === "increase" ? (prev + 1) % 60 : (prev - 1 + 60) % 60;
       }
-      onChange?.(time);
+      onChange(next);
 
       return next;
     });
