@@ -13,8 +13,11 @@ type Props = {
 const FormInput = ({ label, placeholder, value, onValueChange }: Props) => {
   return (
     <div className="flex flex-col gap-1">
-      <Label htmlFor="" className="text-gray-700 text-md">{label}</Label>
+      <Label htmlFor={`input-${label}`} className="text-black text-md">
+        {label}
+      </Label>
       <Input
+        id={`input-${label}`}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
