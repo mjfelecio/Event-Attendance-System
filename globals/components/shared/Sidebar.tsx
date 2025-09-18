@@ -8,6 +8,7 @@ import { RxDashboard } from "react-icons/rx";
 import { LuCalendar, LuLogOut, LuSunMedium, LuMoon } from "react-icons/lu";
 import { FiUsers } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
+import { useSidebar } from "@/globals/contexts/SidebarContext";
 
 /**
  * Represents a single navigation item in the sidebar.
@@ -54,14 +55,13 @@ const SidebarButton = ({
 }: SidebarButtonProps) => {
   const conditionalStyles = isExpanded ? "hover:translate-x-1" : "";
   const baseColors =
-  theme === "dark"
-    ? active
-      ? "bg-gray-700 text-blue-400"
-      : "bg-black text-gray-300 hover:bg-gray-700"
-    : active
-    ? "bg-blue-100 text-blue-700 font-medium"
-    : "bg-white text-gray-800 hover:bg-slate-200 border border-transparent";
-
+    theme === "dark"
+      ? active
+        ? "bg-gray-700 text-blue-400"
+        : "bg-black text-gray-300 hover:bg-gray-700"
+      : active
+      ? "bg-blue-100 text-blue-700 font-medium"
+      : "bg-white text-gray-800 hover:bg-slate-200 border border-transparent";
 
   return (
     <button
@@ -100,7 +100,9 @@ const LogoutButton = ({ isExpanded, onClick }: LogoutButtonProps) => (
 const ThemeSwitch = ({ theme, setTheme }: ThemeSwitchProps) => {
   return (
     <div
-      className={`rounded-lg size-10 flex justify-center items-center hover:cursor-pointer ${theme === "light" ? "hover:bg-gray-300": "hover:bg-gray-600"}`}
+      className={`rounded-lg size-10 flex justify-center items-center hover:cursor-pointer ${
+        theme === "light" ? "hover:bg-gray-300" : "hover:bg-gray-600"
+      }`}
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
     >
       {theme === "dark" ? <LuSunMedium size={22} /> : <LuMoon size={22} />}
@@ -109,12 +111,13 @@ const ThemeSwitch = ({ theme, setTheme }: ThemeSwitchProps) => {
 };
 
 const Sidebar = () => {
-  const [expanded, setExpanded] = useState(true);
+  const { toggleExpanded, isExpanded } = useSidebar();
+
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const router = useRouter();
   const pathname = usePathname();
 
-  const conditionalSidebarStyles = expanded ? "w-64" : "w-16";
+  const conditionalSidebarStyles = isExpanded ? "w-64" : "w-16";
 
   const sidebarBase =
     theme === "dark"
@@ -133,7 +136,7 @@ const Sidebar = () => {
         {/* Sidebar Header */}
         <div
           className="mb-6 rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
-          onClick={() => setExpanded((prev) => !prev)}
+          onClick={() => toggleExpanded()}
         >
           <GiHamburgerMenu size={22} />
         </div>
@@ -145,7 +148,7 @@ const Sidebar = () => {
               key={index}
               text={item.text}
               icon={item.icon}
-              isExpanded={expanded}
+              isExpanded={isExpanded}
               onClick={() => item.route !== pathname && router.push(item.route)}
               active={pathname === item.route}
               theme={theme}
@@ -156,7 +159,7 @@ const Sidebar = () => {
 
       {/* Logout Button pinned at bottom */}
       <div className="mb-2 flex flex-row justify-between items-center">
-        <LogoutButton isExpanded={expanded} onClick={handleLogout} />
+        <LogoutButton isExpanded={isExpanded} onClick={handleLogout} />
         {/* {expanded && (
           <ThemeSwitch theme={theme} setTheme={(theme) => setTheme(theme)} />
         )} */}
