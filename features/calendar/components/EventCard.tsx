@@ -1,10 +1,4 @@
-import React from "react";
-
-export type Event = {
-  title: string;
-  date: string;
-  time: string;
-};
+import { Event } from "@prisma/client";
 
 type Props = {
   event: Event;
@@ -22,7 +16,7 @@ const EventCard = ({ event, onClick }: Props) => {
       </div>
       <div>
         <p className="text-xs">
-          {event.date} | {event.time}
+          {event.start.toLocaleDateString()} | {event.start.toLocaleTimeString()}
         </p>
       </div>
     </div>
