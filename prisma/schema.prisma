@@ -6,3 +6,15 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  location    String?
+  description String?
+  category    String
+  start       DateTime
+  end         DateTime
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
