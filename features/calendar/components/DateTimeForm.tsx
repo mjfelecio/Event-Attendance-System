@@ -3,7 +3,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/globals/components/shad-cn/collapsible";
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import DatePicker from "@/features/calendar/components/DatePicker";
 import TimeSelector from "@/features/calendar/components/TimeSelector";
 import { format } from "date-fns";
@@ -14,41 +14,49 @@ type Props = {
   onDateTimeChange: (date: Date) => void;
 };
 
+type Time = {
+  hour: number;
+  minute: number;
+  second: number;
+  period: "AM" | "PM";
+};
+
+/**
+ * Helper to combine date and time into a single Date object
+ */
+function buildDateTime(date: Date, time: Time): Date {
+  const hour =
+    time.period === "PM" && time.hour !== 12
+      ? time.hour + 12
+      : time.period === "AM" && time.hour === 12
+      ? 0
+      : time.hour;
+
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    hour,
+    time.minute,
+    time.second
+  );
+}
+
 const DateTimeForm = ({
   label,
   date: initialDate,
   onDateTimeChange,
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
-  const [selectedTime, setSelectedTime] = useState<{
-    hour: number;
-    minute: number;
-    second: number;
-    period: "AM" | "PM";
-  }>({
+  const [selectedTime, setSelectedTime] = useState<Time>({
     hour: new Date().getHours() % 12 || 12,
     minute: new Date().getMinutes(),
     second: new Date().getSeconds(),
     period: new Date().getHours() >= 12 ? "PM" : "AM",
   });
 
-  const fullDateTime = new Date(
-    selectedDate.getFullYear(),
-    selectedDate.getMonth(),
-    selectedDate.getDate(),
-    selectedTime.period === "PM" && selectedTime.hour !== 12
-      ? selectedTime.hour + 12
-      : selectedTime.period === "AM" && selectedTime.hour === 12
-      ? 0
-      : selectedTime.hour,
-    selectedTime.minute
-  );
-
+  const fullDateTime = buildDateTime(selectedDate, selectedTime);
   const formattedDateTime = format(fullDateTime, "EEE, MMM d, yyyy h:mm a");
-
-  useEffect(() => {
-    onDateTimeChange(fullDateTime);
-  }, [selectedDate, selectedTime]);
 
   return (
     <Collapsible className="border border-black rounded-lg overflow-hidden">
@@ -58,12 +66,23 @@ const DateTimeForm = ({
           <p>{formattedDateTime}</p>
         </div>
       </CollapsibleTrigger>
+
       <CollapsibleContent asChild>
         <div className="border-t border-t-black h-24 py-2 px-6 justify-between items-center flex gap-2">
-          <DatePicker date={fullDateTime} onChange={setSelectedDate} />
-          <TimeSelector time={selectedTime} onChange={(time) => {
-						setSelectedTime(time)
-					}} />
+          <DatePicker
+            date={fullDateTime}
+            onChange={(date) => {
+              setSelectedDate(date);
+              onDateTimeChange(buildDateTime(date, selectedTime));
+            }}
+          />
+          <TimeSelector
+            time={selectedTime}
+            onChange={(time) => {
+              setSelectedTime(time);
+              onDateTimeChange(buildDateTime(selectedDate, time));
+            }}
+          />
         </div>
       </CollapsibleContent>
     </Collapsible>
