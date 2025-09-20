@@ -1,7 +1,7 @@
 "use client";
 
-import { Input } from "../shad-cn/input";
-import { Label } from "../shad-cn/label";
+import { Input } from "@/globals/components/shad-cn/input";
+import { Label } from "@/globals/components/shad-cn/label";
 
 type Props = {
   label: string;

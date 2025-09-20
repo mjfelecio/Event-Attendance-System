@@ -12,10 +12,12 @@ import {
 import { Label } from "@/globals/components/shad-cn/label";
 import ComboBox from "@/globals/components/shared/ComboBox";
 import FormInput from "@/globals/components/shared/FormInput";
-import React, { useState } from "react";
-import EventScheduleForm from "./EventScheduleForm";
 import { EVENT_CHOICES } from "@/features/calendar/constants/index";
 import { Textarea } from "@/globals/components/shad-cn/textarea";
+import { Switch } from "@/globals/components/shad-cn/switch";
+import DateTimeForm from "@/features/calendar/components/DateTimeForm";
+import { Controller } from "react-hook-form";
+import { useEventForm } from "@/features/calendar/hooks/useEventForm";
 
 type Props = {
   isOpen: boolean;
@@ -23,13 +25,25 @@ type Props = {
 };
 
 const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
-  const [title, setTitle] = useState("");
-  const [location, setLocation] = useState("");
+  const {
+    control,
+    handleSubmit,
+    resetForm,
+    formState: { errors },
+  } = useEventForm(() => onOpenChange(false));
+
+  const handleDrawerClose = () => {
+    resetForm();
+    onOpenChange(false);
+  };
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
       <DrawerContent>
-        <div className="h-full w-full overflow-y-auto bg-white">
+        <form
+          onSubmit={handleSubmit}
+          className="h-full w-full overflow-y-auto bg-white"
+        >
           <DrawerHeader>
             <DrawerTitle className="text-center text-2xl">
               Create Event
@@ -38,42 +52,122 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
 
           {/* Form Content */}
           <div className="px-4 flex flex-col gap-3 pb-24">
-            <FormInput
-              label="Title"
-              placeholder="Enter event title"
-              value={title}
-              onValueChange={setTitle}
-            />
-
-            <FormInput
-              label="Location"
-              placeholder="Enter event location (optional)"
-              value={location}
-              onValueChange={setLocation}
-            />
-
+            {/* Title */}
             <div>
-              <Label className="text-md mb-1">Category</Label>
-              <ComboBox
-                choices={EVENT_CHOICES}
-                onSelect={(v) =>
-                  alert(`Selected ${v.label} as the category type`)
-                }
-                placeholder="Select event category"
-                searchFallbackMsg="No category found"
+              <Controller
+                name="title"
+                control={control}
+                render={({ field }) => (
+                  <FormInput
+                    label="Title"
+                    placeholder="Enter event title"
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  />
+                )}
               />
+              {errors.title && (
+                <p className="text-sm text-red-500">{errors.title.message}</p>
+              )}
             </div>
 
-            <EventScheduleForm />
+            {/* Location */}
+            <Controller
+              name="location"
+              control={control}
+              render={({ field }) => (
+                <FormInput
+                  label="Location"
+                  placeholder="Enter event location (optional)"
+                  onValueChange={field.onChange}
+                  value={field.value ?? ""}
+                />
+              )}
+            />
 
+            {/* Category */}
+            <div>
+              <Label className="text-md mb-1">Category</Label>
+              <Controller
+                name="category"
+                control={control}
+                render={({ field }) => (
+                  <ComboBox
+                    choices={EVENT_CHOICES}
+                    placeholder="Select event category"
+                    searchFallbackMsg="No category found"
+                    onSelect={(v) => field.onChange(v.value)}
+                  />
+                )}
+              />
+              {errors.category && (
+                <p className="text-sm text-red-500">
+                  {errors.category.message}
+                </p>
+              )}
+            </div>
+
+            {/* Schedule */}
+            <div>
+              <p className="text-md font-medium mb-2">Schedule</p>
+              <div className="w-full rounded-xl flex flex-col gap-2">
+                {/* All Day */}
+                <div className="flex flex-row items-center gap-3">
+                  <p className="font-medium text-sm">All Day</p>
+                  <Controller
+                    name="allDay"
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
+
+                <Controller
+                  name="start"
+                  control={control}
+                  render={({ field }) => (
+                    <DateTimeForm
+                      date={field.value}
+                      onDateTimeChange={field.onChange}
+                      label="Start"
+                    />
+                  )}
+                />
+
+                <Controller
+                  name="end"
+                  control={control}
+                  render={({ field }) => (
+                    <DateTimeForm
+                      date={field.value}
+                      onDateTimeChange={field.onChange}
+                      label="End"
+                    />
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Description */}
             <div>
               <Label htmlFor="description" className="text-md mb-1">
                 Description
               </Label>
-              <Textarea
-                placeholder="Optional description about the event"
-                id="description"
-                className="h-24 resize-none"
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    placeholder="Optional description about the event"
+                    id="description"
+                    className="h-24 resize-none"
+                    {...field}
+                  />
+                )}
               />
             </div>
           </div>
@@ -81,12 +175,16 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
           <DrawerFooter className="absolute w-full bottom-0 flex items-end bg-white">
             <div className="h-8 flex items-center gap-4">
               <DrawerClose asChild>
-                <Button variant="destructive">Close</Button>
+                <Button type="button" variant="destructive" onClick={handleDrawerClose}>
+                  Close
+                </Button>
               </DrawerClose>
-              <Button variant="default">Save</Button>
+              <Button type="submit" variant="default">
+                Save
+              </Button>
             </div>
           </DrawerFooter>
-        </div>
+        </form>
       </DrawerContent>
     </Drawer>
   );
