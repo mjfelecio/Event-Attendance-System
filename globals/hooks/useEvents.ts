@@ -1,0 +1,39 @@
+import { Event } from "@prisma/client";
+import { useQuery } from "@tanstack/react-query";
+
+type EventAPI = {
+  id: string;
+  title: string;
+  location: string | null;
+  description: string | null;
+  category: string;
+  start: string; // NOTE: server always returns ISO strings
+  end: string;   // SO we have to parse them into Date objects in this file
+  created_at: string;
+  updated_at: string;
+};
+
+export const fetchEvents = async (): Promise<Event[]> => {
+  const res = await fetch("/api/events");
+  if (!res.ok) throw new Error("Failed to fetch events");
+
+  const data: EventAPI[] = await res.json();
+
+  // We should transform dates before passing them to the client
+  return data.map((e) => ({
+    ...e,
+    start: new Date(e.start),
+    end: new Date(e.end),
+    created_at: new Date(e.start),
+    updated_at: new Date(e.end),
+  }));
+}
+
+const useEvents = () => {
+  return useQuery({
+    queryKey: ["events"],
+    queryFn: fetchEvents,
+  });
+}
+
+export default useEvents;
