@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 type Props = {
   unit: "hour" | "minute" | "second";
   value: number;
@@ -7,27 +5,23 @@ type Props = {
 };
 
 const TimePicker = ({ unit, value, onChange }: Props) => {
-  const [time, setTime] = useState(value);
-
   const handleTimeChange = (type: "increase" | "decrease") => {
-    setTime((prev) => {
-      let next = prev;
-      if (unit === "hour") {
-        next =
-          type === "increase"
-            ? prev === 12
-              ? 1
-              : prev + 1
-            : prev === 1
-            ? 12
-            : prev - 1;
-      } else {
-        next = type === "increase" ? (prev + 1) % 60 : (prev - 1 + 60) % 60;
-      }
-      onChange(next);
+    let newTime = value;
 
-      return next;
-    });
+    if (unit === "hour") {
+      newTime =
+        type === "increase"
+          ? value === 12
+            ? 1
+            : value + 1
+          : value === 1
+          ? 12
+          : value - 1;
+    } else {
+      newTime = type === "increase" ? (value + 1) % 60 : (value - 1 + 60) % 60;
+    }
+
+    onChange(newTime);
   };
 
   return (
@@ -39,7 +33,7 @@ const TimePicker = ({ unit, value, onChange }: Props) => {
         +
       </button>
       <p className="p-0.5 flex justify-center items-center font-mono text-sm">
-        {time.toString().padStart(2, "0")}
+        {value.toString().padStart(2, "0")}
       </p>
       <button
         className="hover:bg-gray-100 p-0.5 transition-colors"

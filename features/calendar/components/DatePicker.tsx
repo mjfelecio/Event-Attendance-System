@@ -13,16 +13,15 @@ import {
 import { useState } from "react";
 
 type Props = {
+  date: Date
   onChange: (date: Date) => void;
 };
 
-const DatePicker = ({ onChange }: Props) => {
-  const [date, setDate] = useState<Date>(new Date());
+const DatePicker = ({ onChange, date }: Props) => {
   const [open, setOpen] = useState(false);
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (!newDate) return;
-    setDate(newDate);
     onChange(newDate);
     setOpen(false);
   };
