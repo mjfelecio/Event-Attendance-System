@@ -9,19 +9,14 @@ type Time = {
 };
 
 type Props = {
-  initial?: Time;
-  onChange?: (time: Time) => void;
+  time: Time;
+  onChange: (time: Time) => void;
 };
 
-const TimeSelector = ({ initial, onChange }: Props) => {
-  const [time, setTime] = useState<Time>(
-    initial ?? { hour: 12, minute: 0, second: 0, period: "AM" }
-  );
-
+const TimeSelector = ({ time, onChange }: Props) => {
   const updateTime = (unit: keyof Time, value: number | "AM" | "PM") => {
     const updated = { ...time, [unit]: value } as Time;
-    setTime(updated);
-    onChange?.(updated);
+    onChange(updated);
   };
 
   return (
