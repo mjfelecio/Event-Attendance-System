@@ -1,5 +1,5 @@
-import { Event } from "@prisma/client";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Event, NewEvent } from "@/globals/types/events";
 
 type EventAPI = {
   id: string;
@@ -8,7 +8,7 @@ type EventAPI = {
   description: string | null;
   category: string;
   start: string; // NOTE: server always returns ISO strings
-  end: string;   // SO we have to parse them into Date objects in this file
+  end: string; // SO we have to parse them into Date objects in this file
   created_at: string;
   updated_at: string;
 };
@@ -27,13 +27,34 @@ export const fetchEvents = async (): Promise<Event[]> => {
     created_at: new Date(e.start),
     updated_at: new Date(e.end),
   }));
-}
+};
+
+const addEvent = async (event: NewEvent) => {
+  const res = await fetch("/api/events", {
+    method: "POST",
+    body: JSON.stringify(event),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error("Failed to add event");
+  return res.json();
+};
+
+export const useAddEvent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+};
 
 const useEvents = () => {
   return useQuery({
     queryKey: ["events"],
     queryFn: fetchEvents,
   });
-}
+};
 
 export default useEvents;

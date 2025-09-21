@@ -18,6 +18,7 @@ import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
 import { Controller } from "react-hook-form";
 import { useEventForm } from "@/features/calendar/hooks/useEventForm";
+import { useAddEvent } from "@/globals/hooks/useEvents";
 
 type Props = {
   isOpen: boolean;
@@ -25,12 +26,17 @@ type Props = {
 };
 
 const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
+  const { mutate: addEvent } = useAddEvent();
+
   const {
     control,
     handleSubmit,
     resetForm,
     formState: { errors },
-  } = useEventForm(() => onOpenChange(false));
+  } = useEventForm((data) => {
+    addEvent(data);
+    onOpenChange(false);
+  });
 
   const handleDrawerClose = () => {
     resetForm();
@@ -175,7 +181,11 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
           <DrawerFooter className="absolute w-full bottom-0 flex items-end bg-white">
             <div className="h-8 flex items-center gap-4">
               <DrawerClose asChild>
-                <Button type="button" variant="destructive" onClick={handleDrawerClose}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDrawerClose}
+                >
                   Close
                 </Button>
               </DrawerClose>

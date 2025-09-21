@@ -1,4 +1,4 @@
-import { Event } from "@prisma/client";
+import { Event } from "@/globals/types/events";
 
 type Props = {
   event: Event;

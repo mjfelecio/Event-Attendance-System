@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { NewEvent } from "@/globals/types/events";
 
 export const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -16,7 +17,7 @@ export const eventSchema = z.object({
 
 export type EventForm = z.infer<typeof eventSchema>;
 
-export function useEventForm(onSuccess?: (data: EventForm) => void) {
+export function useEventForm(onSuccess?: (data: NewEvent) => void) {
   const form = useForm<EventForm>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -31,7 +32,14 @@ export function useEventForm(onSuccess?: (data: EventForm) => void) {
   });
 
   const handleSubmit = form.handleSubmit((data) => {
-    if (onSuccess) onSuccess(data);
+    if (onSuccess) onSuccess({
+      title: data.title,
+      location: data.location ?? null,
+      category: data.category,
+      description: data.description ?? null,
+      start: data.start,
+      end: data.end,
+    });
     form.reset();
   });
 
