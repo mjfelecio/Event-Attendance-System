@@ -6,6 +6,9 @@ type Props = {
 };
 
 const EventCard = ({ event, onClick }: Props) => {
+  const dateTimeString = `${event.start.toLocaleDateString()} | ${event.start.toLocaleTimeString()}`;
+  const dateString = `${event.start.toLocaleDateString()}`;
+
   return (
     <div
       onClick={onClick}
@@ -16,7 +19,7 @@ const EventCard = ({ event, onClick }: Props) => {
       </div>
       <div>
         <p className="text-xs">
-          {event.start.toLocaleDateString()} | {event.start.toLocaleTimeString()}
+          {event.allDay ? dateString : dateTimeString}
         </p>
       </div>
     </div>

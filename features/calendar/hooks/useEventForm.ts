@@ -39,6 +39,7 @@ export function useEventForm(onSuccess?: (data: NewEvent) => void) {
       description: data.description ?? null,
       start: data.start,
       end: data.end,
+      allDay: data.allDay
     });
     form.reset();
   });
