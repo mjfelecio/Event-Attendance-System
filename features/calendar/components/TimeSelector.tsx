@@ -21,11 +21,20 @@ const TimeSelector = ({ time, onChange }: Props) => {
 
   return (
     <div className="flex gap-2 items-center">
-      <TimePicker unit="hour" value={time.hour} onChange={(val) => updateTime("hour", val)} />
+      <TimePicker
+        unit="hour"
+        value={time.hour}
+        onChange={(val) => updateTime("hour", val)}
+      />
       <span>:</span>
-      <TimePicker unit="minute" value={time.minute} onChange={(val) => updateTime("minute", val)} />
+      <TimePicker
+        unit="minute"
+        value={time.minute}
+        onChange={(val) => updateTime("minute", val)}
+      />
 
       <button
+        type="button"
         className="ml-2 text-sm border border-black px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
         onClick={() => updateTime("period", time.period === "AM" ? "PM" : "AM")}
       >

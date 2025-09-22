@@ -27,6 +27,7 @@ const TimePicker = ({ unit, value, onChange }: Props) => {
   return (
     <div className="flex flex-col border border-black rounded-2xl overflow-hidden w-6">
       <button
+        type="button"
         className="hover:bg-gray-100 p-0.5 transition-colors"
         onClick={() => handleTimeChange("increase")}
       >
@@ -36,6 +37,7 @@ const TimePicker = ({ unit, value, onChange }: Props) => {
         {value.toString().padStart(2, "0")}
       </p>
       <button
+        type="button"
         className="hover:bg-gray-100 p-0.5 transition-colors"
         onClick={() => handleTimeChange("decrease")}
       >
