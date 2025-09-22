@@ -7,9 +7,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { title, location, category, start, end, description } = await req.json();
+  const { title, location, category, start, end, description, allDay } =
+    await req.json();
   const event = await prisma.event.create({
-    data: { title, location, category, start, end, description },
+    data: { title, location, category, start, end, description, allDay },
   });
   return NextResponse.json(event, { status: 201 });
 }

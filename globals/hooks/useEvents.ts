@@ -1,17 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Event, NewEvent } from "@/globals/types/events";
 
-type EventAPI = {
-  id: string;
-  title: string;
-  location: string | null;
-  description: string | null;
-  category: string;
+type EventAPI = Omit<Event, "start" | "end" | "created_at" | "updated_at"> & {
   start: string; // NOTE: server always returns ISO strings
   end: string; // SO we have to parse them into Date objects in this file
   created_at: string;
   updated_at: string;
-};
+}
 
 export const fetchEvents = async (): Promise<Event[]> => {
   const res = await fetch("/api/events");

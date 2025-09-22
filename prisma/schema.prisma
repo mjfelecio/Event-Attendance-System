@@ -15,6 +15,7 @@ model Event {
   category    String
   start       DateTime
   end         DateTime
+  allDay      Boolean  @default(false)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }

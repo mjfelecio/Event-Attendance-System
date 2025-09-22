@@ -16,7 +16,7 @@ import { EVENT_CHOICES } from "@/features/calendar/constants/index";
 import { Textarea } from "@/globals/components/shad-cn/textarea";
 import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import { useEventForm } from "@/features/calendar/hooks/useEventForm";
 import { useAddEvent } from "@/globals/hooks/useEvents";
 
@@ -36,6 +36,11 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
   } = useEventForm((data) => {
     addEvent(data);
     onOpenChange(false);
+  });
+
+  const allDay = useWatch({
+    control,
+    name: "allDay",
   });
 
   const handleDrawerClose = () => {
@@ -140,6 +145,7 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
                       date={field.value}
                       onDateTimeChange={field.onChange}
                       label="Start"
+                      allDay={allDay}
                     />
                   )}
                 />
@@ -152,6 +158,7 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
                       date={field.value}
                       onDateTimeChange={field.onChange}
                       label="End"
+                      allDay={allDay}
                     />
                   )}
                 />
