@@ -104,10 +104,11 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
                 control={control}
                 render={({ field }) => (
                   <ComboBox
+                    selectedValue={field.value}
                     choices={EVENT_CHOICES}
                     placeholder="Select event category"
                     searchFallbackMsg="No category found"
-                    onSelect={(v) => field.onChange(v.value)}
+                    onSelect={(v) => field.onChange(v)}
                   />
                 )}
               />
