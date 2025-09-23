@@ -19,7 +19,7 @@ const FormInput = ({ label, placeholder, value, onValueChange }: Props) => {
       <Input
         id={`input-${label}`}
         placeholder={placeholder}
-        value={value}
+        value={value ?? ""}
         onChange={(e) => onValueChange(e.target.value)}
       />
     </div>
