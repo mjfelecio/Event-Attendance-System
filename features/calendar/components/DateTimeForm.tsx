@@ -54,10 +54,10 @@ const DateTimeForm = ({
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
   const [selectedTime, setSelectedTime] = useState<Time>({
-    hour: new Date().getHours() % 12 || 12,
-    minute: new Date().getMinutes(),
-    second: new Date().getSeconds(),
-    period: new Date().getHours() >= 12 ? "PM" : "AM",
+    hour: initialDate.getHours() % 12 || 12,
+    minute: initialDate.getMinutes(),
+    second: initialDate.getSeconds(),
+    period: initialDate.getHours() >= 12 ? "PM" : "AM",
   });
 
   const fullDateTime = buildDateTime(selectedDate, selectedTime, allDay);
