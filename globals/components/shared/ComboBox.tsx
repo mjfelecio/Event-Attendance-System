@@ -28,7 +28,8 @@ type ComboBoxProps = {
   choices: ComboBoxValue[];
   placeholder: string;
   searchFallbackMsg: string;
-  onSelect: (value: ComboBoxValue) => void;
+  selectedValue: string;
+  onSelect: (value: string) => void;
 };
 
 const ComboBox = ({
@@ -36,9 +37,9 @@ const ComboBox = ({
   onSelect,
   placeholder,
   searchFallbackMsg,
+  selectedValue
 }: ComboBoxProps) => {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -49,8 +50,8 @@ const ComboBox = ({
           aria-expanded={open}
           className="w-[200px] justify-between"
         >
-          {value
-            ? choices.find((choice) => choice.value === value)?.label
+          {selectedValue
+            ? choices.find((choice) => choice.value === selectedValue)?.label
             : placeholder}
           <ChevronsUpDown className="opacity-50" />
         </Button>
@@ -66,16 +67,15 @@ const ComboBox = ({
                   key={choice.value}
                   value={choice.value}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
                     setOpen(false);
-                    onSelect(choice)
+                    onSelect(currentValue)
                   }}
                 >
                   {choice.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === choice.value ? "opacity-100" : "opacity-0"
+                      selectedValue === choice.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>
