@@ -1,27 +1,20 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback } from "react";
 import { Button } from "@/globals/components/shad-cn/button";
-import EventDrawer from "@/features/calendar/components/EventDrawer";
 import EventCard from "@/features/calendar/components/EventCard";
 import useEvents from "@/globals/hooks/useEvents";
 import { Loader2 } from "lucide-react";
 import { Event } from "@/globals/types/events";
 
-const EventsContainer = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const formData = useRef<Event>(null);
+type Props = {
+  onDrawerOpen: (event: Event | null) => void;
+};
+
+const EventsContainer = ({ onDrawerOpen }: Props) => {
   const { data: events, isLoading, error } = useEvents();
 
-  const handleDrawerOpen = useCallback((event: Event) => {
-    formData.current = event;
-    setIsDrawerOpen(true);
-  }, []);
-
-  const handleDrawerClose = useCallback(() => {
-    formData.current = null;
-    setIsDrawerOpen(false);
-  }, []);
+  const handleDrawerOpen = useCallback((event: Event) => onDrawerOpen(event), []);
 
   return (
     <div className="relative border-2 rounded-xl p-4 overflow-hidden basis-[30%] flex flex-col gap-4 justify-between">
@@ -58,13 +51,7 @@ const EventsContainer = () => {
 
       {/* Action Buttons */}
       <div className="bottom-4 flex flex-col bg-white p-2 rounded-xl items-stretch gap-2">
-        <Button
-          size="lg"
-          onClick={() => {
-            formData.current = null;
-            setIsDrawerOpen(true);
-          }}
-        >
+        <Button size="lg" onClick={() => onDrawerOpen(null)}>
           Add Event
         </Button>
         <Button
@@ -75,12 +62,6 @@ const EventsContainer = () => {
           Take Attendance
         </Button>
       </div>
-
-      <EventDrawer
-        initialData={formData.current ?? undefined}
-        isOpen={isDrawerOpen}
-        onClose={handleDrawerClose}
-      />
     </div>
   );
 };

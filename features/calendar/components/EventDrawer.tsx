@@ -24,10 +24,13 @@ import { Event } from "@/globals/types/events";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  initialData?: Event;
+  initialData?: Partial<Event>;
+  mode: "create" | "edit";
 };
 
-const EventDrawer = ({ isOpen, onClose, initialData }: Props) => {
+const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
+  const isEdit = mode === "edit";
+
   const { mutate: saveEvent } = useSaveEvent();
   const { mutate: deleteEvent } = useDeleteEvent();
 
@@ -72,7 +75,7 @@ const EventDrawer = ({ isOpen, onClose, initialData }: Props) => {
         >
           <DrawerHeader>
             <DrawerTitle className="text-center text-2xl">
-              Create Event
+              {isEdit ? "Edit Event" : "Create Event"}
             </DrawerTitle>
           </DrawerHeader>
 
@@ -203,7 +206,7 @@ const EventDrawer = ({ isOpen, onClose, initialData }: Props) => {
           </div>
 
           <DrawerFooter className="absolute w-full bottom-0 flex flex-row justify-between items-center bg-white">
-            {initialData ? (
+            {isEdit ? (
               <Button
                 type="button"
                 variant="destructive"
