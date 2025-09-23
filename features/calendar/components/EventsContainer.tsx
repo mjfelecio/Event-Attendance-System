@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Button } from "@/globals/components/shad-cn/button";
 import EventDrawer from "@/features/calendar/components/EventDrawer";
 import EventCard from "@/features/calendar/components/EventCard";
 import useEvents from "@/globals/hooks/useEvents";
 import { Loader2 } from "lucide-react";
+import { Event } from "@/globals/types/events";
 
 const EventsContainer = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const formData = useRef<Event>(null);
   const { data: events, isLoading, error } = useEvents();
+
+  const handleDrawerOpen = useCallback((event: Event) => {
+    formData.current = event;
+    setIsDrawerOpen(true);
+  }, []);
+
+  const handleDrawerClose = useCallback(() => {
+    formData.current = null;
+    setIsDrawerOpen(false);
+  }, []);
 
   return (
     <div className="relative border-2 rounded-xl p-4 overflow-hidden basis-[30%] flex flex-col gap-4 justify-between">
@@ -29,11 +41,11 @@ const EventsContainer = () => {
               <span className="text-sm">Try refreshing the page</span>
             </div>
           ) : events?.length ? (
-            events.map((item, index) => (
+            events.map((item) => (
               <EventCard
-                key={index}
+                key={item.id}
                 event={item}
-                onClick={() => setIsDrawerOpen(true)}
+                onClick={() => handleDrawerOpen(item)}
               />
             ))
           ) : (
@@ -46,18 +58,29 @@ const EventsContainer = () => {
 
       {/* Action Buttons */}
       <div className="bottom-4 flex flex-col bg-white p-2 rounded-xl items-stretch gap-2">
-        <Button size="lg" onClick={() => setIsDrawerOpen(true)}>
+        <Button
+          size="lg"
+          onClick={() => {
+            formData.current = null;
+            setIsDrawerOpen(true);
+          }}
+        >
           Add Event
         </Button>
         <Button
           size="lg"
+          disabled={!events?.length}
           onClick={() => alert("Taking you to attendance page...")}
         >
           Take Attendance
         </Button>
       </div>
 
-      <EventDrawer isOpen={isDrawerOpen} onOpenChange={setIsDrawerOpen} />
+      <EventDrawer
+        initialData={formData.current ?? undefined}
+        isOpen={isDrawerOpen}
+        onClose={handleDrawerClose}
+      />
     </div>
   );
 };

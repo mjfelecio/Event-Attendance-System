@@ -1,51 +1,72 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { NewEvent } from "@/globals/types/events";
+import { Event, NewEvent } from "@/globals/types/events";
 
 export const eventSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, "Title is required"),
-  location: z.string().optional(),
+  location: z.string().nullable(),
   category: z.string().min(1, "Category is required"),
   start: z.date(),
   end: z.date(),
-  description: z.string().optional(),
+  description: z.string().nullable(),
   allDay: z.boolean(),
 });
 
 export type EventForm = z.infer<typeof eventSchema>;
 
-export function useEventForm(onSuccess?: (data: NewEvent) => void) {
+const defaultValues: EventForm = {
+  title: "",
+  location: null,
+  category: "",
+  start: new Date(),
+  end: new Date(),
+  description: null,
+  allDay: false,
+};
+
+export function useEventForm(
+  onSuccess?: (data: Event | NewEvent) => void,
+  initialData?: Partial<EventForm>
+) {
   const form = useForm<EventForm>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      title: "",
-      location: "",
-      category: "",
-      start: new Date(),
-      end: new Date(),
-      description: "",
-      allDay: false,
+      ...defaultValues,
+      ...initialData,
     },
   });
 
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    } else {
+      form.reset(defaultValues);
+    }
+  }, [initialData]);
+
   const handleSubmit = form.handleSubmit((data) => {
-    if (onSuccess) onSuccess({
-      title: data.title,
-      location: data.location ?? null,
-      category: data.category,
-      description: data.description ?? null,
-      start: data.start,
-      end: data.end,
-      allDay: data.allDay
-    });
-    form.reset();
+    if (onSuccess) {
+      onSuccess({
+        id: data.id,
+        title: data.title,
+        location: data.location,
+        category: data.category,
+        description: data.description,
+        start: data.start,
+        end: data.end,
+        allDay: data.allDay,
+      });
+    }
+    form.reset(initialData);
   });
 
-  const resetForm = () => {
-    form.reset();
+  const resetForm = (values?: Partial<EventForm>) => {
+    form.reset(values ?? initialData);
   };
 
   return {

@@ -18,15 +18,18 @@ import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
 import { Controller, useWatch } from "react-hook-form";
 import { useEventForm } from "@/features/calendar/hooks/useEventForm";
-import { useAddEvent } from "@/globals/hooks/useEvents";
+import { useDeleteEvent, useSaveEvent } from "@/globals/hooks/useEvents";
+import { Event } from "@/globals/types/events";
 
 type Props = {
   isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+  onClose: () => void;
+  initialData?: Event;
 };
 
-const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
-  const { mutate: addEvent } = useAddEvent();
+const EventDrawer = ({ isOpen, onClose, initialData }: Props) => {
+  const { mutate: saveEvent } = useSaveEvent();
+  const { mutate: deleteEvent } = useDeleteEvent();
 
   const {
     control,
@@ -34,9 +37,9 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
     resetForm,
     formState: { errors },
   } = useEventForm((data) => {
-    addEvent(data);
-    onOpenChange(false);
-  });
+    saveEvent(data);
+    onClose();
+  }, initialData);
 
   const allDay = useWatch({
     control,
@@ -45,11 +48,23 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
 
   const handleDrawerClose = () => {
     resetForm();
-    onOpenChange(false);
+    onClose();
+  };
+
+  const handleDeleteEvent = () => {
+    const confirmed = confirm("Are you sure you want to delete this event?");
+    if (!confirmed || !initialData?.id) return;
+
+    deleteEvent(initialData.id);
+    onClose();
   };
 
   return (
-    <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
+    <Drawer
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      direction="right"
+    >
       <DrawerContent>
         <form
           onSubmit={handleSubmit}
@@ -180,13 +195,25 @@ const EventDrawer = ({ isOpen, onOpenChange }: Props) => {
                     id="description"
                     className="h-24 resize-none"
                     {...field}
+                    value={field.value ?? ""}
                   />
                 )}
               />
             </div>
           </div>
 
-          <DrawerFooter className="absolute w-full bottom-0 flex items-end bg-white">
+          <DrawerFooter className="absolute w-full bottom-0 flex flex-row justify-between items-center bg-white">
+            {initialData ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteEvent}
+              >
+                Delete
+              </Button>
+            ) : (
+              <div></div>
+            )}
             <div className="h-8 flex items-center gap-4">
               <DrawerClose asChild>
                 <Button
