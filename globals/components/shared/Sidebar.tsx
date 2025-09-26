@@ -6,6 +6,7 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { IconType } from "react-icons/lib";
 import { RxDashboard } from "react-icons/rx";
 import { LuCalendar, LuLogOut, LuSunMedium, LuMoon } from "react-icons/lu";
+import { LuCalendar, LuLogOut, LuSunMedium, LuMoon } from "react-icons/lu";
 import { FiUsers } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
@@ -26,11 +27,17 @@ type SidebarButtonProps = {
   onClick: () => void;
   active?: boolean;
   theme: "light" | "dark";
+  theme: "light" | "dark";
 };
 
 type LogoutButtonProps = {
   isExpanded: boolean;
   onClick: () => void;
+};
+
+type ThemeSwitchProps = {
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
 };
 
 type ThemeSwitchProps = {
@@ -52,6 +59,7 @@ const SidebarButton = ({
   isExpanded,
   active = false,
   theme,
+  theme,
 }: SidebarButtonProps) => {
   const conditionalStyles = isExpanded ? "hover:translate-x-1" : "";
   const baseColors =
@@ -67,11 +75,14 @@ const SidebarButton = ({
     <button
       onClick={onClick}
       className={`rounded-md p-2 flex items-center gap-3 transition-all hover:cursor-grab duration-300 ${conditionalStyles} ${baseColors}`}
+      className={`rounded-md p-2 flex items-center gap-3 transition-all hover:cursor-grab duration-300 ${conditionalStyles} ${baseColors}`}
     >
       <div className="size-8 flex items-center justify-center shrink-0">
         <Icon size={24} />
+        <Icon size={24} />
       </div>
       {isExpanded && (
+        <p className="font-medium text-md overflow-hidden whitespace-nowrap transition-opacity duration-300 opacity-100">
         <p className="font-medium text-md overflow-hidden whitespace-nowrap transition-opacity duration-300 opacity-100">
           {text}
         </p>
@@ -124,6 +135,11 @@ const Sidebar = () => {
       ? "bg-black text-white"
       : "bg-gray-100 text-black border-r border-gray-300";
 
+  const sidebarBase =
+    theme === "dark"
+      ? "bg-black text-white"
+      : "bg-gray-100 text-black border-r border-gray-300";
+
   const handleLogout = () => {
     alert("Logging out...");
   };
@@ -131,13 +147,16 @@ const Sidebar = () => {
   return (
     <div
       className={`min-h-screen flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
+      className={`min-h-screen flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
     >
       <div>
+        {/* Sidebar Header */}
         {/* Sidebar Header */}
         <div
           className="mb-6 rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
           onClick={() => toggleExpanded()}
         >
+          <GiHamburgerMenu size={22} />
           <GiHamburgerMenu size={22} />
         </div>
 
@@ -151,6 +170,7 @@ const Sidebar = () => {
               isExpanded={isExpanded}
               onClick={() => item.route !== pathname && router.push(item.route)}
               active={pathname === item.route}
+              theme={theme}
               theme={theme}
             />
           ))}
