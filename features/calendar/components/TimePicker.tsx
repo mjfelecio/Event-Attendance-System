@@ -2,9 +2,10 @@ type Props = {
   unit: "hour" | "minute" | "second";
   value: number;
   onChange: (val: number) => void;
+  disabled: boolean;
 };
 
-const TimePicker = ({ unit, value, onChange }: Props) => {
+const TimePicker = ({ unit, value, onChange, disabled }: Props) => {
   const handleTimeChange = (type: "increase" | "decrease") => {
     let newTime = value;
 
@@ -25,20 +26,43 @@ const TimePicker = ({ unit, value, onChange }: Props) => {
   };
 
   return (
-    <div className="flex flex-col border border-black rounded-2xl overflow-hidden w-6">
+    <div
+      className={`flex flex-col border border-black rounded-2xl overflow-hidden w-6 ${
+        disabled && "border-gray-300"
+      }`}
+    >
       <button
         type="button"
-        className="hover:bg-gray-100 p-0.5 transition-colors"
+        className={`text-sm p-0.5 transition-colors
+          ${
+            disabled
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
+              : "text-black hover:bg-gray-100 cursor-pointer"
+          }`}
+        disabled={disabled}
         onClick={() => handleTimeChange("increase")}
       >
         +
       </button>
-      <p className="p-0.5 flex justify-center items-center font-mono text-sm">
+      <p
+        className={`p-0.5 flex justify-center items-center font-mono text-sm 
+        ${
+          disabled
+            ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
+            : "text-black hover:bg-gray-100 cursor-pointer"
+        }`}
+      >
         {value.toString().padStart(2, "0")}
       </p>
       <button
         type="button"
-        className="hover:bg-gray-100 p-0.5 transition-colors"
+        className={`text-sm p-0.5 transition-colors
+          ${
+            disabled
+              ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed opacity-50"
+              : "text-black hover:bg-gray-100 cursor-pointer"
+          }`}
+        disabled={disabled}
         onClick={() => handleTimeChange("decrease")}
       >
         -
