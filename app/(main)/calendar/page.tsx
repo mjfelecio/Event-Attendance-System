@@ -30,6 +30,7 @@ const CalendarPage = () => {
   return (
     <div className="flex flex-1 bg-white p-8 gap-4 max-h-[680px]">
       <Calendar
+        isDrawerOpen={isDrawerOpen}
         onSelectDate={(start, end) => handleDrawerOpen({ start, end })}
       />
       <EventsContainer onDrawerOpen={handleDrawerOpen} />
