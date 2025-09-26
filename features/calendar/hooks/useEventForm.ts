@@ -6,16 +6,41 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Event, NewEvent } from "@/globals/types/events";
 
-export const eventSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1, "Title is required"),
-  location: z.string().nullable(),
-  category: z.string().min(1, "Category is required"),
-  start: z.date(),
-  end: z.date(),
-  description: z.string().nullable(),
-  allDay: z.boolean(),
-});
+export const eventSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().min(1, "Title is required"),
+    location: z.string().nullable(),
+    category: z.string().min(1, "Category is required"),
+    start: z.date(),
+    end: z.date(),
+    description: z.string().nullable(),
+    allDay: z.boolean(),
+  })
+  .refine(
+    (data) => {
+      if (data.allDay) {
+        // Compare only yyyy-mm-dd portion
+        const startDay = new Date(
+          data.start.getFullYear(),
+          data.start.getMonth(),
+          data.start.getDate()
+        );
+        const endDay = new Date(
+          data.end.getFullYear(),
+          data.end.getMonth(),
+          data.end.getDate()
+        );
+        return endDay >= startDay;
+      }
+
+      return data.end > data.start;
+    },
+    {
+      message: "End date must be after start date",
+      path: ["end"],
+    }
+  );
 
 export type EventForm = z.infer<typeof eventSchema>;
 
@@ -50,6 +75,23 @@ export function useEventForm(
   }, [initialData]);
 
   const handleSubmit = form.handleSubmit((data) => {
+    if (data.allDay) {
+      // Drop time info if allDay
+      const startDay = new Date(
+        data.start.getFullYear(),
+        data.start.getMonth(),
+        data.start.getDate()
+      );
+      const endDay = new Date(
+        data.end.getFullYear(),
+        data.end.getMonth(),
+        data.end.getDate()
+      );
+
+      data.start = startDay;
+      data.end = endDay;
+    }
+
     if (onSuccess) {
       onSuccess({
         id: data.id,

@@ -173,12 +173,19 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
                   name="end"
                   control={control}
                   render={({ field }) => (
-                    <DateTimeForm
-                      date={field.value}
-                      onDateTimeChange={field.onChange}
-                      label="End"
-                      allDay={allDay}
-                    />
+                    <>
+                      <DateTimeForm
+                        date={field.value}
+                        onDateTimeChange={field.onChange}
+                        label="End"
+                        allDay={allDay}
+                      />
+                      {errors.end && (
+                        <p className="text-sm text-red-500">
+                          {errors.end.message}
+                        </p>
+                      )}
+                    </>
                   )}
                 />
               </div>

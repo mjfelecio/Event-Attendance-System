@@ -27,7 +27,9 @@ type Time = {
  */
 function buildDateTime(date: Date, time: Time, allDay: boolean): Date {
   if (allDay)
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    );
 
   const hour =
     time.period === "PM" && time.hour !== 12
