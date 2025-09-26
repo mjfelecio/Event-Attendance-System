@@ -2,55 +2,81 @@
 
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
-import { DateSelectArg } from "@fullcalendar/core/index.js";
-import { useCallback, useEffect, useRef } from "react";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { DateSelectArg, EventClickArg } from "@fullcalendar/core";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
+import CalendarEventCard from "./CalendarEventCard";
 
 type Props = {
   onSelectDate: (start: Date, end: Date) => void;
+  isDrawerOpen: boolean;
+  onEditEvent?: (id: string) => void;
+  events?: any[];
 };
 
-const Calendar = ({ onSelectDate }: Props) => {
+const Calendar = ({
+  onSelectDate,
+  isDrawerOpen,
+  onEditEvent,
+  events = [],
+}: Props) => {
   const { isExpanded: isSidebarExpanded } = useSidebar();
   const calendarRef = useRef<FullCalendar | null>(null);
+  const [draftEvent, setDraftEvent] = useState<any | null>(null);
 
   useEffect(() => {
-    // Trigger rerender of calendar when sidebarExpanded changes
     setTimeout(() => calendarRef.current?.getApi().updateSize(), 300);
   }, [isSidebarExpanded]);
 
-  const handleSelectDate = useCallback((info: DateSelectArg) => {
-    // FullCalendar's "select" gives us a [start, end) range
-    // meaning start is inclusive, end is exclusive.
-    // Example: selecting just Sept 23 gives start=2025-09-23 and end=2025-09-24.
-    // This makes "single day" selections look like a 2-day difference in Date objects.
-    const isSingleDay = info.end.getDate() - info.start.getDate() === 1;
-
-    if (isSingleDay) {
-      // Use info.startStr instead of info.start because:
-      // - info.start is a JS Date in local timezone (may shift depending on TZ/DST)
-      // - info.startStr is the normalized ISO8601 string from FullCalendar
-      onSelectDate(new Date(info.startStr), new Date(info.startStr));
-    } else {
-      // For multi-day ranges, end is exclusive
-      // So if user selects Sept 23 → Sept 25,
-      // info.startStr = "2025-09-23", info.endStr = "2025-09-26"
-      // We subtract 1 day from endStr so the range is inclusive
-      const endDate = new Date(info.endStr);
-      endDate.setDate(info.end.getDate() - 1);
-
-      onSelectDate(new Date(info.startStr), new Date(endDate));
+  useEffect(() => {
+    if (!isDrawerOpen) {
+      setDraftEvent(null);
     }
-  }, []);
+  }, [isDrawerOpen]);
+
+  const handleSelectDate = useCallback(
+    (info: DateSelectArg) => {
+      const isSingleDay = info.end.getDate() - info.start.getDate() === 1;
+
+      const start = new Date(info.startStr);
+
+      // We shift the end by a single day because it is exclusive
+      // This is only used for outside components, on FullCalendar, we use the exclusive version
+      const end = isSingleDay
+        ? new Date(info.startStr)
+        : new Date(info.end.getTime() - 1 * 24 * 60 * 60 * 1000);
+
+      setDraftEvent({
+        id: "draft",
+        start,
+        end: info.end, // We use the exclusive version of the event since this is how calendar handles it
+        backgroundColor: "oklch(68.5% 0.169 237.323)",
+        editable: false,
+      });
+
+      onSelectDate(start, end);
+    },
+    [onSelectDate]
+  );
+
+  const handleEventClick = useCallback(
+    (info: EventClickArg) => {
+      if (info.event.id !== "draft" && onEditEvent) {
+        onEditEvent(info.event.id);
+      }
+    },
+    [onEditEvent]
+  );
 
   return (
-    <div className="rounded-2xl border-2 p-6 max-h-[600px] overflow-hidden basis-[70%]">
+    <div className="rounded-2xl border-2 p-6 overflow-hidden basis-[70%]">
       <FullCalendar
         ref={calendarRef}
-        height={"100%"}
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
+        height="100%"
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="timeGridWeek"
         headerToolbar={{
           left: "prev,next today",
           center: "title",
@@ -58,6 +84,15 @@ const Calendar = ({ onSelectDate }: Props) => {
         }}
         selectable
         select={handleSelectDate}
+        eventClick={handleEventClick}
+        events={[...events, ...(draftEvent ? [draftEvent] : [])]}
+        slotDuration={"00:30:00"}
+        defaultTimedEventDuration={"00:30:00"}
+        snapDuration={"00:30:00"}
+        editable
+        nowIndicator
+        validRange={{ start: new Date() }}
+        eventContent={(arg) => <CalendarEventCard arg={arg} />}
       />
     </div>
   );
