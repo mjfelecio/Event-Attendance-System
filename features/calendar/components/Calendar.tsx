@@ -3,12 +3,14 @@
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, {
+  EventResizeDoneArg,
+} from "@fullcalendar/interaction";
 import { DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import CalendarEventCard from "./CalendarEventCard";
-import useEvents from "@/globals/hooks/useEvents";
+import useEvents, { useSaveEvent } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 
 type Props = {
@@ -20,6 +22,7 @@ type Props = {
 const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
   const { isExpanded: isSidebarExpanded } = useSidebar();
   const { data } = useEvents();
+  const { mutate: saveEvent } = useSaveEvent();
 
   // We first map the data since FullCalendar has a different format
   const events =
@@ -28,7 +31,7 @@ const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
       title: event.title,
       start: event.start,
       end: event.end,
-      allDay: event.allDay
+      allDay: event.allDay,
     })) ?? [];
 
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -72,7 +75,7 @@ const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       if (info.event.id !== "draft" && onEditEvent) {
-        const event = data?.find((e) => e.id === info.event.id)
+        const event = data?.find((e) => e.id === info.event.id);
         if (!event) return;
 
         onEditEvent(event);
@@ -80,6 +83,29 @@ const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
     },
     [onEditEvent]
   );
+
+  const handleEventResize = useCallback((info: EventResizeDoneArg) => {
+    // Prevent draft event from being resized
+    if (info.event.id === "draft") {
+      info.revert();
+      return;
+    }
+
+    alert("Us")
+
+    const event = data?.find((e) => e.id === info.event.id);
+    if (!event) return;
+
+    const updatedEvent: Event = {
+      ...event,
+      start: info.event.start!, // always exists after resize
+      end: info.event.end ?? info.event.start!, // may be null for allDay
+      allDay: info.event.allDay,
+    };
+
+    // Update event
+    saveEvent(updatedEvent);
+  }, []);
 
   return (
     <div className="rounded-2xl border-2 p-6 overflow-hidden basis-[70%]">
@@ -96,6 +122,7 @@ const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
         selectable
         select={handleSelectDate}
         eventClick={handleEventClick}
+        eventResize={handleEventResize}
         events={[...events, ...(draftEvent ? [draftEvent] : [])]}
         slotDuration={"00:30:00"}
         defaultTimedEventDuration={"00:30:00"}
