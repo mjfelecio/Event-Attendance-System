@@ -22,12 +22,13 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
   );
 
   return (
-    <div className="relative border-2 rounded-xl p-4 overflow-hidden basis-[30%] flex flex-col gap-4 justify-between">
+    <div className="relative border-2 rounded-xl p-4 overflow-hidden w-full md:basis-[30%] flex flex-col gap-4 justify-between">
       <div>
-        <h1 className="text-2xl text-center font-bold mb-2">Upcoming Events</h1>
-
+        <h1 className="text-xl md:text-2xl text-center font-bold mb-2">
+          Upcoming Events
+        </h1>
         {/* Upcoming Events List */}
-        <div className="border-2 p-2 flex flex-col gap-2 h-[420px] border-gray-300 rounded-xl overflow-y-auto">
+        <div className="border-2 p-2 flex flex-col gap-2 h-[300px] md:h-[420px] border-gray-300 rounded-xl overflow-y-auto">
           {isLoading ? (
             <div className="flex justify-center items-center h-full">
               <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
@@ -53,7 +54,6 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
           )}
         </div>
       </div>
-
       {/* Action Buttons */}
       <div className="bottom-4 flex flex-col bg-white p-2 rounded-xl items-stretch gap-2">
         <Button size="lg" onClick={() => onDrawerOpen(null)}>

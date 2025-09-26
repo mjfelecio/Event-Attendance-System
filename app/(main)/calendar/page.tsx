@@ -27,16 +27,22 @@ const CalendarPage = () => {
     setIsDrawerOpen(false);
   }, []);
 
-  const handleSelectDate = useCallback((start: Date, end: Date) => {
-    handleDrawerOpen({ start, end });
-  }, [handleDrawerOpen]);
+  const handleSelectDate = useCallback(
+    (start: Date, end: Date) => {
+      handleDrawerOpen({ start, end });
+    },
+    [handleDrawerOpen]
+  );
 
-  const handleEditEvent = useCallback((event: Event) => {
-    handleDrawerOpen(event);
-  }, [handleDrawerOpen]);
+  const handleEditEvent = useCallback(
+    (event: Event) => {
+      handleDrawerOpen(event);
+    },
+    [handleDrawerOpen]
+  );
 
   return (
-    <div className="flex flex-1 bg-white p-8 gap-4 max-h-[680px]">
+    <div className="flex flex-col md:flex-row flex-1 bg-white p-4 md:p-8 gap-4 max-h-[680px]">
       <Calendar
         isDrawerOpen={isDrawerOpen}
         onSelectDate={handleSelectDate}
