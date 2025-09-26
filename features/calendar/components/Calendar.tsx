@@ -6,7 +6,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin, {
   EventResizeDoneArg,
 } from "@fullcalendar/interaction";
-import { DateSelectArg, EventClickArg } from "@fullcalendar/core";
+import { DateSelectArg, EventClickArg, EventDropArg } from "@fullcalendar/core";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import CalendarEventCard from "./CalendarEventCard";
@@ -84,28 +84,49 @@ const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
     [onEditEvent]
   );
 
-  const handleEventResize = useCallback((info: EventResizeDoneArg) => {
-    // Prevent draft event from being resized
-    if (info.event.id === "draft") {
-      info.revert();
-      return;
-    }
+  const handleEventResize = useCallback(
+    async (info: EventResizeDoneArg) => {
+      if (info.event.id === "draft") {
+        info.revert();
+        return;
+      }
 
-    alert("Us")
+      const event = data?.find((e) => e.id === info.event.id);
+      if (!event) return;
 
-    const event = data?.find((e) => e.id === info.event.id);
-    if (!event) return;
+      const updatedEvent: Event = {
+        ...event,
+        start: info.event.start!,
+        end: info.event.end ?? info.event.start!,
+        allDay: info.event.allDay,
+      };
 
-    const updatedEvent: Event = {
-      ...event,
-      start: info.event.start!, // always exists after resize
-      end: info.event.end ?? info.event.start!, // may be null for allDay
-      allDay: info.event.allDay,
-    };
+      saveEvent(updatedEvent);
+    },
+    [data, saveEvent]
+  );
 
-    // Update event
-    saveEvent(updatedEvent);
-  }, []);
+  const handleEventDrop = useCallback(
+    (info: EventDropArg) => {
+      if (info.event.id === "draft") {
+        info.revert();
+        return;
+      }
+
+      const event = data?.find((e) => e.id === info.event.id);
+      if (!event) return;
+
+      const updatedEvent: Event = {
+        ...event,
+        start: info.event.start!,
+        end: info.event.end ?? info.event.start!,
+        allDay: info.event.allDay,
+      };
+
+      saveEvent(updatedEvent);
+    },
+    [data, saveEvent]
+  );
 
   return (
     <div className="rounded-2xl border-2 p-6 overflow-hidden basis-[70%]">
@@ -123,6 +144,7 @@ const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
         select={handleSelectDate}
         eventClick={handleEventClick}
         eventResize={handleEventResize}
+        eventDrop={handleEventDrop}
         events={[...events, ...(draftEvent ? [draftEvent] : [])]}
         slotDuration={"00:30:00"}
         defaultTimedEventDuration={"00:30:00"}
