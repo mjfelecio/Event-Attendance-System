@@ -28,6 +28,7 @@ const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
       title: event.title,
       start: event.start,
       end: event.end,
+      allDay: event.allDay
     })) ?? [];
 
   const calendarRef = useRef<FullCalendar | null>(null);
