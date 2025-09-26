@@ -8,21 +8,28 @@ import { DateSelectArg, EventClickArg } from "@fullcalendar/core";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import CalendarEventCard from "./CalendarEventCard";
+import useEvents from "@/globals/hooks/useEvents";
+import { Event } from "@/globals/types/events";
 
 type Props = {
   onSelectDate: (start: Date, end: Date) => void;
   isDrawerOpen: boolean;
-  onEditEvent?: (id: string) => void;
-  events?: any[];
+  onEditEvent?: (event: Event) => void;
 };
 
-const Calendar = ({
-  onSelectDate,
-  isDrawerOpen,
-  onEditEvent,
-  events = [],
-}: Props) => {
+const Calendar = ({ onSelectDate, isDrawerOpen, onEditEvent }: Props) => {
   const { isExpanded: isSidebarExpanded } = useSidebar();
+  const { data } = useEvents();
+
+  // We first map the data since FullCalendar has a different format
+  const events =
+    data?.map((event) => ({
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+    })) ?? [];
+
   const calendarRef = useRef<FullCalendar | null>(null);
   const [draftEvent, setDraftEvent] = useState<any | null>(null);
 
@@ -64,7 +71,10 @@ const Calendar = ({
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       if (info.event.id !== "draft" && onEditEvent) {
-        onEditEvent(info.event.id);
+        const event = data?.find((e) => e.id === info.event.id)
+        if (!event) return;
+
+        onEditEvent(event);
       }
     },
     [onEditEvent]
