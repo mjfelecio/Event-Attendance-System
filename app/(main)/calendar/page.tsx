@@ -32,6 +32,7 @@ const CalendarPage = () => {
       <Calendar
         isDrawerOpen={isDrawerOpen}
         onSelectDate={(start, end) => handleDrawerOpen({ start, end })}
+        onEditEvent={(event) => handleDrawerOpen(event)}
       />
       <EventsContainer onDrawerOpen={handleDrawerOpen} />
       <EventDrawer
@@ -43,6 +44,5 @@ const CalendarPage = () => {
     </div>
   );
 };
-
 
 export default CalendarPage;
