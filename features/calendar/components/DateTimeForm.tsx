@@ -88,6 +88,7 @@ const DateTimeForm = ({
               setSelectedTime(time);
               onDateTimeChange(buildDateTime(selectedDate, time, allDay));
             }}
+            disabled={allDay}
           />
         </div>
       </CollapsibleContent>
