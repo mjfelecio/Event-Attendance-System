@@ -6,15 +6,20 @@ import EventCard from "@/features/calendar/components/EventCard";
 import useEvents from "@/globals/hooks/useEvents";
 import { Loader2 } from "lucide-react";
 import { Event } from "@/globals/types/events";
+import { getUpcomingEvents } from "@/globals/utils/events";
 
 type Props = {
   onDrawerOpen: (event: Event | null) => void;
 };
 
 const EventsContainer = ({ onDrawerOpen }: Props) => {
-  const { data: events, isLoading, error } = useEvents();
+  const { data, isLoading, error } = useEvents();
+  const events = getUpcomingEvents(data);
 
-  const handleDrawerOpen = useCallback((event: Event) => onDrawerOpen(event), []);
+  const handleDrawerOpen = useCallback(
+    (event: Event) => onDrawerOpen(event),
+    []
+  );
 
   return (
     <div className="relative border-2 rounded-xl p-4 overflow-hidden basis-[30%] flex flex-col gap-4 justify-between">
