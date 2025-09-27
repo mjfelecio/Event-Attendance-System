@@ -19,3 +19,36 @@ model Event {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 }
+
+model Student {
+  studentId      Int           @id
+  name           String
+  shsStrand      String? // required if schoolLevel = SHS
+  collegeProgram String? // required if schoolLevel = COLLEGE
+  section        String
+  yearLevel      YearLevel
+  schoolLevel    SchoolLevel
+  status         StudentStatus @default(ACTIVE)
+  contactNumber  String?
+}
+
+enum YearLevel {
+  YEAR_1
+  YEAR_2
+  YEAR_3
+  YEAR_4
+  GRADE_11
+  GRADE_12
+}
+
+enum SchoolLevel {
+  SHS
+  COLLEGE
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+  DROPPED
+}
