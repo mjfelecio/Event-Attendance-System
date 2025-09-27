@@ -9,6 +9,7 @@ import { LuCalendar, LuLogOut, LuSunMedium, LuMoon } from "react-icons/lu";
 import { FiUsers } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
+import { LuQrCode } from "react-icons/lu";
 
 /**
  * Represents a single navigation item in the sidebar.
@@ -42,6 +43,7 @@ const navigationItems: NavigationItem[] = [
   { text: "Dashboard", route: "/dashboard", icon: RxDashboard },
   { text: "Calendar", route: "/calendar", icon: LuCalendar },
   { text: "Manage List", route: "/manage-list", icon: FiUsers },
+  { text: "Attendance", route: "/attendance", icon: LuQrCode },
   { text: "Settings", route: "/settings", icon: IoSettingsOutline },
 ];
 
@@ -68,7 +70,7 @@ const SidebarButton = ({
       onClick={onClick}
       className={`rounded-md p-2 flex items-center gap-3 transition-all hover:cursor-grab duration-300 ${conditionalStyles} ${baseColors}`}
     >
-      <div className="size-8 flex items-center justify-center shrink-0">
+      <div className="size-8 flex items-center justify-center ">
         <Icon size={24} />
       </div>
       {isExpanded && (

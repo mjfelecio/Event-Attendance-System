@@ -1,9 +1,9 @@
 import React from 'react'
 
-const AttendancePage = () => {
+const ManageList = () => {
 	return (
-		<div>AttendancePage</div>
+		<div>ManageList Page</div>
 	)
 }
 
-export default AttendancePage
+export default ManageList
