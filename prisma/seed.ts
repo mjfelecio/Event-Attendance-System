@@ -1,59 +1,154 @@
-import { PrismaClient } from "@prisma/client";
+import { AttendanceMethod, AttendanceStatus, Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// Helper function to pick random element from an array
+function randomChoice<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 async function main() {
-  await prisma.event.createMany({
-    data: [
-      {
-        title: "Programmers Guild Meeting",
-        location: "Room 204, CS Building",
-        description: "Monthly guild meetup to discuss projects and share knowledge",
-        category: "Meeting",
-        start: new Date("2025-09-27T20:00:00Z"),
-        end: new Date("2025-09-27T21:00:00Z"),
-        allDay: false,
-      },
-      {
-        title: "Paytaca Cashscript Workshop",
-        location: "Innovation Lab",
-        description: "Two-day hands-on workshop on Cashscript development",
-        category: "Workshop",
-        start: new Date("2025-10-01T00:00:00Z"),
-        end: new Date("2025-10-02T00:00:00Z"),
-        allDay: true,
-      },
-      {
-        title: "Orientation Day",
-        location: "Auditorium",
-        description: "Kickoff event for new students",
-        category: "School",
-        start: new Date("2025-10-03T09:00:00Z"),
-        end: new Date("2025-10-03T12:00:00Z"),
-        allDay: false,
-      },
-      {
-        title: "Hackathon 2025",
-        location: "Tech Hub",
-        description: "24-hour coding event",
-        category: "Competition",
-        start: new Date("2025-10-05T10:00:00Z"),
-        end: new Date("2025-10-06T10:00:00Z"),
-        allDay: false,
-      },
-      {
-        title: "Founders’ Day",
-        location: "Main Campus Grounds",
-        description: "Annual celebration with activities, food stalls, and concerts",
-        category: "Holiday",
-        start: new Date("2025-12-15T00:00:00Z"),
-        end: new Date("2025-12-15T00:00:00Z"),
-        allDay: true,
-      },
-    ],
+  // Create users
+  const organizer = await prisma.user.create({
+    data: {
+      name: "Alice Organizer",
+      email: "alice@example.com",
+      password: "password123",
+      role: "ORGANIZER",
+    },
   });
 
-  console.log("✅ Seed data inserted successfully!");
+  const admin = await prisma.user.create({
+    data: {
+      name: "Bob Admin",
+      email: "bob@example.com",
+      password: "adminpass123",
+      role: "ADMIN",
+    },
+  });
+
+  // Create events
+  const eventsData = [
+    {
+      title: "Programmers Guild Meeting",
+      location: "Room 204, CS Building",
+      description: "Monthly guild meetup to discuss projects and share knowledge",
+      category: "Meeting",
+      start: new Date("2025-09-27T20:00:00Z"),
+      end: new Date("2025-09-27T21:00:00Z"),
+      allDay: false,
+      userId: organizer.id,
+    },
+    {
+      title: "Paytaca Cashscript Workshop",
+      location: "Innovation Lab",
+      description: "Two-day hands-on workshop on Cashscript development",
+      category: "Workshop",
+      start: new Date("2025-10-01T00:00:00Z"),
+      end: new Date("2025-10-02T00:00:00Z"),
+      allDay: true,
+      userId: organizer.id,
+    },
+    {
+      title: "Orientation Day",
+      location: "Auditorium",
+      description: "Kickoff event for new students",
+      category: "School",
+      start: new Date("2025-10-03T09:00:00Z"),
+      end: new Date("2025-10-03T12:00:00Z"),
+      allDay: false,
+      userId: organizer.id,
+    },
+    {
+      title: "Hackathon 2025",
+      location: "Tech Hub",
+      description: "24-hour coding event",
+      category: "Competition",
+      start: new Date("2025-10-05T10:00:00Z"),
+      end: new Date("2025-10-06T10:00:00Z"),
+      allDay: false,
+      userId: organizer.id,
+    },
+    {
+      title: "Founders’ Day",
+      location: "Main Campus Grounds",
+      description: "Annual celebration with activities, food stalls, and concerts",
+      category: "Holiday",
+      start: new Date("2025-12-15T00:00:00Z"),
+      end: new Date("2025-12-15T00:00:00Z"),
+      allDay: true,
+      userId: organizer.id,
+    },
+  ];
+
+  const events = await prisma.event.createMany({
+    data: eventsData,
+  });
+
+  // Create students
+  const studentsData: Prisma.StudentCreateInput[] = [
+    {
+      id: 1,
+      name: "John Doe",
+      shsStrand: "STEM",
+      section: "A",
+      yearLevel: "GRADE_12",
+      schoolLevel: "SHS",
+      status: "ACTIVE",
+      contactNumber: "09171234567",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      collegeProgram: "Computer Science",
+      section: "B",
+      yearLevel: "YEAR_3",
+      schoolLevel: "COLLEGE",
+      status: "ACTIVE",
+      contactNumber: "09179876543",
+    },
+    {
+      id: 3,
+      name: "Alice Tan",
+      shsStrand: "ABM",
+      section: "C",
+      yearLevel: "GRADE_11",
+      schoolLevel: "SHS",
+      status: "ACTIVE",
+    },
+  ];
+
+  const students = await prisma.student.createMany({
+    data: studentsData,
+  });
+
+  // Fetch all events and students
+  const allEvents = await prisma.event.findMany();
+  const allStudents = await prisma.student.findMany();
+
+  // Attendance statuses and methods for random generation
+  const statuses: AttendanceStatus[] = ["PRESENT", "LATE", "EXCUSED", "ABSENT"];
+  const methods: AttendanceMethod[] = ["MANUAL", "SCANNED"];
+
+  // Generate attendance records for every student for every event
+  const recordsData: Prisma.RecordCreateManyInput[] = [];
+
+  for (const event of allEvents) {
+    for (const student of allStudents) {
+      recordsData.push({
+        eventId: event.id,
+        studentId: student.id,
+        status: randomChoice(statuses),
+        method: randomChoice(methods),
+      });
+    }
+  }
+
+  await prisma.record.createMany({
+    data: recordsData,
+  });
+
+  console.log("✅ Seed data with events, students, and attendance records inserted successfully!");
 }
 
 main()
