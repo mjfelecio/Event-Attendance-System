@@ -18,10 +18,11 @@ model Event {
   allDay      Boolean  @default(false)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+  Record      Record[]
 }
 
 model Student {
-  studentId      Int           @id
+  id             Int           @id
   name           String
   shsStrand      String? // required if schoolLevel = SHS
   collegeProgram String? // required if schoolLevel = COLLEGE
@@ -30,6 +31,29 @@ model Student {
   schoolLevel    SchoolLevel
   status         StudentStatus @default(ACTIVE)
   contactNumber  String?
+  Record         Record[]
+}
+
+model Record {
+  id        String           @id @default(cuid())
+  eventId   String
+  event     Event            @relation(fields: [eventId], references: [id])
+  studentId Int
+  student   Student          @relation(fields: [studentId], references: [id])
+  status    AttendanceStatus @default(PRESENT)
+  method    AttendanceMethod
+}
+
+enum AttendanceMethod {
+  MANUAL
+  SCANNED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  EXCUSED
+  ABSENT
 }
 
 enum YearLevel {
