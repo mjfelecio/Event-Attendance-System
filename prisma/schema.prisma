@@ -16,12 +16,13 @@ model Event {
   start       DateTime
   end         DateTime
   allDay      Boolean  @default(false)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
 
   Record Record[]
   User   User     @relation(fields: [userId], references: [id])
   userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Student {
@@ -35,6 +36,9 @@ model Student {
   status         StudentStatus @default(ACTIVE)
   contactNumber  String?
   Record         Record[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Record {
@@ -45,6 +49,9 @@ model Record {
   student   Student          @relation(fields: [studentId], references: [id])
   status    AttendanceStatus @default(PRESENT)
   method    AttendanceMethod
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model User {
