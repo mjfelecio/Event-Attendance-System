@@ -18,8 +18,8 @@ model Event {
   allDay      Boolean  @default(false)
 
   Record Record[]
-  User   User     @relation(fields: [userId], references: [id])
-  userId String
+  User   User?    @relation(fields: [userId], references: [id])
+  userId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
