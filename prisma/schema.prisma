@@ -18,7 +18,10 @@ model Event {
   allDay      Boolean  @default(false)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
-  Record      Record[]
+
+  Record Record[]
+  User   User     @relation(fields: [userId], references: [id])
+  userId String
 }
 
 model Student {
@@ -42,6 +45,23 @@ model Record {
   student   Student          @relation(fields: [studentId], references: [id])
   status    AttendanceStatus @default(PRESENT)
   method    AttendanceMethod
+}
+
+model User {
+  id       String   @id @default(cuid())
+  name     String
+  role     UserRole @default(ORGANIZER)
+  email    String   @unique
+  password String
+  Event    Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  ORGANIZER
+  ADMIN
 }
 
 enum AttendanceMethod {
