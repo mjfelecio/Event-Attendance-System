@@ -7,7 +7,10 @@ interface StudentStatCardProps {
 const StudentStatCard = ({ stat }: StudentStatCardProps) => {
   const { icon: Icon, title, align, category, value } = stat;
   const formattedValue = new Intl.NumberFormat().format(value ?? 0);
-  const href = `/manage-list/manage-which?type=${category}`;
+  const href =
+    category === "all"
+      ? `/manage-list/manage-student?category=all&label=All%20Students`
+      : `/manage-list/manage-which?type=${category}`;
 
   return (
     <Link
