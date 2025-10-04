@@ -14,6 +14,7 @@ export type ManageStudentContext = {
   category: ManageListCategory;
   item?: string;
   label?: string;
+  search?: string;
 };
 
 export type StudentRow = {
