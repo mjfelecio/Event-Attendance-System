@@ -15,3 +15,22 @@ export type ManageStudentContext = {
   item?: string;
   label?: string;
 };
+
+export type StudentRow = {
+  studentNumber: string;
+  lastName: string;
+  firstName: string;
+  middleName?: string;
+  program?: string;
+  programSlug?: string;
+  department?: string;
+  departmentSlug?: string;
+  house?: string;
+  houseSlug?: string;
+  section: string;
+  yearLevelLabel: string;
+  schoolLevel: "COLLEGE" | "SHS";
+  status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "DROPPED";
+  contactNumber?: string;
+  updatedAt: string;
+};
