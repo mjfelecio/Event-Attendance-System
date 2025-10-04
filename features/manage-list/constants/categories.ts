@@ -2,36 +2,78 @@ export const COLLEGE_DEPARTMENTS = [
   {
     title: "Computer Studies",
     abbreviation: "CS Dept.",
+    slug: "computer-studies",
   },
   {
     title: "Hotel Management",
     abbreviation: "HM Dept.",
+    slug: "hotel-management",
   },
   {
     title: "Business Administration",
     abbreviation: "BA Dept.",
+    slug: "business-administration",
   },
 ];
 
 export const SHS_STRANDS = {
   academics: [
-    "STEM",
-    "HUMSS",
-    "ABM",
-    "GAS",
+    {
+      title: "STEM",
+      slug: "stem",
+    },
+    {
+      title: "HUMSS",
+      slug: "humss",
+    },
+    {
+      title: "ABM",
+      slug: "abm",
+    },
+    {
+      title: "GAS",
+      slug: "gas",
+    },
   ],
   tvl: [
-    "Programming",
-    "Animation",
-    "Home Economics",
-    "CSS",
+    {
+      title: "Programming",
+      slug: "programming",
+    },
+    {
+      title: "Animation",
+      slug: "animation",
+    },
+    {
+      title: "Home Economics",
+      slug: "home-economics",
+    },
+    {
+      title: "CSS",
+      slug: "css",
+    },
   ],
 };
 
 export const HOUSES = [
-  "GiallIO",
-  "Roxxo",
-  "Azul",
-  "Cahel",
-  "Vierrdy",
+  {
+    name: "GiallIO",
+    slug: "giall-io",
+  },
+  {
+    name: "Roxxo",
+    slug: "roxxo",
+  },
+  {
+    name: "Azul",
+    slug: "azul",
+  },
+  {
+    name: "Cahel",
+    slug: "cahel",
+  },
+  {
+    name: "Vierrdy",
+    slug: "vierrdy",
+  },
 ];
