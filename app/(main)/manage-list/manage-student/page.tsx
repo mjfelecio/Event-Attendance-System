@@ -1,5 +1,5 @@
 import Link from "next/link";
-import StudentTable from "@/features/manage-list/components/StudentTable";
+import ManageStudentClient from "@/features/manage-list/components/ManageStudentClient";
 import {
   ManageStudentContext,
   StudentRow,
@@ -16,10 +16,12 @@ const categoryLabels: Record<ManageStudentContext["category"], string> = {
   all: "All Students",
 };
 
-const ManageStudentPage = ({ searchParams }: ManageStudentPageProps) => {
-  const { category = "all", label, item } = searchParams;
-
-  const filteredRows = MOCK_STUDENTS.filter((student) => {
+const filterByContext = (
+  rows: StudentRow[],
+  category: ManageStudentContext["category"],
+  item?: string
+) => {
+  return rows.filter((student) => {
     if (category === "all") {
       return true;
     }
@@ -47,6 +49,13 @@ const ManageStudentPage = ({ searchParams }: ManageStudentPageProps) => {
 
     return true;
   });
+};
+
+const ManageStudentPage = async ({ searchParams }: ManageStudentPageProps) => {
+  const params = await searchParams;
+  const { category = "all", label, item } = params;
+
+  const baseRows = filterByContext(MOCK_STUDENTS, category, item);
 
   return (
     <section className="flex min-h-[calc(100vh-4rem)] flex-1 justify-center bg-neutral-100 px-0 py-12 text-neutral-900 md:px-0">
@@ -60,23 +69,13 @@ const ManageStudentPage = ({ searchParams }: ManageStudentPageProps) => {
           </Link>
         </div>
 
-        <header className="px-6 text-center md:px-12">
-          <p className="text-sm uppercase tracking-[0.35em] text-neutral-500">
-            {categoryLabels[category]}
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-neutral-800 md:text-4xl">
-            {label ?? "Manage Students"}
-          </h1>
-          {item && (
-            <p className="mt-2 text-xs uppercase tracking-[0.4em] text-neutral-400">
-              {item}
-            </p>
-          )}
-        </header>
-
-        <div className="px-0 md:px-4">
-          <StudentTable rows={filteredRows} />
-        </div>
+        <ManageStudentClient
+          category={category}
+          label={label}
+          item={item}
+          categoryHeading={categoryLabels[category]}
+          rows={baseRows}
+        />
       </div>
     </section>
   );
