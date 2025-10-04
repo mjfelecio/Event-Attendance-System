@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SelectionBoardFrame from "@/features/manage-list/components/SelectionBoardFrame";
 import { SHS_STRANDS } from "@/features/manage-list/constants/categories";
 
@@ -16,13 +17,20 @@ const ShsSelectionBoard = () => {
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               {SHS_STRANDS.academics.map((strand) => (
-                <button
-                  key={strand}
-                  type="button"
+                <Link
+                  key={strand.slug}
+                  href={{
+                    pathname: "/manage-list/manage-student",
+                    query: {
+                      category: "shs",
+                      item: strand.slug,
+                      label: strand.title,
+                    },
+                  }}
                   className="rounded-[1.25rem] border border-neutral-300 px-6 py-4 text-sm font-semibold uppercase tracking-widest text-neutral-700 transition hover:-translate-y-1 hover:border-neutral-400 hover:text-neutral-900"
                 >
-                  {strand}
-                </button>
+                  {strand.title}
+                </Link>
               ))}
             </div>
           </div>
@@ -33,13 +41,20 @@ const ShsSelectionBoard = () => {
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               {SHS_STRANDS.tvl.map((strand) => (
-                <button
-                  key={strand}
-                  type="button"
+                <Link
+                  key={strand.slug}
+                  href={{
+                    pathname: "/manage-list/manage-student",
+                    query: {
+                      category: "shs",
+                      item: strand.slug,
+                      label: strand.title,
+                    },
+                  }}
                   className="rounded-[1.25rem] border border-neutral-300 px-6 py-4 text-sm font-semibold uppercase tracking-widest text-neutral-700 transition hover:-translate-y-1 hover:border-neutral-400 hover:text-neutral-900"
                 >
-                  {strand}
-                </button>
+                  {strand.title}
+                </Link>
               ))}
             </div>
           </div>
