@@ -57,8 +57,8 @@ export const SHS_STRANDS = {
 
 export const HOUSES = [
   {
-    name: "GiallIO",
-    slug: "giall-io",
+    name: "Giallio",
+    slug: "giallio",
   },
   {
     name: "Roxxo",
