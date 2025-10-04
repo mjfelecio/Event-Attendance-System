@@ -9,3 +9,9 @@ export type StudentStat = {
   value: number;
   category: ManageListCategory;
 };
+
+export type ManageStudentContext = {
+  category: ManageListCategory;
+  item?: string;
+  label?: string;
+};
