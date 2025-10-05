@@ -4,13 +4,14 @@ import ShsSelectionBoard from "@/features/manage-list/components/ShsSelectionBoa
 import { ManageListCategory } from "@/features/manage-list/types";
 
 type ManageWhichPageProps = {
-  searchParams: {
+  searchParams: Promise<{
     type?: ManageListCategory;
-  };
+  }>;
 };
 
-const ManageWhichPage = ({ searchParams }: ManageWhichPageProps) => {
-  const type = searchParams.type ?? "college";
+const ManageWhichPage = async ({ searchParams }: ManageWhichPageProps) => {
+  const params = await searchParams;
+  const type = params.type ?? "college";
 
   const renderContent = () => {
     if (type === "college") return <CollegeSelectionBoard />;
