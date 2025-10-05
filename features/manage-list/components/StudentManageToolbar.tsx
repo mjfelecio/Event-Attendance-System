@@ -1,7 +1,7 @@
 "use client";
 
 import { Dispatch, SetStateAction } from "react";
-import { ArrowUpDown, Filter } from "lucide-react";
+import { ArrowUpDown, Filter, Plus, Upload } from "lucide-react";
 import {
   type FilterState,
   type SortDirection,
@@ -34,6 +34,8 @@ interface StudentManageToolbarProps {
   setIsSortOpen: Dispatch<SetStateAction<boolean>>;
   isFilterOpen: boolean;
   setIsFilterOpen: Dispatch<SetStateAction<boolean>>;
+  onAddStudent: () => void;
+  onImportStudents: () => void;
 }
 
 const StudentManageToolbar = ({
@@ -59,6 +61,8 @@ const StudentManageToolbar = ({
   setIsSortOpen,
   isFilterOpen,
   setIsFilterOpen,
+  onAddStudent,
+  onImportStudents,
 }: StudentManageToolbarProps) => {
   return (
     <div className="px-6 md:px-12">
@@ -78,6 +82,24 @@ const StudentManageToolbar = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 md:justify-end">
+          <button
+            type="button"
+            onClick={onAddStudent}
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-500 bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-emerald-600"
+          >
+            <Plus className="size-4" strokeWidth={1.6} />
+            Add
+          </button>
+
+          <button
+            type="button"
+            onClick={onImportStudents}
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-600 shadow-sm transition hover:border-neutral-400 hover:text-neutral-800"
+          >
+            <Upload className="size-4" strokeWidth={1.6} />
+            Import
+          </button>
+
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
