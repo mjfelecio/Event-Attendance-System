@@ -1,3 +1,4 @@
+import { Delete, Edit, MoveLeft, MoveRight } from "lucide-react";
 import { StudentRow } from "@/features/manage-list/types";
 
 const tableHeaders = [
@@ -95,14 +96,16 @@ const StudentTable = ({ rows }: StudentTableProps) => {
                   <div className="flex items-center justify-center gap-2 md:gap-3">
                     <button
                       type="button"
-                      className="rounded-full border border-emerald-500 bg-white px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-emerald-600 transition hover:bg-emerald-50 md:px-4 md:text-xs"
+                      className="inline-flex items-center gap-1 rounded-full border border-emerald-500 bg-white px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-emerald-600 transition hover:bg-emerald-50 md:px-4 md:text-xs"
                     >
+                      <Edit className="size-3.5" strokeWidth={1.6} />
                       Edit
                     </button>
                     <button
                       type="button"
-                      className="rounded-full border border-rose-500 bg-white px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 md:px-4 md:text-xs"
+                      className="inline-flex items-center gap-1 rounded-full border border-rose-500 bg-white px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 md:px-4 md:text-xs"
                     >
+                      <Delete className="size-3.5" strokeWidth={1.6} />
                       Delete
                     </button>
                   </div>
@@ -120,7 +123,7 @@ const StudentTable = ({ rows }: StudentTableProps) => {
             className="flex size-8 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-600 transition hover:border-neutral-400"
             aria-label="Previous page"
           >
-            ◀
+            <MoveLeft className="size-4" strokeWidth={1.6} />
           </button>
           {Array.from({ length: 10 }).map((_, index) => {
             const page = index + 1;
@@ -144,7 +147,7 @@ const StudentTable = ({ rows }: StudentTableProps) => {
             className="flex size-8 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-600 transition hover:border-neutral-400"
             aria-label="Next page"
           >
-            ▶
+            <MoveRight className="size-4" strokeWidth={1.6} />
           </button>
         </div>
 
