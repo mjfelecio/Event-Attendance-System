@@ -1,6 +1,7 @@
 "use client";
 
 import { Dispatch, SetStateAction } from "react";
+import { ArrowUpDown, Filter } from "lucide-react";
 import {
   type FilterState,
   type SortDirection,
@@ -86,8 +87,11 @@ const StudentManageToolbar = ({
                   setIsFilterOpen(false);
                 }}
                 className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-600 shadow-sm transition hover:border-neutral-400 hover:text-neutral-800"
+                aria-expanded={isSortOpen}
+                aria-controls="student-sort-popover"
               >
-                ⇅ Sort
+                <ArrowUpDown className="size-4" strokeWidth={1.6} />
+                Sort
               </button>
 
               <StudentSortPopover
@@ -98,6 +102,7 @@ const StudentManageToolbar = ({
                 sortDirection={sortDirection}
                 setSortDirection={setSortDirection}
                 resetSort={resetSort}
+                popoverId="student-sort-popover"
               />
             </div>
 
@@ -109,8 +114,11 @@ const StudentManageToolbar = ({
                   setIsSortOpen(false);
                 }}
                 className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-neutral-600 shadow-sm transition hover:border-neutral-400 hover:text-neutral-800"
+                aria-expanded={isFilterOpen}
+                aria-controls="student-filter-popover"
               >
-                ⊚ Filter
+                <Filter className="size-4" strokeWidth={1.6} />
+                Filter
               </button>
 
               <StudentFilterPopover
@@ -124,6 +132,7 @@ const StudentManageToolbar = ({
                 sections={sections}
                 levels={levels}
                 houses={houses}
+                popoverId="student-filter-popover"
               />
             </div>
           </div>
