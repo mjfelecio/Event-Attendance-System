@@ -116,8 +116,8 @@ const StudentTable = ({ rows }: StudentTableProps) => {
         </tbody>
       </table>
 
-      <div className="flex flex-col gap-3 border-t border-neutral-200 bg-neutral-50 px-4 py-4 text-xs text-neutral-500 md:flex-row md:items-center md:justify-between md:px-6">
-        <div className="flex flex-wrap items-center gap-2 text-neutral-600">
+      <div className="flex flex-col items-center gap-3 border-t border-neutral-200 bg-neutral-50 px-4 py-4 text-xs text-neutral-500 md:px-6">
+        <div className="flex flex-wrap items-center justify-center gap-2 text-neutral-600">
           <button
             type="button"
             className="flex size-8 items-center justify-center rounded-full border border-neutral-300 bg-white text-neutral-600 transition hover:border-neutral-400"
@@ -151,7 +151,7 @@ const StudentTable = ({ rows }: StudentTableProps) => {
           </button>
         </div>
 
-        <p className="text-right text-xs text-neutral-500 md:text-sm">
+        <p className="text-center text-xs text-neutral-500 md:text-sm">
           Showing 1–{Math.min(20, total)} of {total} students
         </p>
       </div>
