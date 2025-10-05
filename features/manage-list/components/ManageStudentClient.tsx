@@ -3,6 +3,7 @@
 import { useState } from "react";
 import StudentTable from "@/features/manage-list/components/StudentTable";
 import StudentManageToolbar from "@/features/manage-list/components/StudentManageToolbar";
+import AddStudentDialog, { type StudentFormData } from "@/features/manage-list/components/AddStudentDialog";
 import { useStudentTableControls } from "@/features/manage-list/hooks/useStudentTableControls";
 import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
 
@@ -23,6 +24,7 @@ const ManageStudentClient = ({
 }: ManageStudentClientProps) => {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const {
     searchValue,
@@ -42,6 +44,16 @@ const ManageStudentClient = ({
     availableHouses,
     visibleRows,
   } = useStudentTableControls({ rows });
+
+  const handleAddStudent = (data: StudentFormData) => {
+    console.log('Adding student:', data);
+    // TODO: Implement API call to add student
+  };
+
+  const handleImportStudents = () => {
+    console.log('Import students clicked');
+    // TODO: Implement import functionality
+  };
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -68,9 +80,17 @@ const ManageStudentClient = ({
         setIsSortOpen={setIsSortOpen}
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
+        onAddStudent={() => setIsAddDialogOpen(true)}
+        onImportStudents={handleImportStudents}
       />
 
       <StudentTable rows={visibleRows} />
+
+      <AddStudentDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onSubmit={handleAddStudent}
+      />
     </div>
   );
 };
