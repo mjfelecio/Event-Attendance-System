@@ -1,5 +1,6 @@
 'use client';
 
+import { Check, Eraser } from 'lucide-react';
 import { type FilterState } from '@/features/manage-list/hooks/useStudentTableControls';
 
 interface StudentFilterPopoverProps {
@@ -13,6 +14,7 @@ interface StudentFilterPopoverProps {
   sections: string[];
   levels: string[];
   houses: string[];
+  popoverId?: string;
 }
 
 const StudentFilterPopover = ({
@@ -26,6 +28,7 @@ const StudentFilterPopover = ({
   sections,
   levels,
   houses,
+  popoverId,
 }: StudentFilterPopoverProps) => {
   if (!open) return null;
 
@@ -55,7 +58,12 @@ const StudentFilterPopover = ({
   );
 
   return (
-    <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-2xl border border-neutral-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.12)]">
+    <div
+      id={popoverId}
+      role="dialog"
+      aria-label="Filter students"
+      className="absolute right-0 top-full z-20 mt-2 w-72 rounded-2xl border border-neutral-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.12)]"
+    >
       <div className="flex flex-col gap-4 text-sm text-neutral-700">
         {renderSelect('Department', filters.department, (next) => updateFilter('department', next), departments)}
         {renderSelect('Program / Strand', filters.program, (next) => updateFilter('program', next), programs)}
@@ -68,15 +76,17 @@ const StudentFilterPopover = ({
         <button
           type="button"
           onClick={clearFilters}
-          className="rounded-full border border-neutral-300 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-500 transition hover:border-neutral-400"
+          className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-500 transition hover:border-neutral-400"
         >
+          <Eraser className="size-3.5" strokeWidth={1.6} />
           Reset
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-full border border-neutral-800 bg-neutral-900 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-white"
+          className="inline-flex items-center gap-1 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-white"
         >
+          <Check className="size-3.5" strokeWidth={1.6} />
           Done
         </button>
       </div>
