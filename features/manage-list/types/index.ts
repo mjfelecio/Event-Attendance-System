@@ -4,7 +4,8 @@ export type ManageListCategory = "all" | "college" | "shs" | "house";
 
 export type StudentStat = {
   title: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  logo?: string;
   align: "left" | "right";
   value: number;
   category: ManageListCategory;
