@@ -29,7 +29,7 @@ const AddStudentFormFields = ({
   };
 
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    <div className="grid gap-x-6 gap-y-5 md:grid-cols-2">
       <div className="flex flex-col gap-1.5 md:col-span-2">
         <label htmlFor="student-id" className="text-sm font-semibold text-neutral-700">
           Student ID (11 digits) <span className="text-rose-500">*</span>
@@ -229,25 +229,27 @@ const AddStudentFormFields = ({
         </select>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="status" className="text-sm font-semibold text-neutral-700">
-          Status
-        </label>
-        <select
-          id="status"
-          value={formData.status}
-          onChange={handleInputChange("status")}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
-          disabled={isSubmitting}
-        >
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="GRADUATED">Graduated</option>
-          <option value="DROPPED">Dropped</option>
-        </select>
-      </div>
+      {isEditMode && (
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="status" className="text-sm font-semibold text-neutral-700">
+            Status
+          </label>
+          <select
+            id="status"
+            value={formData.status}
+            onChange={handleInputChange("status")}
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
+            disabled={isSubmitting}
+          >
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="GRADUATED">Graduated</option>
+            <option value="DROPPED">Dropped</option>
+          </select>
+        </div>
+      )}
 
-      <div className="flex flex-col gap-1.5">
+      <div className={`flex flex-col gap-1.5 ${isEditMode ? "" : "md:col-span-2"}`}>
         <label htmlFor="contact-number" className="text-sm font-semibold text-neutral-700">
           Contact Number <span className="text-rose-500">*</span>
         </label>

@@ -51,14 +51,11 @@ export const useAddStudentForm = ({
 
   const resetForm = useCallback((data?: StudentFormData) => {
     const next = mergeWithDefaults(data);
+    if (!data) {
+      next.status = "ACTIVE";
+    }
     setFormData(next);
-    const hasInitialData = Boolean(data);
-    const normalizedMiddle = next.middleName?.toUpperCase() ?? "";
-    const shouldRequireMiddleName = hasInitialData
-      ? !(normalizedMiddle === "" || normalizedMiddle === "N/A")
-      : true;
-
-    setRequireMiddleName(shouldRequireMiddleName);
+    setRequireMiddleName(!(next.middleName === "" || next.middleName.toUpperCase() === "N/A"));
     setErrors({});
     setSubmitError(null);
   }, []);
