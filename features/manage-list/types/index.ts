@@ -1,3 +1,4 @@
+import { YearLevel } from "@prisma/client";
 import { LucideIcon } from "lucide-react";
 
 export type ManageListCategory = "all" | "college" | "shs" | "house";
@@ -25,12 +26,15 @@ export type StudentRow = {
   middleName?: string;
   program?: string;
   programSlug?: string;
+  collegeProgram?: string;
+  shsStrand?: string;
   department?: string;
   departmentSlug?: string;
   house?: string;
   houseSlug?: string;
   section: string;
   yearLevelLabel: string;
+  yearLevel: YearLevel;
   schoolLevel: "COLLEGE" | "SHS";
   status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "DROPPED";
   contactNumber?: string;
