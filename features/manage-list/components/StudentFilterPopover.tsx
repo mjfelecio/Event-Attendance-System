@@ -31,12 +31,15 @@ const StudentFilterPopover = ({
   houses,
   popoverId,
 }: StudentFilterPopoverProps) => {
-  if (!open) return null;
-
   const containerRef = useRef<HTMLDivElement>(null);
   const [openSelectKey, setOpenSelectKey] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!open) {
+      setOpenSelectKey(null);
+      return;
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) {
         setOpenSelectKey(null);
@@ -56,9 +59,13 @@ const StudentFilterPopover = ({
       window.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('keydown', handleEscape);
     };
-  }, []);
+  }, [open]);
 
   const closeSelect = () => setOpenSelectKey(null);
+
+  if (!open) {
+    return null;
+  }
 
   const renderSelect = (
     label: string,

@@ -28,7 +28,9 @@ const StudentSortPopover = ({
   resetSort,
   popoverId,
 }: StudentSortPopoverProps) => {
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   return (
     <div
