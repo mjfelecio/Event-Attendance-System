@@ -122,6 +122,26 @@ const AddStudentFormFields = ({
         </select>
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="department" className="text-sm font-semibold text-neutral-700">
+          Department <span className="text-rose-500">*</span>
+        </label>
+        <select
+          id="department"
+          value={formData.department}
+          onChange={handleInputChange("department")}
+          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
+          disabled={isSubmitting}
+        >
+          {DEPARTMENT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.department && <span className="text-xs text-rose-600">{errors.department}</span>}
+      </div>
+
       {formData.schoolLevel === "SHS" ? (
         <div className="flex flex-col gap-1.5">
           <label htmlFor="shs-strand" className="text-sm font-semibold text-neutral-700">
@@ -155,23 +175,19 @@ const AddStudentFormFields = ({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="department" className="text-sm font-semibold text-neutral-700">
-          Department <span className="text-rose-500">*</span>
+        <label htmlFor="section" className="text-sm font-semibold text-neutral-700">
+          Section <span className="text-rose-500">*</span>
         </label>
-        <select
-          id="department"
-          value={formData.department}
-          onChange={handleInputChange("department")}
+        <input
+          id="section"
+          type="text"
+          value={formData.section}
+          onChange={handleInputChange("section")}
           className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
           disabled={isSubmitting}
-        >
-          {DEPARTMENT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {errors.department && <span className="text-xs text-rose-600">{errors.department}</span>}
+          placeholder="e.g., 1A, 2B"
+        />
+        {errors.section && <span className="text-xs text-rose-600">{errors.section}</span>}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -192,22 +208,6 @@ const AddStudentFormFields = ({
           ))}
         </select>
         {errors.house && <span className="text-xs text-rose-600">{errors.house}</span>}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="section" className="text-sm font-semibold text-neutral-700">
-          Section <span className="text-rose-500">*</span>
-        </label>
-        <input
-          id="section"
-          type="text"
-          value={formData.section}
-          onChange={handleInputChange("section")}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
-          disabled={isSubmitting}
-          placeholder="e.g., 1A, 2B"
-        />
-        {errors.section && <span className="text-xs text-rose-600">{errors.section}</span>}
       </div>
 
       <div className="flex flex-col gap-1.5">
