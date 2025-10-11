@@ -52,7 +52,13 @@ export const useAddStudentForm = ({
   const resetForm = useCallback((data?: StudentFormData) => {
     const next = mergeWithDefaults(data);
     setFormData(next);
-    setRequireMiddleName(!(next.middleName === "" || next.middleName.toUpperCase() === "N/A"));
+    const hasInitialData = Boolean(data);
+    const normalizedMiddle = next.middleName?.toUpperCase() ?? "";
+    const shouldRequireMiddleName = hasInitialData
+      ? !(normalizedMiddle === "" || normalizedMiddle === "N/A")
+      : true;
+
+    setRequireMiddleName(shouldRequireMiddleName);
     setErrors({});
     setSubmitError(null);
   }, []);
