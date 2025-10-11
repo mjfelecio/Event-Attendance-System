@@ -1,4 +1,4 @@
-import { AttendanceMethod, AttendanceStatus, Prisma, PrismaClient } from "@prisma/client";
+import { AttendanceMethod, AttendanceStatus, Prisma, PrismaClient, SchoolLevel, StudentStatus, YearLevel } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -6,6 +6,13 @@ const prisma = new PrismaClient();
 function randomChoice<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
+
+const slugify = (value: string | null | undefined) =>
+  value
+    ?.toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
 async function main() {
   // Create users
@@ -86,41 +93,58 @@ async function main() {
   });
 
   // Create students
-  const studentsData: Prisma.StudentCreateInput[] = [
+  const studentsData: Array<Prisma.StudentCreateInput> = [
     {
-      id: 1,
-      name: "John Doe",
+      id: "20250000001",
+      lastName: "Doe",
+      firstName: "John",
+      middleName: "Alexander",
       shsStrand: "STEM",
       section: "A",
-      yearLevel: "GRADE_12",
-      schoolLevel: "SHS",
-      status: "ACTIVE",
+      yearLevel: YearLevel.GRADE_12,
+      schoolLevel: SchoolLevel.SHS,
+      status: StudentStatus.ACTIVE,
       contactNumber: "09171234567",
+      department: "Academic",
+      departmentSlug: slugify("Academic") ?? undefined,
     },
     {
-      id: 2,
-      name: "Jane Smith",
+      id: "20250000002",
+      lastName: "Smith",
+      firstName: "Jane",
+      middleName: "Louise",
       collegeProgram: "Computer Science",
       section: "B",
-      yearLevel: "YEAR_3",
-      schoolLevel: "COLLEGE",
-      status: "ACTIVE",
+      yearLevel: YearLevel.YEAR_3,
+      schoolLevel: SchoolLevel.COLLEGE,
+      status: StudentStatus.ACTIVE,
       contactNumber: "09179876543",
+      department: "CS",
+      departmentSlug: slugify("CS") ?? undefined,
+      house: "Giallio",
+      houseSlug: slugify("Giallio") ?? undefined,
     },
     {
-      id: 3,
-      name: "Alice Tan",
+      id: "20250000003",
+      lastName: "Tan",
+      firstName: "Alice",
       shsStrand: "ABM",
       section: "C",
-      yearLevel: "GRADE_11",
-      schoolLevel: "SHS",
-      status: "ACTIVE",
+      yearLevel: YearLevel.GRADE_11,
+      schoolLevel: SchoolLevel.SHS,
+      status: StudentStatus.ACTIVE,
+      department: "Academic",
+      departmentSlug: slugify("Academic") ?? undefined,
     },
   ];
 
-  const students = await prisma.student.createMany({
-    data: studentsData,
-  });
+  for (const student of studentsData) {
+    await prisma.student.upsert({
+      where: { id: student.id },
+      update: student,
+      create: student,
+    });
+  }
 
   // Fetch all events and students
   const allEvents = await prisma.event.findMany();
