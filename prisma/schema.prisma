@@ -26,8 +26,10 @@ model Event {
 }
 
 model Student {
-  id             Int           @id
-  name           String
+  id             String         @id
+  lastName       String
+  firstName      String
+  middleName     String?
   shsStrand      String? // required if schoolLevel = SHS
   collegeProgram String? // required if schoolLevel = COLLEGE
   section        String
@@ -35,6 +37,10 @@ model Student {
   schoolLevel    SchoolLevel
   status         StudentStatus @default(ACTIVE)
   contactNumber  String?
+  department     String?
+  departmentSlug String?
+  house          String?
+  houseSlug      String?
   Record         Record[]
 
   createdAt DateTime @default(now())
@@ -45,7 +51,7 @@ model Record {
   id        String           @id @default(cuid())
   eventId   String
   event     Event            @relation(fields: [eventId], references: [id])
-  studentId Int
+  studentId String
   student   Student          @relation(fields: [studentId], references: [id])
   status    AttendanceStatus @default(PRESENT)
   method    AttendanceMethod
