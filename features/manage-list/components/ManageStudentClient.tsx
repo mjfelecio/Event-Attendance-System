@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import StudentTable from "@/features/manage-list/components/StudentTable";
 import StudentManageToolbar from "@/features/manage-list/components/StudentManageToolbar";
-import AddStudentDialog, {
-  type StudentFormData,
-} from "@/features/manage-list/components/AddStudentDialog";
+import AddStudentDialog from "@/features/manage-list/components/AddStudentDialog";
+import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
 import { useStudentTableControls } from "@/features/manage-list/hooks/useStudentTableControls";
 import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
 
