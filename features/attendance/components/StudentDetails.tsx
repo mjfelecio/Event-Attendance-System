@@ -8,7 +8,7 @@ type Props = {
 const StudentDetails = ({ data }: Props) => {
   if (!data) {
     return (
-      <div className="flex-1 flex rounded-md bg-gray-100 p-6 overflow-y-auto items-center justify-center">
+      <div className="flex-1 flex rounded-md bg-white border-2 p-6 overflow-y-auto items-center justify-center">
         <p className="text-gray-500 flex items-center gap-2 text-3xl">
           <FaUser className="text-gray-400" />
           No Student Found
@@ -31,7 +31,7 @@ const StudentDetails = ({ data }: Props) => {
   } = data;
 
   return (
-    <div className="flex-1 rounded-md bg-gray-100 p-6 overflow-y-auto">
+    <div className="flex-1 rounded-md bg-white border-2 p-6 overflow-y-auto">
       <h2 className="text-xl font-semibold mb-4">Student Details</h2>
       <div className="space-y-3 text-gray-700">
         <div>

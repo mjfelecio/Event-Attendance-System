@@ -11,8 +11,8 @@ const ScannerSection = () => {
 
   return (
     <div className="flex min-h-[400px] gap-4 border-2 border-gray-300 w-full rounded-md p-4">
-      <Scanner onRead={setScannedValue} />
-      <StudentDetails data={studentInfo} />
+        <Scanner onRead={setScannedValue} />
+        <StudentDetails data={studentInfo} />
     </div>
   );
 };

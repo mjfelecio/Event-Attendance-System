@@ -17,7 +17,7 @@ const Scanner = ({ onRead }: Props) => {
   const [cameraOpen, setCameraOpen] = useState(false);
 
   return (
-    <div className="flex-2 bg-gray-300 rounded-md flex flex-col items-center justify-center text-white">
+    <div className="flex-2 h-full bg-white border-2 rounded-md flex flex-col items-center justify-center text-white">
       {cameraOpen ? (
         <div className="overflow-hidden rounded-md relative">
           <BarcodeScanner
@@ -30,24 +30,23 @@ const Scanner = ({ onRead }: Props) => {
             onClick={() => setCameraOpen(false)}
             className="absolute top-4 right-4"
           >
-            <BiSolidCameraOff size={64} />
+            <BiSolidCameraOff size={64} color="black" />
           </div>
         </div>
       ) : (
-        <>
-          <IoCameraOutline size={320} />
-          <p className="text-2xl font-medium">
+        <div className="py-4 h-full flex flex-col items-center justify-center">
+          <IoCameraOutline size={260} color="black" />
+          <p className="text-2xl font-medium text-gray-500">
             Turn on camera to start attendance
           </p>
           <Button
             onClick={() => setCameraOpen((prev) => !prev)}
-            size={"lg"}
-            variant={"secondary"}
-            className="my-4 text-xl"
+            size={"default"}
+            className="mt-2 mb-4 text-xl"
           >
             Open Camera
           </Button>
-        </>
+        </div>
       )}
     </div>
   );
