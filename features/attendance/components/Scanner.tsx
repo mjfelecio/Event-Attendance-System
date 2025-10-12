@@ -17,7 +17,7 @@ const Scanner = ({ onRead }: Props) => {
   const [cameraOpen, setCameraOpen] = useState(false);
 
   return (
-    <div className="flex-1 max-h-96 bg-gray-300 rounded-md flex flex-col items-center justify-center text-white">
+    <div className="flex-2 bg-gray-300 rounded-md flex flex-col items-center justify-center text-white">
       {cameraOpen ? (
         <div className="overflow-hidden rounded-md relative">
           <BarcodeScanner
