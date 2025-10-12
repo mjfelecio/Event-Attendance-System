@@ -1,13 +1,14 @@
 "use client";
 
 import ButtonWithIcon from "@/globals/components/shared/ButtonWithIcon";
-import React from "react";
+import React, { useMemo } from "react";
 import { PiExport } from "react-icons/pi";
 import DataCard from "./DataCard";
-import ComboBox from "@/globals/components/shared/ComboBox";
+import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { FaUserGroup } from "react-icons/fa6";
 import { VscPercentage } from "react-icons/vsc";
+import useEvents from "@/globals/hooks/useEvents";
 
 type Props = {
   selectedEvent: string;
@@ -15,6 +16,13 @@ type Props = {
 };
 
 const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
+  const { data } = useEvents();
+
+  const eventChoices: ComboBoxValue[] = useMemo(() => {
+    if (data) return data?.map((e) => ({ value: e.id, label: e.title }));
+    else return [];
+  }, [data]);
+
   return (
     <div className="flex flex-col gap-4">
       {/* Top Part of Header */}
@@ -34,9 +42,9 @@ const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
       <div className="flex justify-between gap-6">
         {/* Event Selection Dropdown */}
         <div className="border-2 border-gray-300 rounded-md p-3 flex flex-col gap-2">
-          <p className="font-medium mt-2">Select Event</p>
+          <p className="font-medium ml-1 text-lg">Select Event</p>
           <ComboBox
-            choices={[{ value: "event-1", label: "Event 1" }]}
+            choices={eventChoices}
             selectedValue={selectedEvent}
             onSelect={onChangeEvent}
             placeholder="Select an event"
