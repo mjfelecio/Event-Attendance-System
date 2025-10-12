@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Event, NewEvent } from "@/globals/types/events";
 
-type EventAPI = Omit<Event, "start" | "end" | "created_at" | "updated_at"> & {
+type EventAPI = Omit<Event, "start" | "end" | "createdAt" | "updatedAt"> & {
   start: string;
   end: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // Transform function to make sure that the dates are actually a Date object
@@ -13,8 +13,8 @@ const transformEvent = (e: EventAPI): Event => ({
   ...e,
   start: new Date(e.start),
   end: new Date(e.end),
-  created_at: new Date(e.created_at),
-  updated_at: new Date(e.updated_at),
+  createdAt: new Date(e.createdAt),
+  updatedAt: new Date(e.updatedAt),
 });
 
 // Fetch
