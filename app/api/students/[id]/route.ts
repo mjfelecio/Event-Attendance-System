@@ -1,14 +1,48 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
-import { mapStudentToRow, mapStudentToSource, slugify } from "@/features/manage-list/utils/mapStudentToRow";
+import {
+  mapStudentToRow,
+  mapStudentToSource,
+  slugify,
+} from "@/features/manage-list/utils/mapStudentToRow";
 import { Prisma } from "@prisma/client";
 import { studentUpdateSchema } from "@/features/manage-list/utils/studentSchemas";
 
 const createSlugPayload = (data: { department?: string; house?: string }) => {
-  const departmentSlug = data.department ? slugify(data.department) ?? null : null;
+  const departmentSlug = data.department
+    ? slugify(data.department) ?? null
+    : null;
   const houseSlug = data.house ? slugify(data.house) ?? null : null;
   return { departmentSlug, houseSlug };
 };
+
+// Fetching a single student by id
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
+
+  try {
+    const student = await prisma.student.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!student) {
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(student);
+  } catch (error) {
+    console.error("Error fetching student:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch student" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PATCH(
   request: Request,
@@ -30,7 +64,8 @@ export async function PATCH(
         middleName: data.middleName,
         schoolLevel: data.schoolLevel,
         shsStrand: data.schoolLevel === "SHS" ? data.shsStrand : null,
-        collegeProgram: data.schoolLevel === "COLLEGE" ? data.collegeProgram : null,
+        collegeProgram:
+          data.schoolLevel === "COLLEGE" ? data.collegeProgram : null,
         section: data.section,
         yearLevel: data.yearLevel,
         status: data.status,
@@ -53,11 +88,17 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
-        return NextResponse.json({ message: "Student not found." }, { status: 404 });
+        return NextResponse.json(
+          { message: "Student not found." },
+          { status: 404 }
+        );
       }
     }
 
-    return NextResponse.json({ message: "Failed to update student." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Failed to update student." },
+      { status: 500 }
+    );
   }
 }
 
@@ -73,10 +114,16 @@ export async function DELETE(
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
-        return NextResponse.json({ message: "Student not found." }, { status: 404 });
+        return NextResponse.json(
+          { message: "Student not found." },
+          { status: 404 }
+        );
       }
     }
 
-    return NextResponse.json({ message: "Failed to delete student." }, { status: 500 });
+    return NextResponse.json(
+      { message: "Failed to delete student." },
+      { status: 500 }
+    );
   }
 }
