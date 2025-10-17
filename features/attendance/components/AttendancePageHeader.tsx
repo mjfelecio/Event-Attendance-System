@@ -3,16 +3,17 @@
 import ButtonWithIcon from "@/globals/components/shared/ButtonWithIcon";
 import React, { useMemo } from "react";
 import { PiExport } from "react-icons/pi";
-import DataCard from "./DataCard";
+import DataCard from "@/features/attendance/components/DataCard";
 import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { FaUserGroup } from "react-icons/fa6";
 import { VscPercentage } from "react-icons/vsc";
 import useEvents from "@/globals/hooks/useEvents";
+import { Event } from "@/globals/types/events";
 
 type Props = {
-  selectedEvent: string;
-  onChangeEvent: (event: string) => void;
+  selectedEvent: Event | null;
+  onChangeEvent: (event: Event) => void;
 };
 
 const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
@@ -22,6 +23,16 @@ const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
     if (data) return data?.map((e) => ({ value: e.id, label: e.title }));
     else return [];
   }, [data]);
+
+  const handleSelectEvent = (eventId: string) => {
+    const event = data?.find((e) => e.id === eventId);
+    if (!event) {
+      console.log("Selected event was not in the list");
+      return;
+    }
+
+    onChangeEvent(event);
+  } 
 
   return (
     <div className="flex flex-col gap-4">
@@ -45,8 +56,8 @@ const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
           <p className="font-medium ml-1 text-lg">Select Event</p>
           <ComboBox
             choices={eventChoices}
-            selectedValue={selectedEvent}
-            onSelect={onChangeEvent}
+            selectedValue={selectedEvent?.id ?? ""}
+            onSelect={handleSelectEvent}
             placeholder="Select an event"
             searchFallbackMsg="No results"
           />
