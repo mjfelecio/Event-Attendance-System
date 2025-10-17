@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Student } from "@/globals/types/students";
+import { Student, StudentAttendanceRecord } from "@/globals/types/students";
 
-export const columns: ColumnDef<Student>[] = [
+export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
     accessorKey: "id",
     header: "Student ID",
@@ -9,18 +9,6 @@ export const columns: ColumnDef<Student>[] = [
   {
     accessorKey: "fullName",
     header: "Full Name",
-    accessorFn: (row) => {
-      // Construct full name, handling optional middle name
-      const middleInitial = row.middleName
-        ? `${row.middleName.charAt(0)}.`
-        : "";
-
-      return `${row.firstName} ${middleInitial} ${row.lastName}`.trim();
-    },
-    cell: ({ getValue }) => {
-      const fullName = getValue() as string;
-      return fullName;
-    },
   },
   {
     accessorKey: "schoolLevel",
@@ -33,9 +21,21 @@ export const columns: ColumnDef<Student>[] = [
   {
     accessorKey: "timestamp",
     header: "Timestamp",
+    accessorFn: (row) => {
+      return new Date(row.timestamp).toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+    },
+    cell: ({ getValue }) => {
+      const timeStamp = getValue() as string;
+      return timeStamp;
+    },
   },
   {
-		id: "actions",
+    id: "actions",
     header: "Actions",
   },
 ];

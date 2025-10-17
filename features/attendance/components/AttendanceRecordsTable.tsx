@@ -1,18 +1,29 @@
 "use client";
 
 import { DataTable } from "@/globals/components/shared/DataTable";
-import useStudents from "@/globals/hooks/useStudents";
 import { columns } from "@/features/attendance/constants/table";
 import SortButton from "@/features/attendance/components/SortButton";
 import FilterButton from "@/features/attendance/components/FilterButton";
 import SearchBar from "@/features/attendance/components/SearchBar";
 import { useState } from "react";
+import { Event } from "@/globals/types/events";
+import { useEventAttendanceRecords } from "@/globals/hooks/useRecords";
 
-const AttendanceRecordsTable = () => {
-  const { data } = useStudents();
-  const records = data ?? [];
+type Props = {
+  selectedEvent: Event | null;
+};
 
+const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
+  if (!selectedEvent)
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 border-2 border-gray-300 w-full rounded-md p-6">
+        <h3 className="text-3xl font-semibold">No Records</h3>
+      </div>
+    );
+
+  const { data } = useEventAttendanceRecords(selectedEvent.id);
   const [query, setQuery] = useState("");
+  const records = data ?? [];
 
   return (
     <div className="flex flex-col gap-4 border-2 border-gray-300 w-full rounded-md px-4 pt-4">

@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Record, NewRecord } from "@/globals/types/records";
+import { Event } from "../types/events";
+import { StudentAttendanceRecord } from "../types/students";
 
 type RecordAPI = Omit<Record, "createdAt" | "updatedAt"> & {
   createdAt: string;
@@ -13,13 +15,15 @@ const transformRecord = (r: RecordAPI): Record => ({
   updatedAt: new Date(r.updatedAt),
 });
 
-// Fetch all records
-export const fetchRecords = async (): Promise<Record[]> => {
-  const res = await fetch("/api/records");
-  if (!res.ok) throw new Error("Failed to fetch records");
+// Fetch
+export const fetchEventRecords = async (
+  eventId: string
+): Promise<StudentAttendanceRecord[]> => {
+  const res = await fetch(`/api/events/${eventId}/records`);
+  if (!res.ok) throw new Error("Failed to fetch event records");
 
-  const data: RecordAPI[] = await res.json();
-  return data.map(transformRecord);
+  const data: StudentAttendanceRecord[] = await res.json();
+  return data;
 };
 
 // Save (Add or Edit) a record
@@ -61,11 +65,9 @@ export const useDeleteRecord = () => {
   });
 };
 
-const useRecords = () => {
+export const useEventAttendanceRecords = (eventId: string) => {
   return useQuery({
-    queryKey: ["records"],
-    queryFn: fetchRecords,
+    queryKey: ["event", eventId, "records"],
+    queryFn: ({ queryKey }) => fetchEventRecords(queryKey[1]),
   });
 };
-
-export default useRecords;
