@@ -15,7 +15,7 @@ type Props = {
 const ScannerSection = ({ selectedEvent }: Props) => {
   const [scannedValue, setScannedValue] = useState("");
   const { data: studentInfo } = useStudent(scannedValue);
-  const { mutate: saveRecord } = useSaveRecord();
+  const { mutate: saveRecord } = useSaveRecord(selectedEvent?.id || "");
 
   const handleScanResult = (result: string) => {
     setScannedValue(result);
@@ -25,8 +25,8 @@ const ScannerSection = ({ selectedEvent }: Props) => {
     // TODO: Differentiate between status based on time or excused
     if (!selectedEvent) {
       console.error("Failed to record attendance: No event selected");
-      return;      
-    };
+      return;
+    }
 
     if (!studentInfo || String(studentInfo.id) !== String(scannedValue)) {
       console.error("Found no student with this id: " + scannedValue);
@@ -51,7 +51,9 @@ const ScannerSection = ({ selectedEvent }: Props) => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] border-2 border-gray-300 w-full rounded-md p-4">
         <h1 className="text-4xl">No Event Selected</h1>
-        <h3 className="text-md text-gray-500">Select an event first to start attendance</h3>
+        <h3 className="text-md text-gray-500">
+          Select an event first to start attendance
+        </h3>
       </div>
     );
   }

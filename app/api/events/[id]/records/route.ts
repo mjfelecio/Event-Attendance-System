@@ -14,8 +14,8 @@ export async function GET(
     const recordsWithStudent: any = await prisma.record.findMany({
       where: { eventId: eventId },
       select: {
-        eventId: true,
         id: true,
+        eventId: true,
         studentId: true,
         createdAt: true,
         student: {
@@ -33,6 +33,7 @@ export async function GET(
     const records: StudentAttendanceRecord[] = recordsWithStudent.map(
       (r: any) => ({
         id: r.id,
+        eventId: r.eventId,
         studentId: r.studentId,
         fullName: fullName(
           r.student.firstName,

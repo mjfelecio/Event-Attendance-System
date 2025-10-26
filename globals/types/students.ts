@@ -6,6 +6,7 @@ export type NewStudent = Omit<Student, "id" | "created_at" | "updated_at">
 
 export type StudentAttendanceRecord = {
 	id: string;
+	eventId: string,
 	studentId: string,
 	fullName: string,
 	schoolLevel: SchoolLevel,

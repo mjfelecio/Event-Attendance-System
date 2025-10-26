@@ -57,10 +57,9 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
     cell({ row }) {
-      const studentId = row.original.studentId;
-      const recordId = row.original.id;
-      const { mutate: deleteRecord } = useDeleteRecord();
-      const { mutate: updateStatus } = useUpdateRecordStatus();
+      const { id: recordId, eventId, studentId } = row.original;
+      const { mutate: deleteRecord } = useDeleteRecord(eventId);
+      const { mutate: updateStatus } = useUpdateRecordStatus(eventId);
 
       const handleActions = async (status: AttendanceStatus) => {
         try {

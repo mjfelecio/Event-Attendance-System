@@ -21,7 +21,6 @@ const updateRecordStatus = async (
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
   });
-
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.error || "Failed to update record");
@@ -36,7 +35,6 @@ const saveRecord = async (record: Record | NewRecord) => {
     body: JSON.stringify(record),
     headers: { "Content-Type": "application/json" },
   });
-
   if (!res.ok) throw new Error("Failed to save record");
   return await res.json();
 };
@@ -47,21 +45,20 @@ const deleteRecord = async (id: string) => {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
   });
-
   if (!res.ok) throw new Error("Failed to delete record");
   return await res.json();
 };
 
 // Custom hooks
-export const useSaveRecord = () => {
+export const useSaveRecord = (eventId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: saveRecord,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["records"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event", eventId, "records"] }),
   });
 };
 
-export const useUpdateRecordStatus = () => {
+export const useUpdateRecordStatus = (eventId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -71,15 +68,15 @@ export const useUpdateRecordStatus = () => {
       recordId: string;
       status: AttendanceStatus;
     }) => updateRecordStatus(recordId, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["records"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event", eventId, "records"] }),
   });
 };
 
-export const useDeleteRecord = () => {
+export const useDeleteRecord = (eventId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteRecord,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["records"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event", eventId, "records"] }),
   });
 };
 
