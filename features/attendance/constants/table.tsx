@@ -1,9 +1,14 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Student, StudentAttendanceRecord } from "@/globals/types/students";
+import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
 import { FaCheck, FaClock, FaTrash } from "react-icons/fa6";
-import { FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
+import {
+  useDeleteRecord,
+  useUpdateRecordStatus,
+} from "@/globals/hooks/useRecords";
+import { AttendanceStatus } from "@prisma/client";
+import { FaTimes } from "react-icons/fa";
 
 export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
@@ -37,55 +42,69 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
     accessorKey: "timestamp",
     header: () => <div className="text-center">Timestamp</div>,
-    accessorFn: (row) => {
-      return new Date(row.timestamp).toLocaleString("en-US", {
+    accessorFn: (row) =>
+      new Date(row.timestamp).toLocaleString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
         hour12: true,
-      });
-    },
-    cell: ({ getValue }) => {
-      const timeStamp = getValue() as string;
-      return <div className="text-center">{timeStamp}</div>;
-    },
+      }),
+    cell: ({ getValue }) => (
+      <div className="text-center">{getValue() as string}</div>
+    ),
   },
   {
     id: "actions",
-    header: () => <div className="text-center">Student ID</div>,
+    header: () => <div className="text-center">Actions</div>,
     cell({ row }) {
       const studentId = row.original.studentId;
+      const { mutate: handleDelete } = useDeleteRecord();
+      const { mutate: updateStatus } = useUpdateRecordStatus();
+
+      const handleActions = async (status: AttendanceStatus) => {
+        try {
+          updateStatus({ recordId: studentId, status });
+          toast.success(
+            <p>
+              {status}: {studentId}
+            </p>,
+            { position: "top-right" }
+          );
+        } catch (error) {
+          console.error("Error updating status:", error);
+        }
+      };
 
       return (
         <div className="flex gap-1 items-center justify-center">
           <Button
-            onClick={() => handleActions("present", studentId)}
-            variant={"ghost"}
-            size={"sm"}
+            onClick={() => handleActions("PRESENT")}
+            variant="ghost"
+            size="sm"
             title="Present"
           >
             <FaCheck color="oklch(72.3% 0.219 149.579)" />
           </Button>
           <Button
-            onClick={() => handleActions("excuse", studentId)}
-            variant={"ghost"}
-            size={"sm"}
+            onClick={() => handleActions("EXCUSED")}
+            variant="ghost"
+            size="sm"
             title="Excuse"
           >
             <FaClock color="oklch(82.8% 0.189 84.429)" />
           </Button>
           <Button
-            onClick={() => handleActions("absent", studentId)}
-            variant={"ghost"}
-            size={"sm"}
+            onClick={() => handleActions("ABSENT")}
+            variant="ghost"
+            size="sm"
             title="Absent"
           >
             <FaTimes color="red" />
           </Button>
           <Button
-            onClick={() => handleActions("clear", studentId)}
-            variant={"ghost"}
-            size={"sm"}
+            onClick={() => handleDelete(studentId)}
+            variant="ghost"
+            size="sm"
             title="Clear"
           >
             <FaTrash color="gray" />
@@ -95,17 +114,3 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     },
   },
 ];
-
-function handleActions(
-  type: "present" | "excuse" | "absent" | "clear",
-  studentId: string
-) {
-  toast.success(
-    <p>
-      {type}d: {studentId}
-    </p>,
-    {
-      position: "top-right",
-    }
-  );
-}
