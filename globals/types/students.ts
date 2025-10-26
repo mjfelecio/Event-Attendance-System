@@ -5,6 +5,7 @@ export type Student = PrismaStudent;
 export type NewStudent = Omit<Student, "id" | "created_at" | "updated_at">
 
 export type StudentAttendanceRecord = {
+	id: string;
 	studentId: string,
 	fullName: string,
 	schoolLevel: SchoolLevel,

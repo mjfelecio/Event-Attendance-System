@@ -7,27 +7,20 @@ export async function PATCH(
   request: Request,
   { params }: { params: { id: string; type: AttendanceStatus } }
 ) {
-  const { id: studentId, type } = await params;
+  const { id, type } = await params;
 
   try {
-    const existingRecord = await prisma.record.findFirstOrThrow({
-      where: { studentId },
-      select: { id: true }
+    const updatedRecord = await prisma.record.update({
+      where: { id },
+      data: { status: type }
     });
 
-    if (!existingRecord) {
+    if (!updatedRecord) {
       return NextResponse.json(
         { error: "Record not found" }, 
         { status: 404 }
       );
     }
-
-    const updatedRecord = await prisma.record.update({
-      where: { id: existingRecord.id },
-      data: { 
-        status: type, 
-      }
-    });
 
     return NextResponse.json(updatedRecord, { status: 200 });
   } catch (error) {
