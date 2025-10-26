@@ -1,3 +1,5 @@
+"use client"
+
 import { Filter } from "lucide-react";
 import React, { useState } from "react";
 
