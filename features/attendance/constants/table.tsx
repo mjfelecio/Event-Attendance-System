@@ -7,23 +7,35 @@ import { FaTimes } from "react-icons/fa";
 export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
     accessorKey: "id",
-    header: "Student ID",
+    header: () => <div className="text-center">Student ID</div>,
+    cell: ({ getValue }) => (
+      <div className="text-center">{getValue() as string}</div>
+    ),
   },
   {
     accessorKey: "fullName",
-    header: "Full Name",
+    header: () => <div className="text-center">Full Name</div>,
+    cell: ({ getValue }) => (
+      <div className="text-center">{getValue() as string}</div>
+    ),
   },
   {
     accessorKey: "schoolLevel",
-    header: "School Level",
+    header: () => <div className="text-center">School Level</div>,
+    cell: ({ getValue }) => (
+      <div className="text-center">{getValue() as string}</div>
+    ),
   },
   {
     accessorKey: "section",
-    header: "Section",
+    header: () => <div className="text-center">Section</div>,
+    cell: ({ getValue }) => (
+      <div className="text-center">{getValue() as string}</div>
+    ),
   },
   {
     accessorKey: "timestamp",
-    header: "Timestamp",
+    header: () => <div className="text-center">Timestamp</div>,
     accessorFn: (row) => {
       return new Date(row.timestamp).toLocaleString("en-US", {
         hour: "2-digit",
@@ -34,7 +46,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     },
     cell: ({ getValue }) => {
       const timeStamp = getValue() as string;
-      return timeStamp;
+      return <div className="text-center">{timeStamp}</div>;
     },
   },
   {
