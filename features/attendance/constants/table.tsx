@@ -3,10 +3,11 @@ import { Student, StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
 import { FaCheck, FaClock, FaTrash } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
+import { toast } from "sonner";
 
 export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
-    accessorKey: "id",
+    accessorKey: "studentId",
     header: () => <div className="text-center">Student ID</div>,
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
@@ -53,18 +54,40 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     id: "actions",
     header: () => <div className="text-center">Student ID</div>,
     cell({ row }) {
+      const studentId = row.original.studentId;
+
       return (
         <div className="flex gap-1 items-center justify-center">
-          <Button variant={"ghost"} size={"sm"} title="Present">
+          <Button
+            onClick={() => handleActions("present", studentId)}
+            variant={"ghost"}
+            size={"sm"}
+            title="Present"
+          >
             <FaCheck color="oklch(72.3% 0.219 149.579)" />
           </Button>
-          <Button variant={"ghost"} size={"sm"} title="Excuse">
+          <Button
+            onClick={() => handleActions("excuse", studentId)}
+            variant={"ghost"}
+            size={"sm"}
+            title="Excuse"
+          >
             <FaClock color="oklch(82.8% 0.189 84.429)" />
           </Button>
-          <Button variant={"ghost"} size={"sm"} title="Absent">
+          <Button
+            onClick={() => handleActions("absent", studentId)}
+            variant={"ghost"}
+            size={"sm"}
+            title="Absent"
+          >
             <FaTimes color="red" />
           </Button>
-          <Button variant={"ghost"} size={"sm"} title="Clear">
+          <Button
+            onClick={() => handleActions("clear", studentId)}
+            variant={"ghost"}
+            size={"sm"}
+            title="Clear"
+          >
             <FaTrash color="gray" />
           </Button>
         </div>
@@ -72,3 +95,17 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     },
   },
 ];
+
+function handleActions(
+  type: "present" | "excuse" | "absent" | "clear",
+  studentId: string
+) {
+  toast.success(
+    <p>
+      {type}d: {studentId}
+    </p>,
+    {
+      position: "top-right",
+    }
+  );
+}
