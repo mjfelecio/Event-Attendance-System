@@ -1,7 +1,6 @@
 import { prisma } from "@/globals/libs/prisma";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { fullName } from "@/globals/utils/formatting";
-import { id } from "date-fns/locale";
 import { NextResponse } from "next/server";
 
 // Fetch all attendance record of a specific event
@@ -31,14 +30,20 @@ export async function GET(
       },
     });
 
-    const records: StudentAttendanceRecord[] = recordsWithStudent.map((r: any) => ({
-      id: r.id,
-      studentId: r.studentId,
-      fullName: fullName(r.student.firstName, r.student.middleName, r.student.lastName),
-      schoolLevel: r.student.schoolLevel,
-      section: r.student.section,
-      timestamp: r.createdAt,
-    }));
+    const records: StudentAttendanceRecord[] = recordsWithStudent.map(
+      (r: any) => ({
+        id: r.id,
+        studentId: r.studentId,
+        fullName: fullName(
+          r.student.firstName,
+          r.student.middleName,
+          r.student.lastName
+        ),
+        schoolLevel: r.student.schoolLevel,
+        section: r.student.section,
+        timestamp: r.createdAt,
+      })
+    );
 
     return NextResponse.json(records, { status: 200 });
   } catch (error) {
