@@ -43,9 +43,8 @@ const saveRecord = async (record: Record | NewRecord) => {
 
 // Delete a record
 const deleteRecord = async (id: string) => {
-  const res = await fetch("/api/records", {
+  const res = await fetch(`/api/records/${id}`, {
     method: "DELETE",
-    body: JSON.stringify({ id }),
     headers: { "Content-Type": "application/json" },
   });
 

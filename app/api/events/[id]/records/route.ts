@@ -8,7 +8,7 @@ export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const eventId = await params.id;
+  const { id: eventId } = await params;
 
   try {
     const recordsWithStudent: any = await prisma.record.findMany({

@@ -58,12 +58,13 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     header: () => <div className="text-center">Actions</div>,
     cell({ row }) {
       const studentId = row.original.studentId;
-      const { mutate: handleDelete } = useDeleteRecord();
+      const recordId = row.original.id;
+      const { mutate: deleteRecord } = useDeleteRecord();
       const { mutate: updateStatus } = useUpdateRecordStatus();
 
       const handleActions = async (status: AttendanceStatus) => {
         try {
-          updateStatus({ recordId: studentId, status });
+          updateStatus({ recordId, status });
           toast.success(
             <p>
               {status}: {studentId}
@@ -73,6 +74,11 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
         } catch (error) {
           console.error("Error updating status:", error);
         }
+      };
+
+      const handleDelete = async () => {
+        deleteRecord(recordId);
+        toast.success(<p>Deleted {studentId}</p>, { position: "top-right" });
       };
 
       return (
@@ -102,7 +108,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
             <FaTimes color="red" />
           </Button>
           <Button
-            onClick={() => handleDelete(studentId)}
+            onClick={handleDelete}
             variant="ghost"
             size="sm"
             title="Clear"
