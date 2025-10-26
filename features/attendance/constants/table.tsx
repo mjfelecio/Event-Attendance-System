@@ -54,6 +54,13 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     ),
   },
   {
+    accessorKey: "status",
+    header: () => <div className="text-center">Status</div>,
+    cell: ({ getValue }) => (
+      <div className="text-center">{getValue() as string}</div>
+    ),
+  },
+  {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
     cell({ row }) {

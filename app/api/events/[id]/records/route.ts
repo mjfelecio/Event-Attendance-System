@@ -15,6 +15,7 @@ export async function GET(
       where: { eventId: eventId },
       select: {
         id: true,
+        status: true,
         eventId: true,
         studentId: true,
         createdAt: true,
@@ -33,6 +34,7 @@ export async function GET(
     const records: StudentAttendanceRecord[] = recordsWithStudent.map(
       (r: any) => ({
         id: r.id,
+        status: r.status,
         eventId: r.eventId,
         studentId: r.studentId,
         fullName: fullName(
