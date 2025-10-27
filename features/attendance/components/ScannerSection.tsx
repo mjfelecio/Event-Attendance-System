@@ -7,6 +7,7 @@ import StudentDetails from "@/features/attendance/components/StudentDetails";
 import { useSaveRecord } from "@/globals/hooks/useRecords";
 import { NewRecord } from "@/globals/types/records";
 import { Event } from "@/globals/types/events";
+import { toast } from "sonner";
 
 type Props = {
   selectedEvent: Event | null;
@@ -14,22 +15,21 @@ type Props = {
 
 const ScannerSection = ({ selectedEvent }: Props) => {
   const [scannedValue, setScannedValue] = useState("");
-  const { data: studentInfo } = useStudent(scannedValue);
-  const { mutate: saveRecord } = useSaveRecord(selectedEvent?.id || "");
+  const { data: studentInfo, isError: isFetchingStudentError } = useStudent(scannedValue);
+  const { mutate: saveRecord, isError } = useSaveRecord(selectedEvent?.id || "");
 
   const handleScanResult = (result: string) => {
     setScannedValue(result);
-  };
 
-  const recordAttendance = () => {
     // TODO: Differentiate between status based on time or excused
     if (!selectedEvent) {
       console.error("Failed to record attendance: No event selected");
+      toast.error("Failed to record attendance: No event selected");
       return;
     }
 
-    if (!studentInfo || String(studentInfo.id) !== String(scannedValue)) {
-      console.error("Found no student with this id: " + scannedValue);
+    if (!studentInfo || isFetchingStudentError) {
+      toast.error(`Found no student with id: {${scannedValue}}`);
       return;
     }
 
@@ -41,11 +41,14 @@ const ScannerSection = ({ selectedEvent }: Props) => {
     };
 
     saveRecord(record);
-  };
 
-  useEffect(() => {
-    if (scannedValue) recordAttendance();
-  }, [scannedValue, studentInfo]);
+    if (isError) {
+      toast.error(`Found duplicate student with id: {${scannedValue}}`);
+      return;
+    }
+    toast.success(`Successfully recorded attendance of student ${scannedValue}`)
+    setScannedValue("")
+  };
 
   if (!selectedEvent) {
     return (
