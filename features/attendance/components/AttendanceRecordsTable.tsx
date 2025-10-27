@@ -14,16 +14,16 @@ type Props = {
 };
 
 const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
+  const { data } = useEventAttendanceRecords(selectedEvent?.id);
+  const [query, setQuery] = useState("");
+  const records = data ?? [];
+
   if (!selectedEvent)
     return (
       <div className="flex flex-col items-center justify-center gap-4 border-2 border-gray-300 w-full rounded-md p-6">
         <h3 className="text-3xl font-semibold">No Records</h3>
       </div>
     );
-
-  const { data } = useEventAttendanceRecords(selectedEvent.id);
-  const [query, setQuery] = useState("");
-  const records = data ?? [];
 
   return (
     <div className="flex flex-col gap-4 border-2 border-gray-300 w-full rounded-md px-4 pt-4">

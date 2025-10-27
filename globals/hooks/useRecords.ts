@@ -80,9 +80,10 @@ export const useDeleteRecord = (eventId: string) => {
   });
 };
 
-export const useEventAttendanceRecords = (eventId: string) => {
+export const useEventAttendanceRecords = (eventId?: string) => {
   return useQuery({
     queryKey: ["event", eventId, "records"],
-    queryFn: () => fetchEventRecords(eventId),
+    queryFn: () => (eventId ? fetchEventRecords(eventId) : null),
+    enabled: !!eventId,
   });
 };
