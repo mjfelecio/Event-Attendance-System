@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Scanner from "@/features/attendance/components/Scanner";
 import { useStudent } from "@/globals/hooks/useStudents";
 import StudentDetails from "@/features/attendance/components/StudentDetails";
@@ -8,6 +8,12 @@ import { useSaveRecord } from "@/globals/hooks/useRecords";
 import { NewRecord } from "@/globals/types/records";
 import { Event } from "@/globals/types/events";
 import { toast } from "sonner";
+import {
+  toastDanger,
+  toastInfo,
+  toastSuccess,
+  toastWarning,
+} from "@/globals/components/shared/toasts";
 
 type Props = {
   selectedEvent: Event | null;
@@ -15,40 +21,63 @@ type Props = {
 
 const ScannerSection = ({ selectedEvent }: Props) => {
   const [scannedValue, setScannedValue] = useState("");
-  const { data: studentInfo, isError: isFetchingStudentError } = useStudent(scannedValue);
-  const { mutate: saveRecord, isError } = useSaveRecord(selectedEvent?.id || "");
+  const {
+    data: studentInfo,
+    isError: isStudentFetchingError,
+    isFetching,
+  } = useStudent(scannedValue);
+  const { mutate: saveRecord, isPending } = useSaveRecord(
+    selectedEvent?.id || ""
+  );
 
-  const handleScanResult = (result: string) => {
-    setScannedValue(result);
+  const handleScanResult = useCallback(
+    (result: string) => {
+      if (!result) {
+        toastDanger("Invalid scan result");
+        return;
+      }
 
-    // TODO: Differentiate between status based on time or excused
-    if (!selectedEvent) {
-      console.error("Failed to record attendance: No event selected");
-      toast.error("Failed to record attendance: No event selected");
-      return;
-    }
+      setScannedValue(result);
 
-    if (!studentInfo || isFetchingStudentError) {
-      toast.error(`Found no student with id: {${scannedValue}}`);
-      return;
-    }
+      if (!selectedEvent) {
+        toastDanger("Failed to record attendance: No event selected");
+        return;
+      }
 
-    const record: NewRecord = {
-      eventId: selectedEvent?.id,
-      studentId: studentInfo.id,
-      status: "PRESENT",
-      method: "SCANNED",
-    };
+      try {
+        if (!isStudentFetchingError && !isFetching) {
+          toastDanger(`No student found with ID: ${result}`);
+          return;
+        }
 
-    saveRecord(record);
+        if (!studentInfo) {
+          return;
+        }
 
-    if (isError) {
-      toast.error(`Found duplicate student with id: {${scannedValue}}`);
-      return;
-    }
-    toast.success(`Successfully recorded attendance of student ${scannedValue}`)
-    setScannedValue("")
-  };
+        const record: NewRecord = {
+          eventId: selectedEvent?.id,
+          studentId: studentInfo.id,
+          status: "PRESENT",
+          method: "SCANNED",
+        };
+
+        saveRecord(record, {
+          onError: (error) => {
+            toastWarning(`Attendance recording failed: ${error.message}`);
+            console.error("Record save error:", error);
+          },
+          onSuccess: () => {
+            toastSuccess(`Successfully recorded attendance for ${result}`);
+            setScannedValue("");
+          },
+        });
+      } catch (error) {
+        toastDanger("Unexpected error during scanning");
+        console.error(error);
+      }
+    },
+    [scannedValue]
+  );
 
   if (!selectedEvent) {
     return (
@@ -59,6 +88,12 @@ const ScannerSection = ({ selectedEvent }: Props) => {
         </h3>
       </div>
     );
+  }
+
+  if (isPending) {
+    <div>
+      <h1 className="text-4xl">Trying to create record</h1>
+    </div>;
   }
 
   return (

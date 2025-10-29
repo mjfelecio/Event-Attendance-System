@@ -1,10 +1,11 @@
 "use client";
 
 import { Button } from "@/globals/components/shad-cn/button";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { BiSolidCameraOff } from "react-icons/bi";
 import { IoCameraOutline } from "react-icons/io5";
 import {
+  centerText,
   IDetectedBarcode,
   Scanner as QRScanner,
 } from "@yudiel/react-qr-scanner";
@@ -14,79 +15,49 @@ type Props = {
   onRead: (id: string) => void;
 };
 
-const SCAN_EVERY_NTH_FRAME = 3;
-
 const Scanner = ({ onRead }: Props) => {
   const [cameraOpen, setCameraOpen] = useState(false);
 
-  // Internal refs for debounce logic
-  const lastValueRef = useRef<string>("");
-  const frameCountRef = useRef(0);
-  const debounceUntilRef = useRef(0);
+  const lastScannedRef = useRef<{ value: string; timestamp: number }>({
+    value: "",
+    timestamp: 0,
+  });
 
-  const highlightCodeOnCanvas = (
-    detectedCodes: IDetectedBarcode[],
-    ctx: CanvasRenderingContext2D
-  ) => {
-    detectedCodes.forEach((detectedCode) => {
-      const { boundingBox, cornerPoints } = detectedCode;
-
-      // Draw bounding box
-      ctx.strokeStyle = "#00FF00";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(
-        boundingBox.x,
-        boundingBox.y,
-        boundingBox.width,
-        boundingBox.height
-      );
-
-      // Draw corner points
-      ctx.fillStyle = "#FF0000";
-      cornerPoints.forEach((point: { x: number; y: number }) => {
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
-        ctx.fill();
-      });
-    });
-  };
-
-  const handleScan = (detectedCodes: IDetectedBarcode[]) => {
-    if (!detectedCodes || detectedCodes.length === 0) return;
-
-    // Process only every Nth frame
-    frameCountRef.current = (frameCountRef.current + 1) % SCAN_EVERY_NTH_FRAME;
-    if (frameCountRef.current !== 0) return;
+  const handleScan = useCallback((detectedCodes: IDetectedBarcode[]) => {
+    if (!detectedCodes?.length) return;
 
     const now = Date.now();
-    if (now < debounceUntilRef.current) return;
-
     const rawValue = detectedCodes[0]?.rawValue?.trim();
+
     if (!rawValue) return;
 
-    // If same code scanned recently, debounce cooldown
-    if (rawValue === lastValueRef.current) {
-      debounceUntilRef.current = now + 1000; // 1 second cooldown
-      return;
+    // Check if the scannedValue is the same as the last scan.
+    // If it is, then debounce for 1 second
+    const timeSinceLastScan = now - lastScannedRef.current.timestamp;
+    const isDuplicate =
+      rawValue === lastScannedRef.current.value && timeSinceLastScan < 1000; // 2-second window
+
+    if (!isDuplicate) {
+      lastScannedRef.current = { value: rawValue, timestamp: now };
+      onRead(rawValue);
     }
-
-    lastValueRef.current = rawValue;
-    debounceUntilRef.current = now + 1200; // Set cooldown for new scan
-
-    onRead(rawValue);
-  };
+  }, []);
 
   return (
     <div className="flex-2 h-full bg-white border-2 rounded-md flex flex-col items-center justify-center text-white">
       {cameraOpen ? (
-        <div className="overflow-hidden rounded-md relative">
+        <div className="overflow-hidden rounded-md relative max-h-[600px]">
           <QRScanner
             components={{
               finder: false,
-              tracker: highlightCodeOnCanvas,
+              tracker: centerText,
+              onOff: true,
             }}
             onScan={handleScan}
             paused={!cameraOpen}
+            onError={(error) => {
+              console.log(`onError: ${error}'`);
+            }}
           />
           <div
             onClick={() => setCameraOpen(false)}
