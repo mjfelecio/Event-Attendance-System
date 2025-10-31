@@ -9,6 +9,78 @@ import {
 } from "@/globals/hooks/useRecords";
 import { AttendanceStatus } from "@prisma/client";
 import { FaTimes } from "react-icons/fa";
+import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
+
+ function ActionsCell({ row }: { row: any }) {
+  const { id: recordId, eventId, studentId } = row.original;
+  const { mutateAsync: deleteRecord, isPending: isDeleting } =
+    useDeleteRecord(eventId);
+  const { mutateAsync: updateStatus, isPending: isUpdating } =
+    useUpdateRecordStatus(eventId);
+
+  const handleActions = async (status: AttendanceStatus) => {
+    try {
+      await updateStatus({ recordId, status });
+      toastSuccess(`${status}: ${studentId}`);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toastDanger(`Failed to update status for ${studentId}`);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteRecord(recordId);
+      toastSuccess(`Deleted ${studentId}`);
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      toastDanger(`Failed to delete record for ${studentId}`);
+    }
+  };
+
+  const isLoading = isDeleting || isUpdating;
+
+  return (
+    <div className="flex gap-1 items-center justify-center">
+      <Button
+        onClick={() => handleActions("PRESENT")}
+        variant="ghost"
+        size="sm"
+        title="Present"
+        disabled={isLoading}
+      >
+        <FaCheck color="oklch(72.3% 0.219 149.579)" />
+      </Button>
+      <Button
+        onClick={() => handleActions("EXCUSED")}
+        variant="ghost"
+        size="sm"
+        title="Excuse"
+        disabled={isLoading}
+      >
+        <FaClock color="oklch(82.8% 0.189 84.429)" />
+      </Button>
+      <Button
+        onClick={() => handleActions("ABSENT")}
+        variant="ghost"
+        size="sm"
+        title="Absent"
+        disabled={isLoading}
+      >
+        <FaTimes color="red" />
+      </Button>
+      <Button
+        onClick={handleDelete}
+        variant="ghost"
+        size="sm"
+        title="Clear"
+        disabled={isLoading}
+      >
+        <FaTrash color="gray" />
+      </Button>
+    </div>
+  );
+}
 
 export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
@@ -63,66 +135,6 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
-    cell({ row }) {
-      const { id: recordId, eventId, studentId } = row.original;
-      const { mutate: deleteRecord } = useDeleteRecord(eventId);
-      const { mutate: updateStatus } = useUpdateRecordStatus(eventId);
-
-      const handleActions = async (status: AttendanceStatus) => {
-        try {
-          updateStatus({ recordId, status });
-          toast.success(
-            <p>
-              {status}: {studentId}
-            </p>,
-            { position: "top-right" }
-          );
-        } catch (error) {
-          console.error("Error updating status:", error);
-        }
-      };
-
-      const handleDelete = async () => {
-        deleteRecord(recordId);
-        toast.success(<p>Deleted {studentId}</p>, { position: "top-right" });
-      };
-
-      return (
-        <div className="flex gap-1 items-center justify-center">
-          <Button
-            onClick={() => handleActions("PRESENT")}
-            variant="ghost"
-            size="sm"
-            title="Present"
-          >
-            <FaCheck color="oklch(72.3% 0.219 149.579)" />
-          </Button>
-          <Button
-            onClick={() => handleActions("EXCUSED")}
-            variant="ghost"
-            size="sm"
-            title="Excuse"
-          >
-            <FaClock color="oklch(82.8% 0.189 84.429)" />
-          </Button>
-          <Button
-            onClick={() => handleActions("ABSENT")}
-            variant="ghost"
-            size="sm"
-            title="Absent"
-          >
-            <FaTimes color="red" />
-          </Button>
-          <Button
-            onClick={handleDelete}
-            variant="ghost"
-            size="sm"
-            title="Clear"
-          >
-            <FaTrash color="gray" />
-          </Button>
-        </div>
-      );
-    },
+    cell: ({ row }) => <ActionsCell row={row} />,
   },
 ];

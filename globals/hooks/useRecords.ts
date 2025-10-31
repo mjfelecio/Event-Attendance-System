@@ -49,12 +49,53 @@ const deleteRecord = async (id: string) => {
   return await res.json();
 };
 
-// Custom hooks
 export const useSaveRecord = (eventId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: saveRecord,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event", eventId, "records"] }),
+    onMutate: async (newRecord) => {
+      // Cancel ongoing queries
+      await queryClient.cancelQueries({
+        queryKey: ["event", eventId, "records"],
+      });
+
+      // Get previous data
+      const previousRecords = queryClient.getQueryData<Record[] | NewRecord[]>([
+        "event",
+        eventId,
+        "records",
+      ]);
+
+      // Optimistically add the new record
+      if (previousRecords) {
+        const optimisticRecord: Record | NewRecord = {
+          ...newRecord,
+          id: `temp-${Date.now()}`, // Temporary ID
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        queryClient.setQueryData(
+          ["event", eventId, "records"],
+          [...previousRecords, optimisticRecord]
+        );
+      }
+
+      return { previousRecords };
+    },
+    onError: (err, variables, context: any) => {
+      if (context?.previousRecords) {
+        queryClient.setQueryData(
+          ["event", eventId, "records"],
+          context.previousRecords
+        );
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["event", eventId, "records"],
+        exact: true,
+      }),
   });
 };
 
@@ -68,7 +109,44 @@ export const useUpdateRecordStatus = (eventId: string) => {
       recordId: string;
       status: AttendanceStatus;
     }) => updateRecordStatus(recordId, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event", eventId, "records"] }),
+    onMutate: async ({ recordId, status }) => {
+      // Cancel ongoing queries
+      await queryClient.cancelQueries({
+        queryKey: ["event", eventId, "records"],
+      });
+
+      // Get previous data
+      const previousRecords = queryClient.getQueryData<StudentAttendanceRecord[]>([
+        "event",
+        eventId,
+        "records",
+      ]);
+
+      // Optimistically update the record
+      if (previousRecords) {
+        queryClient.setQueryData(
+          ["event", eventId, "records"],
+          previousRecords.map((record) =>
+            record.id === recordId ? { ...record, status } : record
+          )
+        );
+      }
+
+      return { previousRecords };
+    },
+    onError: (err, variables, context: any) => {
+      if (context?.previousRecords) {
+        queryClient.setQueryData(
+          ["event", eventId, "records"],
+          context.previousRecords
+        );
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["event", eventId, "records"],
+        exact: true,
+      }),
   });
 };
 
@@ -76,7 +154,42 @@ export const useDeleteRecord = (eventId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteRecord,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event", eventId, "records"] }),
+    onMutate: async (recordId) => {
+      // Cancel ongoing queries
+      await queryClient.cancelQueries({
+        queryKey: ["event", eventId, "records"],
+      });
+
+      // Get previous data
+      const previousRecords = queryClient.getQueryData<StudentAttendanceRecord[]>([
+        "event",
+        eventId,
+        "records",
+      ]);
+
+      // Optimistically remove the record
+      if (previousRecords) {
+        queryClient.setQueryData(
+          ["event", eventId, "records"],
+          previousRecords.filter((record) => record.id !== recordId)
+        );
+      }
+
+      return { previousRecords };
+    },
+    onError: (err, variables, context: any) => {
+      if (context?.previousRecords) {
+        queryClient.setQueryData(
+          ["event", eventId, "records"],
+          context.previousRecords
+        );
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["event", eventId, "records"],
+        exact: true,
+      }),
   });
 };
 
