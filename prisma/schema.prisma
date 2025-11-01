@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Event {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   title       String
   location    String?
   description String?
-  category    String
+  category    EventCategory
   start       DateTime
   end         DateTime
-  allDay      Boolean  @default(false)
+  allDay      Boolean       @default(false)
 
   Record Record[]
   User   User?    @relation(fields: [userId], references: [id])
@@ -26,7 +26,7 @@ model Event {
 }
 
 model Student {
-  id             String         @id
+  id             String        @id
   lastName       String
   firstName      String
   middleName     String?
@@ -110,4 +110,16 @@ enum StudentStatus {
   INACTIVE
   GRADUATED
   DROPPED
+}
+
+enum EventCategory {
+  ALL
+  COLLEGE
+  SHS
+  DEPARTMENT
+  HOUSE
+  STRAND
+  PROGRAM
+  SECTION
+  SCHOOL_LEVEL
 }
