@@ -8,14 +8,15 @@ datasource db {
 }
 
 model Event {
-  id          String        @id @default(cuid())
-  title       String
-  location    String?
-  description String?
-  category    EventCategory
-  start       DateTime
-  end         DateTime
-  allDay      Boolean       @default(false)
+  id             String        @id @default(cuid())
+  title          String
+  location       String?
+  description    String?
+  category       EventCategory
+  start          DateTime
+  end            DateTime
+  allDay         Boolean       @default(false)
+  includedGroups String
 
   Record Record[]
   User   User?    @relation(fields: [userId], references: [id])
