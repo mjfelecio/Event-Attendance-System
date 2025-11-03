@@ -13,6 +13,7 @@ export const eventSchema = z
     title: z.string().min(1, "Title is required"),
     location: z.string().nullable(),
     category: z.enum(EventCategory),
+    includedGroups: z.array(z.string()).nullable(),
     start: z.date(),
     end: z.date(),
     description: z.string().nullable(),
@@ -41,6 +42,31 @@ export const eventSchema = z
       message: "End date must be after start date",
       path: ["end"],
     }
+  )
+  .refine(
+    (data) => {
+      const { category, includedGroups } = data;
+
+      // These categories dont need to pick any groups
+      // All = ALL Students included
+      // College = All College included
+      // SHS = All SHS included
+      const needToPickGroups = !(
+        category === "ALL" ||
+        category === "COLLEGE" ||
+        category === "SHS"
+      );
+
+      // If we don't need to pick groups, just return early
+      if (!needToPickGroups) return;
+
+      // Otherwise, includedGroups must have atleast one item
+      return includedGroups?.length !== 0;
+    },
+    {
+      message: "Atleast 1 group must be selected",
+      path: ["includedGroups"],
+    }
   );
 
 export type EventForm = z.infer<typeof eventSchema>;
@@ -49,6 +75,7 @@ const defaultValues: EventForm = {
   title: "",
   location: null,
   category: EventCategory.ALL,
+  includedGroups: [],
   start: new Date(),
   end: new Date(),
   description: null,
@@ -99,6 +126,9 @@ export function useEventForm(
         title: data.title,
         location: data.location,
         category: data.category,
+        includedGroups: data.includedGroups
+          ? JSON.stringify(data.includedGroups)
+          : null,
         description: data.description,
         start: data.start,
         end: data.end,

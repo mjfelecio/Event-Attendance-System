@@ -9,21 +9,17 @@ import { useCallback, useRef, useState } from "react";
 const CalendarPage = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"create" | "edit">("create");
-  const formData = useRef<Partial<Event>>(null);
+
+  const [formData, setFormData] = useState<Partial<Event> | null>(null);
 
   const handleDrawerOpen = useCallback((event: Partial<Event> | null) => {
-    if (event?.id) {
-      setDrawerMode("edit");
-      formData.current = event;
-    } else {
-      setDrawerMode("create");
-      formData.current = event;
-    }
+    setFormData(event);
+    setDrawerMode(event?.id ? "edit" : "create");
     setIsDrawerOpen(true);
   }, []);
 
   const handleDrawerClose = useCallback(() => {
-    formData.current = null;
+    setFormData(null);
     setIsDrawerOpen(false);
   }, []);
 
@@ -51,7 +47,7 @@ const CalendarPage = () => {
       <EventsContainer onDrawerOpen={handleDrawerOpen} />
       <EventDrawer
         mode={drawerMode}
-        initialData={formData.current ?? undefined}
+        initialData={formData ?? undefined}
         isOpen={isDrawerOpen}
         onClose={handleDrawerClose}
       />

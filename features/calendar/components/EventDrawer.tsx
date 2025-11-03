@@ -15,11 +15,16 @@ import FormInput from "@/globals/components/shared/FormInput";
 import { Textarea } from "@/globals/components/shad-cn/textarea";
 import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
-import { Controller, useWatch } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { useEventForm } from "@/features/calendar/hooks/useEventForm";
 import { useDeleteEvent, useSaveEvent } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
-import { EVENT_CHOICES } from "../constants/categoryGroups";
+import {
+  CATEGORY_GROUPS,
+  EVENT_CHOICES,
+} from "@/features/calendar/constants/categoryGroups";
+import { useMemo } from "react";
+import CheckboxGroup from "@/globals/components/shared/CheckboxGroup";
 
 type Props = {
   isOpen: boolean;
@@ -34,20 +39,33 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
   const { mutate: saveEvent } = useSaveEvent();
   const { mutate: deleteEvent } = useDeleteEvent();
 
+  const initData = useMemo(
+    () =>
+      initialData
+        ? {
+            ...initialData,
+            includedGroups: initialData.includedGroups
+              ? JSON.parse(initialData.includedGroups)
+              : null,
+          }
+        : undefined,
+    [initialData]
+  );
+
   const {
     control,
     handleSubmit,
     resetForm,
+    watch,
     formState: { errors },
   } = useEventForm((data) => {
     saveEvent(data);
     onClose();
-  }, initialData);
+  }, initData);
 
-  const allDay = useWatch({
-    control,
-    name: "allDay",
-  });
+  const allDay = watch("allDay");
+  const category = watch("category");
+  // TODO: Reset includedGroups when category changes
 
   const handleDrawerClose = () => {
     resetForm();
@@ -62,6 +80,12 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
     onClose();
   };
 
+  const showIncludedGroups = !(
+    category === "ALL" ||
+    category === "COLLEGE" ||
+    category === "SHS"
+  );
+
   return (
     <Drawer
       open={isOpen}
@@ -71,7 +95,7 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
       <DrawerContent>
         <form
           onSubmit={handleSubmit}
-          className="h-full w-full overflow-y-auto bg-white"
+          className="h-full w-full overflow-y-auto  bg-white"
         >
           <DrawerHeader>
             <DrawerTitle className="text-center text-2xl">
@@ -136,6 +160,38 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
                 </p>
               )}
             </div>
+
+            {showIncludedGroups && (
+              <div>
+                <Label className="text-md mb-1">Included Groups</Label>
+                <Controller
+                  name="includedGroups"
+                  control={control}
+                  render={({ field }) => {
+                    console.log(field.value);
+                    return (
+                      <>
+                        {field.value && (
+                          <CheckboxGroup
+                            choices={CATEGORY_GROUPS[category].map(
+                              (c) => c.value
+                            )}
+                            placeholder={`Selected ${category.toLowerCase()}s`}
+                            selectedValues={field.value}
+                            onSelect={(v) => field.onChange(v)}
+                          />
+                        )}
+                      </>
+                    );
+                  }}
+                />
+                {errors.includedGroups && (
+                  <p className="text-sm text-red-500">
+                    {errors.includedGroups.message}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Schedule */}
             <div>
