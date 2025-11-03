@@ -12,7 +12,6 @@ import {
 import { Label } from "@/globals/components/shad-cn/label";
 import ComboBox from "@/globals/components/shared/ComboBox";
 import FormInput from "@/globals/components/shared/FormInput";
-import { EVENT_CHOICES } from "@/features/calendar/constants/index";
 import { Textarea } from "@/globals/components/shad-cn/textarea";
 import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
@@ -20,6 +19,7 @@ import { Controller, useWatch } from "react-hook-form";
 import { useEventForm } from "@/features/calendar/hooks/useEventForm";
 import { useDeleteEvent, useSaveEvent } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
+import { EVENT_CHOICES } from "../constants/categoryGroups";
 
 type Props = {
   isOpen: boolean;

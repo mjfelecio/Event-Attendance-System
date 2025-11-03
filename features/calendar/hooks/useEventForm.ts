@@ -5,13 +5,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Event, NewEvent } from "@/globals/types/events";
+import { EventCategory } from "@prisma/client";
 
 export const eventSchema = z
   .object({
     id: z.string().optional(),
     title: z.string().min(1, "Title is required"),
     location: z.string().nullable(),
-    category: z.string().min(1, "Category is required"),
+    category: z.enum(EventCategory),
     start: z.date(),
     end: z.date(),
     description: z.string().nullable(),
@@ -47,7 +48,7 @@ export type EventForm = z.infer<typeof eventSchema>;
 const defaultValues: EventForm = {
   title: "",
   location: null,
-  category: "",
+  category: EventCategory.ALL,
   start: new Date(),
   end: new Date(),
   description: null,
@@ -102,7 +103,7 @@ export function useEventForm(
         start: data.start,
         end: data.end,
         allDay: data.allDay,
-      });
+      } as Event | NewEvent);
     }
     form.reset(initialData);
   });
