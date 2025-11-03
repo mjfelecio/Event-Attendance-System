@@ -3,30 +3,64 @@ import { NextResponse } from "next/server";
 
 // Fetch all events
 export async function GET() {
-  const events = await prisma.event.findMany();
-  return NextResponse.json(events);
+  try {
+    const events = await prisma.event.findMany();
+
+    return NextResponse.json(events);
+  } catch (error) {
+    console.error("Failed to fetch events: " + error);
+    return NextResponse.json(
+      { error: "Failed to fetch events" },
+      { status: 500 }
+    );
+  }
 }
 
 // Upsert (create or update based on `id`)
 export async function POST(req: Request) {
-  const { id, title, location, category, start, end, description, allDay } =
-    await req.json();
+  const {
+    id,
+    title,
+    location,
+    includedGroups,
+    category,
+    start,
+    end,
+    description,
+    allDay,
+  } = await req.json();
 
   let event;
 
   // Update if event exists, else create
   if (id) {
-    event = await prisma.event.upsert({
+    event = await prisma.event.update({
       where: { id },
-      update: { title, location, category, start, end, description, allDay },
-      create: { title, location, category, start, end, description, allDay },
+      data: {
+        title,
+        location,
+        category,
+        includedGroups,
+        start,
+        end,
+        description,
+        allDay,
+      },
     });
   } else {
     event = await prisma.event.create({
-      data: { title, location, category, start, end, description, allDay },
+      data: {
+        title,
+        location,
+        category,
+        includedGroups,
+        start,
+        end,
+        description,
+        allDay,
+      },
     });
   }
-
   return NextResponse.json(event, { status: id ? 200 : 201 });
 }
 
