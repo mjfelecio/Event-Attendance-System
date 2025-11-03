@@ -16,7 +16,7 @@ model Event {
   start          DateTime
   end            DateTime
   allDay         Boolean       @default(false)
-  includedGroups String
+  includedGroups String?
 
   Record Record[]
   User   User?    @relation(fields: [userId], references: [id])
