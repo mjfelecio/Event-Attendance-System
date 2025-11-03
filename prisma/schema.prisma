@@ -122,5 +122,5 @@ enum EventCategory {
   STRAND
   PROGRAM
   SECTION
-  SCHOOL_LEVEL
+  YEAR
 }
