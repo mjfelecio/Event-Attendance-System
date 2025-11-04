@@ -10,8 +10,9 @@ import {
 import { AttendanceStatus } from "@prisma/client";
 import { FaTimes } from "react-icons/fa";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
+import { ArrowUpDown } from "lucide-react";
 
- function ActionsCell({ row }: { row: any }) {
+function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
@@ -85,35 +86,85 @@ import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
     accessorKey: "studentId",
-    header: () => <div className="text-center">Student ID</div>,
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Student Id
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
   },
   {
     accessorKey: "fullName",
-    header: () => <div className="text-center">Full Name</div>,
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Full Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
   },
   {
     accessorKey: "schoolLevel",
-    header: () => <div className="text-center">School Level</div>,
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          School Level
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
   },
   {
     accessorKey: "section",
-    header: () => <div className="text-center">Section</div>,
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Section
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
   },
   {
     accessorKey: "timestamp",
-    header: () => <div className="text-center">Timestamp</div>,
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Timestamp
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     accessorFn: (row) =>
       new Date(row.timestamp).toLocaleString("en-US", {
         hour: "2-digit",
@@ -127,7 +178,17 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   },
   {
     accessorKey: "status",
-    header: () => <div className="text-center">Status</div>,
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Status
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
