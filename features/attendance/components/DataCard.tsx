@@ -2,43 +2,63 @@
 
 import React from "react";
 import { IconType } from "react-icons/lib";
+import { twMerge } from "tailwind-merge"; // optional if you use Tailwind + want safer class merging
 
-type Props = {
+type DataCardProps = {
   title: string;
   subtitle: string;
   icon: IconType;
-  value?: number;
+  value?: number | string;
   isPercentage?: boolean;
-  isLoading: boolean;
+  isLoading?: boolean;
+  className?: string;
 };
 
-const DataCard = ({
+const DataCard: React.FC<DataCardProps> = ({
   title,
   subtitle,
   icon: Icon,
   value,
   isPercentage = false,
-  isLoading,
-}: Props) => {
-  return (
-    <div className="border-2 border-gray-300 rounded-md p-3 flex flex-col justify-center items-between gap-2 w-64">
-      <div className="flex justify-between items-center">
-        <p className="text-2xl font-semibold">{title}</p>
-        <Icon size={24} />
-      </div>
-      <div className="flex justify-between items-end">
-        {isLoading ? (
-          <p>Loading...</p>
-        ) : value === undefined || isNaN(value) ? (
-          <div className="text-4xl text-red-400">None</div>
-        ) : (
-          <h1 className="flex flex-1 items-center justify-center font-mono text-5xl">
-            {value}
-            {isPercentage && "%"}
-          </h1>
-        )}
+  isLoading = false,
+  className,
+}) => {
+  const renderValue = () => {
+    if (isLoading) {
+      return (
+        <div className="h-12 w-20 bg-gray-200 animate-pulse rounded-md" />
+      );
+    }
 
-        <p className="text-sm">{subtitle}</p>
+    if (value === undefined || value === null || value === "" || isNaN(Number(value))) {
+      return <span className="text-4xl text-red-400 font-bold">None</span>;
+    }
+
+    return (
+      <span className="text-5xl font-mono font-semibold">
+        {value}
+        {isPercentage && "%"}
+      </span>
+    );
+  };
+
+  return (
+    <div
+      className={twMerge(
+        "border-2 border-gray-200 hover:border-gray-300 shadow-sm rounded-lg p-4 flex flex-col justify-between gap-3 transition-all duration-200 w-64 bg-white",
+        className
+      )}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-700">{title}</h2>
+        <Icon size={28} className="text-gray-500" />
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col items-start gap-1">
+        {renderValue()}
+        <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
     </div>
   );

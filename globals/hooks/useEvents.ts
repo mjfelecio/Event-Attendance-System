@@ -29,11 +29,11 @@ export const fetchEvents = async (): Promise<Event[]> => {
 // Fetch stats of an event
 export const fetchEventStats = async (eventId: string): Promise<EventStats> => {
   const res = await fetch(`/api/events/${eventId}/stats`);
-  const { success, data } = await res.json();
+  const data = await res.json();
 
-  if (!success) throw new Error("Failed to fetch events");
+  if (!res.ok) throw new Error("Failed to fetch events");
 
-  return data;
+  return data.data;
 };
 
 // Upsert (add or edit)
