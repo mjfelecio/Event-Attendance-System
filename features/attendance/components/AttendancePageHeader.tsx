@@ -8,7 +8,7 @@ import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { FaUserGroup } from "react-icons/fa6";
 import { VscPercentage } from "react-icons/vsc";
-import useEvents from "@/globals/hooks/useEvents";
+import useEvents, { useEventStats } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 
 type Props = {
@@ -18,6 +18,13 @@ type Props = {
 
 const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
   const { data } = useEvents();
+  const { data: eventStats, isLoading: isStatsLoading } = useEventStats(
+    selectedEvent?.id
+  );
+  // NOTE: If the attendance rate shows NaN, thats because there are no eligible students
+  const attendanceRate = eventStats
+    ? (eventStats?.present / eventStats?.eligible) * 100
+    : undefined;
 
   const eventChoices: ComboBoxValue[] = useMemo(() => {
     if (data) return data?.map((e) => ({ value: e.id, label: e.title }));
@@ -32,21 +39,27 @@ const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
     }
 
     onChangeEvent(event);
-  } 
+  };
 
   return (
     <div className="flex flex-col gap-4">
       {/* Top Part of Header */}
-      <div className="flex flex-row justify-between">
-        <h1 className="text-3xl font-bold">Attendance Tracking</h1>
+      <div>
+        <div className="flex flex-row justify-between">
+          <h1 className="text-3xl font-bold">Attendance Tracking</h1>
 
-        {/* Right Side */}
-        <ButtonWithIcon
-          icon={PiExport}
-          onClick={() => alert("Exporting attendance records...")}
-        >
-          Export
-        </ButtonWithIcon>
+          {/* Right Side */}
+          <ButtonWithIcon
+            icon={PiExport}
+            onClick={() => alert("Exporting attendance records...")}
+          >
+            Export
+          </ButtonWithIcon>
+        </div>
+
+        {isNaN(attendanceRate!) && !!selectedEvent && (
+          <p className="text-red-600">Error: No eligible students found</p>
+        )}
       </div>
 
       {/* Bottom Part of the Header */}
@@ -68,19 +81,23 @@ const AttendancePageHeader = ({ selectedEvent, onChangeEvent }: Props) => {
             title="Present"
             subtitle="Students checked in"
             icon={IoMdCheckmarkCircleOutline}
-            value={0}
+            value={eventStats?.present}
+            isLoading={isStatsLoading}
           />
           <DataCard
             title="Total Registered"
             subtitle="Expected attendees"
             icon={FaUserGroup}
-            value={0}
+            value={eventStats?.eligible}
+            isLoading={isStatsLoading}
           />
           <DataCard
             title="Attendance Rate"
             subtitle="Current rate"
             icon={VscPercentage}
-            value={0}
+            value={attendanceRate}
+            isLoading={isStatsLoading}
+            isPercentage
           />
         </div>
       </div>

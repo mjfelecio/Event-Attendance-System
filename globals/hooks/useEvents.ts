@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Event, NewEvent } from "@/globals/types/events";
+import { Event, EventStats, NewEvent } from "@/globals/types/events";
 
 type EventAPI = Omit<Event, "start" | "end" | "createdAt" | "updatedAt"> & {
   start: string;
@@ -24,6 +24,16 @@ export const fetchEvents = async (): Promise<Event[]> => {
 
   const data: EventAPI[] = await res.json();
   return data.map(transformEvent);
+};
+
+// Fetch stats of an event
+export const fetchEventStats = async (eventId: string): Promise<EventStats> => {
+  const res = await fetch(`/api/events/${eventId}/stats`);
+  const { success, data } = await res.json();
+
+  if (!success) throw new Error("Failed to fetch events");
+
+  return data;
 };
 
 // Upsert (add or edit)
@@ -63,6 +73,15 @@ export const useDeleteEvent = () => {
   return useMutation({
     mutationFn: deleteEvent,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+  });
+};
+
+// Fetches event stats
+export const useEventStats = (eventId?: string) => {
+  return useQuery({
+    queryKey: ["events", eventId, "stats"],
+    enabled: !!eventId,
+    queryFn: () => fetchEventStats(eventId!),
   });
 };
 
