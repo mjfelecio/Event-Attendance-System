@@ -1,6 +1,7 @@
 import {
   AttendanceMethod,
   AttendanceStatus,
+  EventCategory,
   Prisma,
   PrismaClient,
   SchoolLevel,
@@ -8,6 +9,46 @@ import {
   YearLevel,
 } from "@prisma/client";
 import { faker } from "@faker-js/faker";
+
+type ComboBoxValue = {
+    value: string;
+    label: string;
+}
+export const CATEGORY_GROUPS: Record<EventCategory, ComboBoxValue[]> = {
+  ALL: [],
+  COLLEGE: [],
+  SHS: [],
+  DEPARTMENT: [
+    { value: "CS", label: "Computer Studies" },
+    { value: "HM", label: "Hotel Management" },
+    { value: "BA", label: "Business Administration" },
+  ],
+  HOUSE: [
+    { value: "AZUL", label: "Azul" },
+    { value: "ROXXO", label: "Roxxo" },
+    { value: "CAHEL", label: "Cahel" },
+    { value: "GIALLIO", label: "Giallio" },
+    { value: "VIERRDY", label: "Vierrdy" },
+  ],
+  PROGRAM: [
+    { value: "BSCS", label: "BSCS" },
+    { value: "BSIT", label: "BSIT" },
+    { value: "BSHM", label: "BSHM" },
+    { value: "WAD", label: "WAD" },
+  ],
+  YEAR: Object.keys(YearLevel).map((l) => ({
+    value: l,
+    label: l,
+  })),
+  SECTION: [
+    { value: "BSCS-2A", label: "BSCS-2A" },
+    { value: "BSIT-2B", label: "BSIT-2B" },
+  ],
+  STRAND: [
+    { value: "ANIMATION", label: "Animation" },
+    { value: "PROGRAMMING", label: "Programming" },
+  ],
+};
 
 const prisma = new PrismaClient();
 
@@ -33,13 +74,16 @@ const DEPARTMENTS = [
   "Business Administration",
 ];
 const HOUSES = ["Cahel", "Roxxo", "Giallio", "Azul", "Vierdy"];
-const EVENT_CATEGORIES = [
+const EVENT_CATEGORIES: EventCategory[] = [
   "ALL",
   "COLLEGE",
   "SHS",
   "DEPARTMENT",
   "STRAND",
   "HOUSE",
+  "PROGRAM",
+  "SECTION",
+  "YEAR",
 ];
 
 // Generate realistic but varied event data
@@ -116,11 +160,15 @@ function generateEvent(organizerId: string, baseDate: Date, index: number) {
     "Lecture Hall 101",
   ];
 
+  // Get the included groups based on the event's category
+  const includedGroups = CATEGORY_GROUPS[eventType] || [];
+
   return {
     title,
     location: randomChoice(locations),
     description: faker.lorem.sentence(),
     category: eventType,
+    includedGroups: JSON.stringify(includedGroups.map((g) => g.value)),
     start: startDate,
     end: endDate,
     allDay: isAllDay,
