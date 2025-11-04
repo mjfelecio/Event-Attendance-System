@@ -10,6 +10,7 @@ import { FiUsers } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import { LuQrCode } from "react-icons/lu";
+import { Database } from "lucide-react";
 
 /**
  * Represents a single navigation item in the sidebar.
@@ -44,6 +45,7 @@ const navigationItems: NavigationItem[] = [
   { text: "Calendar", route: "/calendar", icon: LuCalendar },
   { text: "Manage List", route: "/manage-list", icon: FiUsers },
   { text: "Attendance", route: "/attendance", icon: LuQrCode },
+  { text: "Reports", route: "/reports", icon: Database },
   { text: "Settings", route: "/settings", icon: IoSettingsOutline },
 ];
 
