@@ -8,6 +8,7 @@ import SearchBar from "@/features/attendance/components/SearchBar";
 import { useState } from "react";
 import { Event } from "@/globals/types/events";
 import { useEventAttendanceRecords } from "@/globals/hooks/useRecords";
+import ShowUnattendedStudentsToggle from "./ShowUnattendedStudentsToggle";
 
 type Props = {
   selectedEvent: Event | null;
@@ -35,6 +36,7 @@ const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
           <FilterButton />
         </div>
       </div>
+      <ShowUnattendedStudentsToggle />
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center gap-4 border-2 border-gray-300 w-full rounded-md p-6">
