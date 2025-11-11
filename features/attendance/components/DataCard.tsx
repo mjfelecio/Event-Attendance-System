@@ -35,7 +35,7 @@ const DataCard: React.FC<DataCardProps> = ({
     }
 
     return (
-      <span className="text-5xl font-mono font-semibold">
+      <span className="text-4xl font-mono font-semibold">
         {value}
         {isPercentage && "%"}
       </span>
