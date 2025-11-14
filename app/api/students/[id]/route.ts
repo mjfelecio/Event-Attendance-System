@@ -7,6 +7,7 @@ import {
 } from "@/features/manage-list/utils/mapStudentToRow";
 import { Prisma } from "@prisma/client";
 import { studentUpdateSchema } from "@/features/manage-list/utils/studentSchemas";
+import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 
 const createSlugPayload = (data: { department?: string; house?: string }) => {
   const departmentSlug = data.department
@@ -22,13 +23,23 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = await params;
+  const { eventId } = await req.json();
 
   try {
-    const student = await prisma.student.findUnique({
-      where: {
-        id,
-      },
-    });
+    let student;
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+
+    if (event) {
+      student = await prisma.student.findFirst({
+        where: buildEventStudentFilter(event),
+      });
+    } else {
+      student = await prisma.student.findUnique({
+        where: {
+          id,
+        },
+      });
+    }
 
     if (!student) {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
