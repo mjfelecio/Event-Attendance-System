@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Student } from "@/globals/types/students";
+import { useMemo } from "react";
+import { filterAndSortStudents } from "../utils/fuzzySearch";
 
 type StudentAPI = Omit<Student, "createdAt" | "updatedAt"> & {
   createdAt: string;
@@ -22,6 +24,17 @@ export const fetchStudents = async (): Promise<Student[]> => {
   return data.map(transformStudent);
 };
 
+// Fetch
+export const fetchEventStudents = async (
+  eventId: string
+): Promise<Student[]> => {
+  const res = await fetch(`/api/events/${eventId}/students`);
+  if (!res.ok) throw new Error("Failed to fetch events");
+
+  const data: StudentAPI[] = await res.json();
+  return data.map(transformStudent);
+};
+
 // Fetch a single student
 export const fetchStudentById = async (id: string): Promise<Student> => {
   const res = await fetch(`/api/students/${id}`);
@@ -34,11 +47,41 @@ export const fetchStudentById = async (id: string): Promise<Student> => {
   return transformStudent(data);
 };
 
-const useStudents = () => {
-  return useQuery({
+const useStudents = (query?: string) => {
+  const { data: students, ...queryResult } = useQuery({
     queryKey: ["students"],
     queryFn: fetchStudents,
   });
+
+  // Memoize filtered and sorted results
+  const filteredStudents = useMemo(() => {
+    if (!students) return undefined;
+    return filterAndSortStudents(students, query);
+  }, [students, query]);
+
+  return {
+    ...queryResult,
+    data: filteredStudents,
+  };
+};
+
+export const useEventStudents = (eventId: string | null, query?: string) => {
+  const { data: students, ...queryResult } = useQuery({
+    queryKey: [eventId, "students"],
+    enabled: !!eventId,
+    queryFn: () => fetchEventStudents(eventId!),
+  });
+
+  // Memoize filtered and sorted results
+  const filteredStudents = useMemo(() => {
+    if (!students) return undefined;
+    return filterAndSortStudents(students, query);
+  }, [students, query]);
+
+  return {
+    ...queryResult,
+    data: filteredStudents,
+  };
 };
 
 export const useStudent = (id: string) => {

@@ -1,22 +1,45 @@
 import { FaUser } from "react-icons/fa";
 import { Student } from "@/globals/types/students";
+import SearchBar from "./SearchBar";
+import { useState } from "react";
+import useStudents, { useEventStudents, useStudent } from "@/globals/hooks/useStudents";
+import { fullName } from "@/globals/utils/formatting";
+import { Event } from "@/globals/types/events";
 
 type Props = {
-  data: Student | undefined;
+  data: Student | null;
+  selectedEvent: Event | null;
 };
 
-const StudentDetails = ({ data }: Props) => {
+type DetailsDisplayProps = {
+  data: Student | null;
+};
+
+type SearchToolbarProps = {
+  onQueryChange: (query: string) => void;
+  placeholder?: string;
+};
+
+const SearchToolbar = ({ onQueryChange }: SearchToolbarProps) => {
+  return (
+    <div className="flex flex-row justify-self-start border-b-2 pb-4 w-full">
+      <SearchBar
+        onQueryChange={onQueryChange}
+        placeholder="Search manually..."
+      />
+    </div>
+  );
+};
+
+const DetailsDisplay = ({ data }: DetailsDisplayProps) => {
   if (!data) {
     return (
-      <div className="flex-1 flex rounded-md bg-white border-2 p-6 overflow-y-auto items-center justify-center">
-        <p className="text-gray-500 flex items-center gap-2 text-3xl">
-          <FaUser className="text-gray-400" />
-          No Student Found
-        </p>
+      <div className="flex-1 flex items-center gap-2">
+        <FaUser className="text-gray-400 text-3xl" />
+        <p className="text-gray-500 text-3xl">No Student Found</p>
       </div>
     );
   }
-
   const {
     id,
     firstName,
@@ -31,7 +54,7 @@ const StudentDetails = ({ data }: Props) => {
   } = data;
 
   return (
-    <div className="flex-1 rounded-md bg-white border-2 p-6 overflow-y-auto">
+    <>
       <h2 className="text-xl font-semibold mb-4">Student Details</h2>
       <div className="space-y-3 text-gray-700">
         <div>
@@ -58,6 +81,44 @@ const StudentDetails = ({ data }: Props) => {
           <strong>Status:</strong> {status}
         </div>
       </div>
+    </>
+  );
+};
+
+const StudentDetails = ({ selectedEvent, data }: Props) => {
+  const [query, setQuery] = useState("");
+  const { data: students } = useEventStudents(selectedEvent?.id ?? null, query);
+
+  const handleQueryChange = (query: string) => {
+    setQuery(query);
+  };
+
+  return (
+    <div className="flex-1 flex flex-col rounded-md bg-white border-2 p-6 overflow-y-auto items-center justify-center">
+      <SearchToolbar onQueryChange={handleQueryChange} />
+      {query ? (
+        <div className="flex-1 w-full">
+          {students ? (
+            students.map((student) => (
+              <div className="bg-gray-50 py-2 px-4 w-full">
+                <p>
+                  {fullName(
+                    student.firstName,
+                    student.middleName ?? "",
+                    student.lastName
+                  )}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p>No Students</p>
+          )}
+          {students?.length}
+
+        </div>
+      ) : (
+        <DetailsDisplay data={data} />
+      )}
     </div>
   );
 };
