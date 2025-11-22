@@ -103,6 +103,7 @@ const ScannerSection = ({ selectedEvent }: Props) => {
         selectedEvent={selectedEvent}
         data={studentInfo ?? null}
         onSelect={setScannedValue}
+        isFetching={isFetching}
       />
     </div>
   );

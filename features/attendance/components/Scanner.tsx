@@ -44,9 +44,9 @@ const Scanner = ({ onRead }: Props) => {
   }, []);
 
   return (
-    <div className="flex-1 h-full bg-white border-2 rounded-md flex flex-col items-center justify-center text-white">
+    <div className="flex-1  h-full bg-white border-2 rounded-md flex flex-col items-center justify-center text-white">
       {cameraOpen ? (
-        <div className="overflow-hidden rounded-md relative max-h-[600px]">
+        <div className="overflow-hidden rounded-md relative max-h-[500px]">
           <QRScanner
             components={{
               finder: false,
