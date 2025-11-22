@@ -20,14 +20,19 @@ const createSlugPayload = (data: { department?: string; house?: string }) => {
 // Fetching a single student by id
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string; eventId: string } }
 ) {
-  const { id } = await params;
-  const { eventId } = await req.json();
+  const { id, eventId } = await params;
 
   try {
     let student;
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    let event;
+
+    if (eventId) {
+      event = await prisma.event.findUnique({ where: { id: eventId } });
+    } else {
+      event = undefined;
+    }
 
     if (event) {
       student = await prisma.student.findFirst({

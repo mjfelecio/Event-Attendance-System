@@ -99,7 +99,11 @@ const ScannerSection = ({ selectedEvent }: Props) => {
   return (
     <div className="flex min-h-[400px] max-h-[600px] gap-4 border-2 border-gray-300 w-full rounded-md p-4">
       <Scanner onRead={handleScanResult} />
-      <StudentDetails selectedEvent={selectedEvent} data={studentInfo ?? null} />
+      <StudentDetails
+        selectedEvent={selectedEvent}
+        data={studentInfo ?? null}
+        onSelect={setScannedValue}
+      />
     </div>
   );
 };

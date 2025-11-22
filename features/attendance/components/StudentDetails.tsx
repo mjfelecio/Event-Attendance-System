@@ -1,37 +1,21 @@
 import { FaUser } from "react-icons/fa";
 import { Student } from "@/globals/types/students";
 import SearchBar from "./SearchBar";
-import { useState } from "react";
-import useStudents, { useEventStudents, useStudent } from "@/globals/hooks/useStudents";
+import { useMemo, useState } from "react";
+import useStudents, {
+  useEventStudents,
+  useStudent,
+} from "@/globals/hooks/useStudents";
 import { fullName } from "@/globals/utils/formatting";
 import { Event } from "@/globals/types/events";
-
-type Props = {
-  data: Student | null;
-  selectedEvent: Event | null;
-};
+import { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 
 type DetailsDisplayProps = {
   data: Student | null;
+  isLoading: boolean;
 };
 
-type SearchToolbarProps = {
-  onQueryChange: (query: string) => void;
-  placeholder?: string;
-};
-
-const SearchToolbar = ({ onQueryChange }: SearchToolbarProps) => {
-  return (
-    <div className="flex flex-row justify-self-start border-b-2 pb-4 w-full">
-      <SearchBar
-        onQueryChange={onQueryChange}
-        placeholder="Search manually..."
-      />
-    </div>
-  );
-};
-
-const DetailsDisplay = ({ data }: DetailsDisplayProps) => {
+const DetailsDisplay = ({ data, isLoading }: DetailsDisplayProps) => {
   if (!data) {
     return (
       <div className="flex-1 flex items-center gap-2">
@@ -40,6 +24,11 @@ const DetailsDisplay = ({ data }: DetailsDisplayProps) => {
       </div>
     );
   }
+
+  if (isLoading) return (
+    <p>Loading...</p>
+  )
+
   const {
     id,
     firstName,
@@ -85,40 +74,44 @@ const DetailsDisplay = ({ data }: DetailsDisplayProps) => {
   );
 };
 
-const StudentDetails = ({ selectedEvent, data }: Props) => {
-  const [query, setQuery] = useState("");
-  const { data: students } = useEventStudents(selectedEvent?.id ?? null, query);
+type StudentDetailsProps = {
+  data: Student | null;
+  selectedEvent: Event | null;
+  onSelect: (studentId: string) => void;
+};
 
-  const handleQueryChange = (query: string) => {
-    setQuery(query);
-  };
+const StudentDetails = ({
+  selectedEvent,
+  data,
+  onSelect,
+}: StudentDetailsProps) => {
+  const [query, setQuery] = useState("");
+  const { data: students, isLoading } = useEventStudents(selectedEvent?.id ?? null, query);
+
+  const choices: ComboBoxValue[] = useMemo(() => {
+    return (
+      students?.map((student) => ({
+        label: fullName(
+          student.firstName,
+          student.middleName ?? "",
+          student.lastName
+        ),
+        value: student.id,
+      })) ?? []
+    );
+  }, [students]);
 
   return (
     <div className="flex-1 flex flex-col rounded-md bg-white border-2 p-6 overflow-y-auto items-center justify-center">
-      <SearchToolbar onQueryChange={handleQueryChange} />
-      {query ? (
-        <div className="flex-1 w-full">
-          {students ? (
-            students.map((student) => (
-              <div className="bg-gray-50 py-2 px-4 w-full">
-                <p>
-                  {fullName(
-                    student.firstName,
-                    student.middleName ?? "",
-                    student.lastName
-                  )}
-                </p>
-              </div>
-            ))
-          ) : (
-            <p>No Students</p>
-          )}
-          {students?.length}
-
-        </div>
-      ) : (
-        <DetailsDisplay data={data} />
-      )}
+      <div className="flex flex-row justify-self-start border-b-2 pb-4 w-full">
+        <SearchBar
+          onQueryChange={setQuery}
+          placeholder="Search manually..."
+          choices={choices}
+          onSelect={onSelect}
+        />
+      </div>
+      <DetailsDisplay data={data} isLoading={isLoading}/>
     </div>
   );
 };
