@@ -89,7 +89,7 @@ const Scanner = ({ onRead, isPending = false }: ScannerProps) => {
           {/* Close button */}
           <button
             onClick={() => setCameraOpen(false)}
-            className="absolute top-4 right-4 p-2 bg-white/90 hover:bg-white rounded-lg transition-colors"
+            className="absolute top-4 right-4 p-2 bg-slate-200 hover:bg-white rounded-lg transition-colors"
             aria-label="Close camera"
           >
             <BiSolidCameraOff size={32} className="text-gray-800" />
