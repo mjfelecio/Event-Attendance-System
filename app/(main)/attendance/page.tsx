@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import AttendancePageHeader from "@/features/attendance/components/AttendancePageHeader";
-import ScannerSection from "@/features/attendance/components/ScannerSection";
+import ScannerSection from "@/features/attendance/components/AttendanceSection";
 import { Event } from "@/globals/types/events";
 import AttendanceRecordsTable from "@/features/attendance/components/AttendanceRecordsTable";
 
