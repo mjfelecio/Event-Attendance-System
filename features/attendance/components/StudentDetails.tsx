@@ -1,11 +1,13 @@
 import { FaUser } from "react-icons/fa";
 import { useMemo, useState } from "react";
-import { Student } from "@/globals/types/students";
+import { Student, StudentAttendanceRecord } from "@/globals/types/students";
 import { Event } from "@/globals/types/events";
 import { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { useEventStudents } from "@/globals/hooks/useStudents";
 import { fullName } from "@/globals/utils/formatting";
 import SearchBar from "./SearchBar";
+import AttendanceActionButtons from "@/features/attendance/components/AttendanceActionButtons";
+import { useEventAttendanceRecords } from "@/globals/hooks/useRecords";
 
 // ============================================================================
 // Types
@@ -25,6 +27,8 @@ type StudentDetailsProps = {
 type DetailsDisplayProps = {
   /** Student data to display */
   data: Student | null;
+  event: Event;
+  record?: StudentAttendanceRecord;
   /** Whether the data is currently being fetched */
   isLoading: boolean;
 };
@@ -47,7 +51,7 @@ type DetailRowProps = {
  */
 const DetailRow = ({ label, value, show = true }: DetailRowProps) => {
   if (!show) return null;
-  
+
   return (
     <div className="flex gap-2">
       <span className="font-semibold text-gray-900">{label}:</span>
@@ -81,7 +85,7 @@ const LoadingState = () => (
 /**
  * Displays detailed information about a student
  */
-const DetailsDisplay = ({ data, isLoading }: DetailsDisplayProps) => {
+const DetailsDisplay = ({ event, data, record, isLoading }: DetailsDisplayProps) => {
   if (isLoading) return <LoadingState />;
   if (!data) return <EmptyState />;
 
@@ -104,28 +108,23 @@ const DetailsDisplay = ({ data, isLoading }: DetailsDisplayProps) => {
 
   return (
     <div className="flex-1 w-full">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2">
-        Student Details
-      </h2>
-      
+      <div className="flex flex-row justify-between mb-6 pb-3 border-b-2">
+        <h2 className="text-2xl font-bold text-gray-900">Student Details</h2>
+        <AttendanceActionButtons recordId={record?.id} eventId={event.id} studentId={data.id} />
+      </div>
+
       <div className="space-y-4">
         <DetailRow label="Name" value={fullNameDisplay} />
         <DetailRow label="Student ID" value={id} />
         <DetailRow label="School Level" value={schoolLevel} />
-        <DetailRow 
-          label="Program" 
-          value={collegeProgram || "N/A"} 
-          show={isCollege} 
+        <DetailRow
+          label="Program"
+          value={collegeProgram || "N/A"}
+          show={isCollege}
         />
-        <DetailRow 
-          label="Year & Section" 
-          value={`${yearLevel} - ${section}`} 
-        />
+        <DetailRow label="Year & Section" value={`${yearLevel} - ${section}`} />
         <DetailRow label="Contact Number" value={contactNumber ?? "None"} />
-        <DetailRow 
-          label="Status" 
-          value={status}
-        />
+        <DetailRow label="Status" value={status} />
       </div>
     </div>
   );
@@ -137,14 +136,14 @@ const DetailsDisplay = ({ data, isLoading }: DetailsDisplayProps) => {
 
 /**
  * StudentDetails component displays student information with search functionality
- * 
+ *
  * Features:
  * - Search students by name within an event context
  * - Display detailed student information
  * - Loading and empty states
- * 
+ *
  * @component
- * 
+ *
  * @example
  * ```tsx
  * <StudentDetails
@@ -162,10 +161,15 @@ const StudentDetails = ({
 }: StudentDetailsProps) => {
   const [query, setQuery] = useState("");
 
-  const { data: students } = useEventStudents(
-    selectedEvent?.id ?? null,
-    query
+  const { data: students } = useEventStudents(selectedEvent?.id ?? null, query);
+  const { data: records } = useEventAttendanceRecords(selectedEvent?.id);
+
+  const recordOfSelectedStudent = useMemo(
+    () => records?.find((s) => String(s.studentId) === String(data?.id)),
+    []
   );
+
+  console.log(data)
 
   const searchChoices: ComboBoxValue[] = useMemo(() => {
     if (!students) return [];
@@ -179,6 +183,8 @@ const StudentDetails = ({
       value: student.id,
     }));
   }, [students]);
+
+  if (!selectedEvent) return null;
 
   return (
     <div className="flex-1 flex flex-col bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
@@ -194,7 +200,12 @@ const StudentDetails = ({
 
       {/* Details Content */}
       <div className="flex-1 flex flex-col p-6 overflow-y-auto">
-        <DetailsDisplay data={data} isLoading={isFetching} />
+        <DetailsDisplay
+          event={selectedEvent}
+          data={data}
+          record={recordOfSelectedStudent}
+          isLoading={isFetching}
+        />
       </div>
     </div>
   );

@@ -43,50 +43,50 @@ const ScannerSection = ({ selectedEvent }: ScannerSectionProps) => {
 
   const handleScanResult = useCallback(
     (result: string) => {
-      if (!result) {
-        toastDanger("Invalid scan result");
-        return;
-      }
+      // if (!result) {
+      //   toastDanger("Invalid scan result");
+      //   return;
+      // }
 
-      if (!selectedEvent) {
-        toastDanger("Failed to record attendance: No event selected");
-        return;
-      }
+      // if (!selectedEvent) {
+      //   toastDanger("Failed to record attendance: No event selected");
+      //   return;
+      // }
 
-      // Set the scanned value to trigger student fetch
-      setScannedValue(result);
+      // // Set the scanned value to trigger student fetch
+      // setScannedValue(result);
     },
     [selectedEvent]
   );
 
   // Effect to handle student data after fetch
   React.useEffect(() => {
-    if (!scannedValue || isFetching) return;
+    // if (!scannedValue || isFetching) return;
 
-    if (isStudentFetchingError || !studentInfo) {
-      toastDanger(`No student found with ID: ${scannedValue}`);
-      setScannedValue("");
-      return;
-    }
+    // if (isStudentFetchingError || !studentInfo) {
+    //   toastDanger(`No student found with ID: ${scannedValue}`);
+    //   setScannedValue("");
+    //   return;
+    // }
 
-    const record: NewRecord = {
-      eventId: selectedEvent?.id || "",
-      studentId: studentInfo.id,
-      status: "PRESENT",
-      method: "SCANNED",
-    };
+    // const record: NewRecord = {
+    //   eventId: selectedEvent?.id || "",
+    //   studentId: studentInfo.id,
+    //   status: "PRESENT",
+    //   method: "SCANNED",
+    // };
 
-    saveRecord(record, {
-      onError: (error) => {
-        toastWarning(`Attendance recording failed: ${error.message}`);
-        console.error("Record save error:", error);
-        setScannedValue("");
-      },
-      onSuccess: () => {
-        toastSuccess(`Successfully recorded attendance for ${studentInfo.firstName} ${studentInfo.lastName}`);
-        setScannedValue("");
-      },
-    });
+    // saveRecord(record, {
+    //   onError: (error) => {
+    //     toastWarning(`Attendance recording failed: ${error.message}`);
+    //     console.error("Record save error:", error);
+    //     setScannedValue("");
+    //   },
+    //   onSuccess: () => {
+    //     toastSuccess(`Successfully recorded attendance for ${studentInfo.firstName} ${studentInfo.lastName}`);
+    //     setScannedValue("");
+    //   },
+    // });
   }, [studentInfo, isStudentFetchingError, isFetching, scannedValue]);
 
   if (!selectedEvent) {
