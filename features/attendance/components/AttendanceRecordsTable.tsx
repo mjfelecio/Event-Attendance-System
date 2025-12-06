@@ -8,7 +8,7 @@ import SearchBar from "@/features/attendance/components/SearchBar";
 import { useState } from "react";
 import { Event } from "@/globals/types/events";
 import { useEventAttendanceRecords } from "@/globals/hooks/useRecords";
-import ShowUnattendedStudentsToggle from "./ShowUnattendedStudentsToggle";
+import ShowUnattendedStudentsToggle from "@/features/attendance/components/ShowUnattendedStudentsToggle";
 
 type Props = {
   selectedEvent: Event | null;
@@ -31,7 +31,8 @@ const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
       <div className="flex flex-row justify-between">
         <h3 className="text-3xl font-semibold">Attendance Records</h3>
         <div className="flex flex-row gap-2">
-          <SearchBar onQueryChange={setQuery} />
+          {/* TODO: Implement the functionality here from the backend */}
+          <SearchBar choices={[]} onSelect={() => {}} onQueryChange={setQuery} />
           <SortButton />
           <FilterButton />
         </div>
