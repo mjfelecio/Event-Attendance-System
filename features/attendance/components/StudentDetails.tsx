@@ -5,7 +5,10 @@ import { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { useEventStudents } from "@/globals/hooks/useStudents";
 import { fullName } from "@/globals/utils/formatting";
 import SearchBar from "@/features/attendance/components/SearchBar";
-import { useEventAttendanceRecords } from "@/globals/hooks/useRecords";
+import {
+  useEventAttendanceRecords,
+  useEventStudentRecord,
+} from "@/globals/hooks/useRecords";
 import StudentDetailsDisplay from "@/features/attendance/components/StudentDetailsDisplay";
 
 type StudentDetailsProps = {
@@ -47,12 +50,7 @@ const StudentDetails = ({
   const [query, setQuery] = useState("");
 
   const { data: students } = useEventStudents(selectedEvent?.id ?? null, query);
-  const { data: records } = useEventAttendanceRecords(selectedEvent?.id);
-
-  const recordOfSelectedStudent = useMemo(
-    () => records?.find((s) => String(s.studentId) === String(data?.id)),
-    []
-  );
+  const { data: studentRecord } = useEventStudentRecord(selectedEvent?.id, data?.id);
 
   const searchChoices: ComboBoxValue[] = useMemo(() => {
     if (!students) return [];
@@ -86,7 +84,7 @@ const StudentDetails = ({
         <StudentDetailsDisplay
           event={selectedEvent}
           data={data}
-          record={recordOfSelectedStudent}
+          record={studentRecord ?? undefined}
           isLoading={isFetching}
         />
       </div>

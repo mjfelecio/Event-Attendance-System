@@ -116,11 +116,9 @@ export const useUpdateRecordStatus = (eventId: string) => {
       });
 
       // Get previous data
-      const previousRecords = queryClient.getQueryData<StudentAttendanceRecord[]>([
-        "event",
-        eventId,
-        "records",
-      ]);
+      const previousRecords = queryClient.getQueryData<
+        StudentAttendanceRecord[]
+      >(["event", eventId, "records"]);
 
       // Optimistically update the record
       if (previousRecords) {
@@ -161,11 +159,9 @@ export const useDeleteRecord = (eventId: string) => {
       });
 
       // Get previous data
-      const previousRecords = queryClient.getQueryData<StudentAttendanceRecord[]>([
-        "event",
-        eventId,
-        "records",
-      ]);
+      const previousRecords = queryClient.getQueryData<
+        StudentAttendanceRecord[]
+      >(["event", eventId, "records"]);
 
       // Optimistically remove the record
       if (previousRecords) {
@@ -198,5 +194,31 @@ export const useEventAttendanceRecords = (eventId?: string) => {
     queryKey: ["event", eventId, "records"],
     queryFn: () => (eventId ? fetchEventRecords(eventId) : null),
     enabled: !!eventId,
+  });
+};
+
+/**
+ * Fetches the attendance record of a student in an event
+ *
+ * @returns StudentAttendanceRecord if it exists, and null otherwise
+ */
+export const useEventStudentRecord = (eventId?: string, studentId?: string) => {
+  return useQuery({
+    queryKey: ["record", eventId, studentId],
+    enabled: !!eventId && !!studentId,
+    queryFn: async () => {
+      if (!eventId || !studentId) return null;
+
+      const res = await fetch(
+        `/api/records?eventId=${eventId}&studentId=${studentId}`
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error);
+      }
+
+      return await res.json();
+    },
   });
 };
