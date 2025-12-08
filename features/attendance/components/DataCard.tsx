@@ -31,7 +31,7 @@ const DataCard: React.FC<DataCardProps> = ({
     }
 
     if (value === undefined || value === null || value === "" || isNaN(Number(value))) {
-      return <span className="text-4xl text-red-400 font-bold">None</span>;
+      return <span className="text-4xl font-bold">None</span>;
     }
 
     return (
