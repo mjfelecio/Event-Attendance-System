@@ -84,12 +84,46 @@ export const useEventStudents = (eventId: string | null, query?: string) => {
   };
 };
 
+// Fetches a student by ID
 export const useStudent = (id: string) => {
   return useQuery({
     queryKey: ["student", id],
     queryFn: () => fetchStudentById(id),
     // Only run the query if an ID is provided
     enabled: !!id,
+  });
+};
+
+type StudentFetchOptions = { eventId?: string; studentId?: string };
+
+/**
+ * Fetches a student that is included in the event through id
+ *
+ * @returns Student, null if they do not exist or is not included in the event
+ */
+export const useStudentFromEvent = ({
+  eventId,
+  studentId,
+}: StudentFetchOptions) => {
+  return useQuery({
+    queryKey: ["students", eventId, studentId],
+    // Only run the query if a student ID is provided
+    enabled: !!eventId && !!studentId,
+    queryFn: async () => {
+      if (!eventId || !studentId) return null;
+
+      const res = await fetch(`/api/events/${eventId}/students/${studentId}`);
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error);
+      }
+
+      const data: StudentAPI = await res.json();
+
+      console.log(data)
+      return transformStudent(data);
+    },
   });
 };
 

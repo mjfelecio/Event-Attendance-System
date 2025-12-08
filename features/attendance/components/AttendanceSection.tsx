@@ -1,13 +1,15 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import Scanner from "@/features/attendance/components/Scanner";
-import { useStudent } from "@/globals/hooks/useStudents";
+import { useStudentFromEvent } from "@/globals/hooks/useStudents";
 import StudentDetails from "@/features/attendance/components/StudentDetails";
 import { useSaveRecord } from "@/globals/hooks/useRecords";
 import { NewRecord } from "@/globals/types/records";
 import { Event } from "@/globals/types/events";
 import {
   toastDanger,
+  toastInfo,
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
@@ -28,66 +30,87 @@ const NoEventState = () => (
   </div>
 );
 
-const ScannerSection = ({ selectedEvent }: ScannerSectionProps) => {
+const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
   const [scannedValue, setScannedValue] = useState("");
+  const prevScannedValRef = useRef("");
 
+  // Fetches a student based on the scanned value (USN or LRN)
+  // Returns null when the student doesnt exist, or is not included in the event
   const {
-    data: studentInfo,
+    data: student,
     isError: isStudentFetchingError,
+    error: studentFetchError,
     isFetching,
-  } = useStudent(scannedValue);
+  } = useStudentFromEvent({
+    eventId: selectedEvent?.id,
+    studentId: scannedValue,
+  });
 
-  const { mutate: saveRecord, isPending } = useSaveRecord(
+  // Saves a student record once it has been scanned
+  const { mutate: saveRecord, isPending: isSavingRecord } = useSaveRecord(
     selectedEvent?.id || ""
   );
 
-  const handleScanResult = useCallback(
-    (result: string) => {
-      if (!result) {
-        toastDanger("Invalid scan result");
-        return;
-      }
+  const handleScanResult = useCallback((result: string) => {
+    // TODO: Add validation here to check if its a valid id
+    if (!result) {
+      toastDanger("Invalid scan result");
+      return;
+    }
 
-      if (!selectedEvent) {
-        toastDanger("Failed to record attendance: No event selected");
-        return;
-      }
+    // Set the scanned value to trigger student fetch
+    setScannedValue(result);
+  }, []);
 
-      // Set the scanned value to trigger student fetch
-      setScannedValue(result);
-    },
-    [selectedEvent]
-  );
-
-  // Effect to handle student data after fetch
   useEffect(() => {
     if (!scannedValue || isFetching) return;
+    // If we already created the event using the same scanned value, then just return
+    if (prevScannedValRef.current === scannedValue) {
+      toastInfo(`This student's attendance is already recorded`);
+      return;
+    }
 
-    if (isStudentFetchingError || !studentInfo) {
+    if (studentFetchError) {
+      console.error("Error: ", studentFetchError);
+    }
+
+    if (isStudentFetchingError || !student) {
       toastDanger(`No student found with ID: ${scannedValue}`);
       setScannedValue("");
       return;
     }
 
+    if (!selectedEvent) {
+      toastDanger("Failed to record attendance: No event selected");
+      return;
+    }
+
+    // Create the record object
     const record: NewRecord = {
-      eventId: selectedEvent?.id || "",
-      studentId: studentInfo.id,
+      eventId: selectedEvent.id,
+      studentId: student.id,
       status: "PRESENT",
       method: "SCANNED",
     };
 
+    // Save the record
     saveRecord(record, {
       onError: (error) => {
         toastWarning(`Attendance recording failed: ${error.message}`);
         console.error("Record save error:", error);
-        setScannedValue("");
       },
       onSuccess: () => {
-        toastSuccess(`Successfully recorded attendance for ${studentInfo.firstName} ${studentInfo.lastName}`);
-        setScannedValue("");
+        toastSuccess(
+          `Successfully recorded attendance for ${student.firstName} ${student.lastName}`
+        );
+        // We store this ref as scanned so it doesn't re-save the record for the second time
+        // Since it was saved successfully after all
+        prevScannedValRef.current = scannedValue;
       },
     });
-  }, [studentInfo, isStudentFetchingError, isFetching, scannedValue]);
+
+    setScannedValue("");
+  }, [student, isFetching, isStudentFetchingError, selectedEvent]);
 
   if (!selectedEvent) {
     return <NoEventState />;
@@ -95,15 +118,15 @@ const ScannerSection = ({ selectedEvent }: ScannerSectionProps) => {
 
   return (
     <div className="flex h-[600px] gap-4 border-2 border-gray-300 w-full rounded-lg p-4 bg-white">
-      <Scanner onRead={handleScanResult} isPending={isPending} />
+      <Scanner onRead={handleScanResult} isPending={isSavingRecord} />
       <StudentDetails
         selectedEvent={selectedEvent}
-        data={studentInfo ?? null}
-        onSelect={setScannedValue}
-        isFetching={isFetching || isPending}
+        data={student ?? null}
+        onSelect={() => {}}
+        isFetching={isFetching}
       />
     </div>
   );
 };
 
-export default ScannerSection;
+export default AttendanceSection;
