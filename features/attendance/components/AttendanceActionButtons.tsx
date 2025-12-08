@@ -6,7 +6,7 @@ import {
 } from "@/globals/components/shared/toasts";
 import {
   useDeleteRecord,
-  useSaveRecord,
+  useCreateRecord,
   useUpdateRecordStatus,
 } from "@/globals/hooks/useRecords";
 import { NewRecord } from "@/globals/types/records";
@@ -81,7 +81,7 @@ const AttendanceActionButtons = ({
   studentId,
   recordId,
 }: AttendanceActionButtonsProps) => {
-  const { mutateAsync: createRecord, isPending: isCreating } = useSaveRecord(eventId);
+  const { mutateAsync: createRecord, isPending: isCreating } = useCreateRecord(eventId);
   const { mutateAsync: updateStatus, isPending: isUpdating } = useUpdateRecordStatus(eventId);
   const { mutateAsync: deleteRecord, isPending: isDeleting } = useDeleteRecord(eventId);
 

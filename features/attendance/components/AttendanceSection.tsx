@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Scanner from "@/features/attendance/components/Scanner";
 import { useStudentFromEvent } from "@/globals/hooks/useStudents";
 import StudentDetails from "@/features/attendance/components/StudentDetails";
-import { useSaveRecord } from "@/globals/hooks/useRecords";
+import { useCreateRecord } from "@/globals/hooks/useRecords";
 import { NewRecord } from "@/globals/types/records";
 import { Event } from "@/globals/types/events";
 import {
@@ -47,7 +47,7 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
   });
 
   // Saves a student record once it has been scanned
-  const { mutate: saveRecord, isPending: isSavingRecord } = useSaveRecord(
+  const { mutate: createAttendanceRecord, isPending: isSavingRecord } = useCreateRecord(
     selectedEvent?.id || ""
   );
 
@@ -94,7 +94,7 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
     };
 
     // Save the record
-    saveRecord(record, {
+    createAttendanceRecord(record, {
       onError: (error) => {
         toastWarning(`Attendance recording failed: ${error.message}`);
         console.error("Record save error:", error);

@@ -1,129 +1,108 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Record, NewRecord } from "@/globals/types/records";
-import { StudentAttendanceRecord } from "../types/students";
+import { StudentAttendanceRecord } from "@/globals/types/students";
 import { AttendanceStatus } from "@prisma/client";
+import { fetchApi } from "@/globals/utils/api";
+import { queryKeys } from "@/globals/utils/queryKeys";
 
-// Fetch event records
-const fetchEventRecords = async (
-  eventId: string
-): Promise<StudentAttendanceRecord[]> => {
-  const res = await fetch(`/api/events/${eventId}/records`);
-  if (!res.ok) throw new Error("Failed to fetch event records");
-  return await res.json();
-};
-
-// Update record status
-const updateRecordStatus = async (
-  recordId: string,
-  status: AttendanceStatus
-) => {
-  const response = await fetch(`/api/records/${recordId}/${status}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to update record");
-  }
-  return await response.json();
-};
-
-// Save (Add or Edit) a record
-const saveRecord = async (record: Record | NewRecord) => {
-  const res = await fetch("/api/records", {
-    method: "POST",
-    body: JSON.stringify(record),
-    headers: { "Content-Type": "application/json" },
-  });
-  if (!res.ok) throw new Error("Failed to save record");
-  return await res.json();
-};
-
-// Delete a record
-const deleteRecord = async (id: string) => {
-  const res = await fetch(`/api/records/${id}`, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-  });
-  if (!res.ok) throw new Error("Failed to delete record");
-  return await res.json();
-};
-
-export const useSaveRecord = (eventId: string) => {
+/**
+ * Creates a new attendance record.
+ *
+ * Uses optimistic updates to immediately reflect the new record in the UI
+ * before the server confirms the change.
+ */
+export const useCreateRecord = (eventId: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: saveRecord,
-    onMutate: async (newRecord) => {
-      // Cancel ongoing queries
-      await queryClient.cancelQueries({
-        queryKey: ["event", eventId, "records"],
+    mutationFn: async (record: NewRecord) => {
+      return fetchApi<Record>("/api/records", {
+        method: "POST",
+        body: JSON.stringify(record),
+        headers: { "Content-Type": "application/json" },
       });
+    },
 
-      // Get previous data
-      const previousRecords = queryClient.getQueryData<Record[] | NewRecord[]>([
-        "event",
-        eventId,
-        "records",
-      ]);
+    /** Runs before the mutation request is sent */
+    onMutate: async (newRecord) => {
+      const key = queryKeys.events.records(eventId);
 
-      // Optimistically add the new record
+      // Cancel outgoing refetches to prevent overwriting optimistic state
+      await queryClient.cancelQueries({ queryKey: key });
+
+      // Snapshot current cache state so we can rollback if needed
+      const previousRecords =
+        queryClient.getQueryData<(Record | NewRecord)[]>(key);
+
+      // Apply optimistic update
       if (previousRecords) {
-        const optimisticRecord: Record | NewRecord = {
-          ...newRecord,
-          id: `temp-${Date.now()}`, // Temporary ID
+        const optimisticRecord: Record = {
+          ...(newRecord as Record),
+          id: `temp-${Date.now()}`, // Temporary client-only ID
           createdAt: new Date(),
           updatedAt: new Date(),
         };
 
-        queryClient.setQueryData(
-          ["event", eventId, "records"],
-          [...previousRecords, optimisticRecord]
-        );
+        queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
       }
 
+      // Return context for rollback in onError
       return { previousRecords };
     },
-    onError: (err, variables, context: any) => {
+
+    /** Rollback optimistic update if server request fails */
+    onError: (_err, _variables, context) => {
+      const key = queryKeys.events.records(eventId);
       if (context?.previousRecords) {
-        queryClient.setQueryData(
-          ["event", eventId, "records"],
-          context.previousRecords
-        );
+        queryClient.setQueryData(key, context.previousRecords);
       }
     },
-    onSuccess: () =>
+
+    /** Re-sync server state after success */
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["event", eventId, "records"],
+        queryKey: queryKeys.events.records(eventId),
         exact: true,
-      }),
+      });
+    },
   });
 };
 
+/**
+ * Updates the attendance status of a single record.
+ *
+ * Uses optimistic updates so the UI feels instant.
+ */
 export const useUpdateRecordStatus = (eventId: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       recordId,
       status,
     }: {
       recordId: string;
       status: AttendanceStatus;
-    }) => updateRecordStatus(recordId, status),
-    onMutate: async ({ recordId, status }) => {
-      // Cancel ongoing queries
-      await queryClient.cancelQueries({
-        queryKey: ["event", eventId, "records"],
+    }) => {
+      return fetchApi<Record>(`/api/records/${recordId}/${status}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
       });
+    },
 
-      // Get previous data
-      const previousRecords = queryClient.getQueryData<
-        StudentAttendanceRecord[]
-      >(["event", eventId, "records"]);
+    onMutate: async ({ recordId, status }) => {
+      const key = queryKeys.events.records(eventId);
 
-      // Optimistically update the record
+      await queryClient.cancelQueries({ queryKey: key });
+
+      // Snapshot current cache
+      const previousRecords =
+        queryClient.getQueryData<StudentAttendanceRecord[]>(key);
+
+      // Optimistic in-place update
       if (previousRecords) {
         queryClient.setQueryData(
-          ["event", eventId, "records"],
+          key,
           previousRecords.map((record) =>
             record.id === recordId ? { ...record, status } : record
           )
@@ -132,93 +111,106 @@ export const useUpdateRecordStatus = (eventId: string) => {
 
       return { previousRecords };
     },
-    onError: (err, variables, context: any) => {
+
+    onError: (_err, _vars, context) => {
+      const key = queryKeys.events.records(eventId);
       if (context?.previousRecords) {
-        queryClient.setQueryData(
-          ["event", eventId, "records"],
-          context.previousRecords
-        );
+        queryClient.setQueryData(key, context.previousRecords);
       }
     },
-    onSuccess: () =>
+
+    onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["event", eventId, "records"],
+        queryKey: queryKeys.events.records(eventId),
         exact: true,
-      }),
+      });
+    },
   });
 };
 
+/**
+ * Deletes a single attendance record.
+ *
+ * Uses optimistic removal so the row disappears instantly.
+ */
 export const useDeleteRecord = (eventId: string) => {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: deleteRecord,
-    onMutate: async (recordId) => {
-      // Cancel ongoing queries
-      await queryClient.cancelQueries({
-        queryKey: ["event", eventId, "records"],
+    mutationFn: async (id: string) => {
+      return fetchApi<Record>(`/api/records/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
       });
+    },
 
-      // Get previous data
-      const previousRecords = queryClient.getQueryData<
-        StudentAttendanceRecord[]
-      >(["event", eventId, "records"]);
+    onMutate: async (recordId) => {
+      const key = queryKeys.events.records(eventId);
 
-      // Optimistically remove the record
+      await queryClient.cancelQueries({ queryKey: key });
+
+      const previousRecords =
+        queryClient.getQueryData<StudentAttendanceRecord[]>(key);
+
+      // Optimistically remove record from cache
       if (previousRecords) {
         queryClient.setQueryData(
-          ["event", eventId, "records"],
+          key,
           previousRecords.filter((record) => record.id !== recordId)
         );
       }
 
       return { previousRecords };
     },
-    onError: (err, variables, context: any) => {
+
+    onError: (_err, _vars, context) => {
+      const key = queryKeys.events.records(eventId);
       if (context?.previousRecords) {
-        queryClient.setQueryData(
-          ["event", eventId, "records"],
-          context.previousRecords
-        );
+        queryClient.setQueryData(key, context.previousRecords);
       }
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["event", eventId, "records"],
-        exact: true,
-      }),
-  });
-};
 
-export const useEventAttendanceRecords = (eventId?: string) => {
-  return useQuery({
-    queryKey: ["event", eventId, "records"],
-    queryFn: () => (eventId ? fetchEventRecords(eventId) : null),
-    enabled: !!eventId,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.events.records(eventId),
+        exact: true,
+      });
+    },
   });
 };
 
 /**
- * Fetches the attendance record of a student in an event
+ * Fetches all attendance records for an event.
+ */
+export const useEventAttendanceRecords = (eventId?: string) => {
+  return useQuery({
+    queryKey: queryKeys.events.records(eventId!),
+    enabled: !!eventId,
+    queryFn: async () => {
+      if (!eventId) return null;
+
+      return fetchApi<StudentAttendanceRecord[]>(
+        `/api/events/${eventId}/records`
+      );
+    },
+  });
+};
+
+/**
+ * Fetches the attendance record of a specific student in a specific event.
  *
- * @returns StudentAttendanceRecord if it exists, and null otherwise
+ * Returns null when no record exists.
  */
 export const useEventStudentRecord = (eventId?: string, studentId?: string) => {
   return useQuery({
-    queryKey: ["record", eventId, studentId],
+    queryKey: queryKeys.records.byEventStudent(eventId!, studentId!),
     enabled: !!eventId && !!studentId,
-    queryFn: async () => {
+    queryFn: async (): Promise<StudentAttendanceRecord | null> => {
       if (!eventId || !studentId) return null;
 
-      const res = await fetch(
+      return fetchApi<StudentAttendanceRecord>(
         `/api/records?eventId=${eventId}&studentId=${studentId}`
       );
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
-      }
-
-      return await res.json();
     },
   });
 };
