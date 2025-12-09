@@ -1,18 +1,20 @@
 import { prisma } from "@/globals/libs/prisma";
 import { StudentAttendanceRecord } from "@/globals/types/students";
+import { err, ok } from "@/globals/utils/api";
 import { fullName } from "@/globals/utils/formatting";
+import { handlePrismaError } from "@/globals/utils/prismaError";
 import { NextResponse } from "next/server";
 
 // Fetch all attendance record of a specific event
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { eventId: string } }
 ) {
-  const { id: eventId } = await params;
+  const { eventId } = await params;
 
   try {
     const recordsWithStudent: any = await prisma.record.findMany({
-      where: { eventId: eventId },
+      where: { eventId },
       select: {
         id: true,
         status: true,
@@ -48,12 +50,9 @@ export async function GET(
       })
     );
 
-    return NextResponse.json(records, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching records:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch records" },
-      { status: 500 }
-    );
+    return NextResponse.json(ok(records), { status: 200 });
+  } catch (e) {
+    const { message, status } = handlePrismaError(e);
+    return NextResponse.json(err(message), { status });
   }
 }

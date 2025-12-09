@@ -1,33 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
+import { err, ok } from "@/globals/utils/api";
+import { handlePrismaError } from "@/globals/utils/prismaError";
 
 export async function POST(req: Request) {
   try {
-    const { eventId, studentId, status, method } = await req.json();
+    const body = await req.json();
 
-    const alreadyExists = await prisma.record.findUnique({
-      where: { eventId_studentId: { eventId, studentId } },
+    const created = await prisma.record.create({
+      data: body,
     });
 
-    if (alreadyExists) {
-      console.error("This record already exists");
-      return NextResponse.json(
-        { message: "This record already exists" },
-        { status: 409 }
-      );
-    }
-
-    const record = await prisma.record.create({
-      data: { eventId, studentId, status, method },
-    });
-
-    return NextResponse.json({ record }, { status: 201 });
-  } catch (error) {
-    console.error("Failed to create record: ", error);
-    return NextResponse.json(
-      { message: "Failed to create record." },
-      { status: 500 }
-    );
+    return NextResponse.json(ok(created), { status: 201 });
+  } catch (e) {
+    const { status, message } = handlePrismaError(e);
+    return NextResponse.json(err(message), { status });
   }
 }
 
@@ -46,7 +33,7 @@ export async function GET(req: NextRequest) {
         where: { eventId_studentId: { eventId, studentId } },
       });
 
-      return NextResponse.json(record, { status: 200 });
+      return NextResponse.json(ok(record), { status: 200 });
     }
 
     // Fetch all records of an event
@@ -55,7 +42,7 @@ export async function GET(req: NextRequest) {
         where: { eventId: eventId },
       });
 
-      return NextResponse.json(records, { status: 200 });
+      return NextResponse.json(ok(records), { status: 200 });
     }
 
     // Fetch all records of a student, from all events
@@ -64,23 +51,15 @@ export async function GET(req: NextRequest) {
         where: { studentId: studentId },
       });
 
-      return NextResponse.json(records, { status: 200 });
+      return NextResponse.json(ok(records), { status: 200 });
     }
 
     // When no searchParams is found, fetch all records
     const allRecords = await prisma.record.findMany();
 
-    return NextResponse.json(allRecords, { status: 200 });
-  } catch (error: any) {
-    console.error("Error fetching record:", error);
-
-    return NextResponse.json(
-      {
-        error:
-          error.message ??
-          "Unknown server error occured while fetching records",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json(ok(allRecords), { status: 200 });
+  } catch (e) {
+    const { status, message } = handlePrismaError(e);
+    return NextResponse.json(err(message), { status });
   }
 }

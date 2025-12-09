@@ -1,24 +1,25 @@
 import { prisma } from "@/globals/libs/prisma";
+import { err, ok } from "@/globals/utils/api";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
+import { handlePrismaError } from "@/globals/utils/prismaError";
 import { AttendanceStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { eventId: string } }
 ) {
   try {
-    // eventId
-    const { id } = await params;
+    const { eventId } = await params;
 
-    if (!id) {
-      return NextResponse.json({ error: "Missing event id" }, { status: 400 });
+    if (!eventId) {
+      return NextResponse.json(err("Missing event id"), { status: 400 });
     }
 
-    const event = await prisma.event.findUnique({ where: { id } });
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
 
     if (!event) {
-      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+      return NextResponse.json(err("Event not found"), { status: 404 });
     }
 
     // Eligible students based on event criteria
@@ -29,7 +30,7 @@ export async function GET(
     // Students who actually attended
     const presentStudentsCount = await prisma.record.count({
       where: {
-        eventId: id,
+        eventId,
         status: {
           in: [AttendanceStatus.PRESENT, AttendanceStatus.LATE],
         },
@@ -40,20 +41,15 @@ export async function GET(
       eligibleStudentsCount - presentStudentsCount;
 
     return NextResponse.json(
-      {
-        data: {
-          eligible: eligibleStudentsCount,
-          present: presentStudentsCount,
-          unattended: unattendedStudentsCount,
-        },
-      },
+      ok({
+        eligible: eligibleStudentsCount,
+        present: presentStudentsCount,
+        unattended: unattendedStudentsCount,
+      }),
       { status: 200 }
     );
-  } catch (error) {
-    console.error("Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch event stats" },
-      { status: 500 }
-    );
+  } catch (e) {
+    const { message, status } = handlePrismaError(e);
+    return NextResponse.json(err(message), { status });
   }
 }

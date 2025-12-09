@@ -18,8 +18,8 @@ export function ok<T>(data: T): ApiResponse<T> {
   return { success: true, data };
 }
 
-export function err(message: string): ApiResponse<never> {
-  return { success: false, message };
+export function err(message: string, code?: string): ApiResponse<never> {
+  return { success: false, message, code };
 }
 
 /**
