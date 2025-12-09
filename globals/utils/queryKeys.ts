@@ -6,15 +6,23 @@
 export const queryKeys = {
   events: {
     all: () => ["events"] as const,
-    byId: (id: string) => ["events", id] as const,
-    records: (id: string) => ["events", id, "records"] as const,
+    withId: (eventId: string) => ["events", "byId", eventId] as const,
+    statsFromEvent: (eventId: string) => ["events", "stats", eventId] as const,
+  },
+  students: {
+    all: () => ["students"] as const,
+    withId: (studentId: string) => ["students", "byId", studentId] as const,
+    fromEvent: (eventId: string) => ["students", "fromEvent", eventId] as const,
+    fromEventWithId: (eventId: string, studentId: string) =>
+      ["students", "fromEventWithId", eventId, studentId] as const,
   },
   records: {
     all: () => ["records"] as const,
-    byId: (id: string) => ["records", id] as const,
-    byEvent: (eventId: string) =>
-      ["records", "by-event", eventId] as const,
-    byEventStudent: (eventId: string, studentId: string) =>
-      ["records", "by-event-student", eventId, studentId] as const,
+    withId: (id: string) => ["records", "byId", id] as const,
+    fromEvent: (eventId: string) => ["records", "fromEvent", eventId] as const,
+    fromStudent: (studentId: string) =>
+      ["records", "fromStudent", studentId] as const,
+    fromEventForStudent: (eventId: string, studentId: string) =>
+      ["records", "fromEventForStudent", eventId, studentId] as const,
   },
 };
