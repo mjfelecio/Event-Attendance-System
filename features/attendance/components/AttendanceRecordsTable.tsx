@@ -7,7 +7,7 @@ import FilterButton from "@/features/attendance/components/FilterButton";
 import SearchBar from "@/features/attendance/components/SearchBar";
 import { useState } from "react";
 import { Event } from "@/globals/types/events";
-import { useEventAttendanceRecords } from "@/globals/hooks/useRecords";
+import { useAllRecordsFromEvent } from "@/globals/hooks/useRecords";
 import ShowUnattendedStudentsToggle from "@/features/attendance/components/ShowUnattendedStudentsToggle";
 
 type Props = {
@@ -15,7 +15,7 @@ type Props = {
 };
 
 const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
-  const { data, isLoading } = useEventAttendanceRecords(selectedEvent?.id);
+  const { data, isLoading } = useAllRecordsFromEvent(selectedEvent?.id);
   const [query, setQuery] = useState("");
   const records = data ?? [];
 

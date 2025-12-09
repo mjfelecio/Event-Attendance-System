@@ -15,7 +15,7 @@ export const useCreateRecord = (eventId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (record: NewRecord) => {
+    mutationFn: (record: NewRecord) => {
       return fetchApi<Record>("/api/records", {
         method: "POST",
         body: JSON.stringify(record),
@@ -25,7 +25,7 @@ export const useCreateRecord = (eventId: string) => {
 
     /** Runs before the mutation request is sent */
     onMutate: async (newRecord) => {
-      const key = queryKeys.events.records(eventId);
+      const key = queryKeys.records.fromEvent(eventId);
 
       // Cancel outgoing refetches to prevent overwriting optimistic state
       await queryClient.cancelQueries({ queryKey: key });
@@ -52,7 +52,7 @@ export const useCreateRecord = (eventId: string) => {
 
     /** Rollback optimistic update if server request fails */
     onError: (_err, _variables, context) => {
-      const key = queryKeys.events.records(eventId);
+      const key = queryKeys.records.fromEvent(eventId);
       if (context?.previousRecords) {
         queryClient.setQueryData(key, context.previousRecords);
       }
@@ -61,7 +61,7 @@ export const useCreateRecord = (eventId: string) => {
     /** Re-sync server state after success */
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.events.records(eventId),
+        queryKey: queryKeys.records.fromEvent(eventId),
         exact: true,
       });
     },
@@ -77,7 +77,7 @@ export const useUpdateRecordStatus = (eventId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       recordId,
       status,
     }: {
@@ -91,7 +91,7 @@ export const useUpdateRecordStatus = (eventId: string) => {
     },
 
     onMutate: async ({ recordId, status }) => {
-      const key = queryKeys.events.records(eventId);
+      const key = queryKeys.records.fromEvent(eventId);
 
       await queryClient.cancelQueries({ queryKey: key });
 
@@ -113,7 +113,7 @@ export const useUpdateRecordStatus = (eventId: string) => {
     },
 
     onError: (_err, _vars, context) => {
-      const key = queryKeys.events.records(eventId);
+      const key = queryKeys.records.fromEvent(eventId);
       if (context?.previousRecords) {
         queryClient.setQueryData(key, context.previousRecords);
       }
@@ -121,7 +121,7 @@ export const useUpdateRecordStatus = (eventId: string) => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.events.records(eventId),
+        queryKey: queryKeys.records.fromEvent(eventId),
         exact: true,
       });
     },
@@ -137,7 +137,7 @@ export const useDeleteRecord = (eventId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: (id: string) => {
       return fetchApi<Record>(`/api/records/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -145,7 +145,7 @@ export const useDeleteRecord = (eventId: string) => {
     },
 
     onMutate: async (recordId) => {
-      const key = queryKeys.events.records(eventId);
+      const key = queryKeys.records.fromEvent(eventId);
 
       await queryClient.cancelQueries({ queryKey: key });
 
@@ -164,7 +164,7 @@ export const useDeleteRecord = (eventId: string) => {
     },
 
     onError: (_err, _vars, context) => {
-      const key = queryKeys.events.records(eventId);
+      const key = queryKeys.records.fromEvent(eventId);
       if (context?.previousRecords) {
         queryClient.setQueryData(key, context.previousRecords);
       }
@@ -172,7 +172,7 @@ export const useDeleteRecord = (eventId: string) => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.events.records(eventId),
+        queryKey: queryKeys.records.fromEvent(eventId),
         exact: true,
       });
     },
@@ -182,9 +182,9 @@ export const useDeleteRecord = (eventId: string) => {
 /**
  * Fetches all attendance records for an event.
  */
-export const useEventAttendanceRecords = (eventId?: string) => {
+export const useAllRecordsFromEvent = (eventId?: string) => {
   return useQuery({
-    queryKey: queryKeys.events.records(eventId!),
+    queryKey: queryKeys.records.fromEvent(eventId!),
     enabled: !!eventId,
     queryFn: async () => {
       if (!eventId) return null;
@@ -201,9 +201,9 @@ export const useEventAttendanceRecords = (eventId?: string) => {
  *
  * Returns null when no record exists.
  */
-export const useEventStudentRecord = (eventId?: string, studentId?: string) => {
+export const useRecordOfStudentInEvent = (eventId?: string, studentId?: string) => {
   return useQuery({
-    queryKey: queryKeys.records.byEventStudent(eventId!, studentId!),
+    queryKey: queryKeys.records.fromEventForStudent(eventId!, studentId!),
     enabled: !!eventId && !!studentId,
     queryFn: async (): Promise<StudentAttendanceRecord | null> => {
       if (!eventId || !studentId) return null;

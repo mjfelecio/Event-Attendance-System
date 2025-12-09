@@ -9,3 +9,13 @@ export type EventStats = {
   present: number;
   unattended: number;
 };
+
+export type EventAPI = Omit<
+  Event,
+  "start" | "end" | "createdAt" | "updatedAt"
+> & {
+  start: string;
+  end: string;
+  createdAt: string;
+  updatedAt: string;
+};

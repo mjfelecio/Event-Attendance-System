@@ -6,8 +6,8 @@ import { useEventStudents } from "@/globals/hooks/useStudents";
 import { fullName } from "@/globals/utils/formatting";
 import SearchBar from "@/features/attendance/components/SearchBar";
 import {
-  useEventAttendanceRecords,
-  useEventStudentRecord,
+  useAllRecordsFromEvent,
+  useRecordOfStudentInEvent,
 } from "@/globals/hooks/useRecords";
 import StudentDetailsDisplay from "@/features/attendance/components/StudentDetailsDisplay";
 
@@ -50,7 +50,7 @@ const StudentDetails = ({
   const [query, setQuery] = useState("");
 
   const { data: students } = useEventStudents(selectedEvent?.id ?? null, query);
-  const { data: studentRecord } = useEventStudentRecord(selectedEvent?.id, data?.id);
+  const { data: studentRecord } = useRecordOfStudentInEvent(selectedEvent?.id, data?.id);
 
   const searchChoices: ComboBoxValue[] = useMemo(() => {
     if (!students) return [];

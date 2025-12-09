@@ -10,7 +10,7 @@ import ButtonWithIcon from "@/globals/components/shared/ButtonWithIcon";
 import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import DataCard from "@/features/attendance/components/DataCard";
 
-import useEvents, { useEventStats } from "@/globals/hooks/useEvents";
+import useEvents, { useStatsOfEvent } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 
 type Props = {
@@ -27,7 +27,7 @@ const AttendancePageHeader: React.FC<Props> = ({
     data: eventStats,
     isLoading: isStatsLoading,
     isError: isStatsError,
-  } = useEventStats(selectedEvent?.id);
+  } = useStatsOfEvent(selectedEvent?.id);
 
   // Compute attendance rate
   const attendanceRate = useMemo(() => {

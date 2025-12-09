@@ -1,12 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Student } from "@/globals/types/students";
+import { Student, StudentAPI } from "@/globals/types/students";
 import { useMemo } from "react";
-import { filterAndSortStudents } from "../utils/fuzzySearch";
-
-type StudentAPI = Omit<Student, "createdAt" | "updatedAt"> & {
-  createdAt: string;
-  updatedAt: string;
-};
+import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
+import { fetchApi } from "@/globals/utils/api";
+import { queryKeys } from "@/globals/utils/queryKeys";
 
 // Transform function to make sure that the dates are actually a Date object
 const transformStudent = (e: StudentAPI): Student => ({
@@ -15,42 +12,14 @@ const transformStudent = (e: StudentAPI): Student => ({
   updatedAt: new Date(e.updatedAt),
 });
 
-// Fetch
-export const fetchStudents = async (): Promise<Student[]> => {
-  const res = await fetch("/api/students");
-  if (!res.ok) throw new Error("Failed to fetch events");
-
-  const data: StudentAPI[] = await res.json();
-  return data.map(transformStudent);
-};
-
-// Fetch
-export const fetchEventStudents = async (
-  eventId: string
-): Promise<Student[]> => {
-  const res = await fetch(`/api/events/${eventId}/students`);
-  if (!res.ok) throw new Error("Failed to fetch events");
-
-  const data: StudentAPI[] = await res.json();
-  return data.map(transformStudent);
-};
-
-// Fetch a single student
-export const fetchStudentById = async (id: string): Promise<Student> => {
-  const res = await fetch(`/api/students/${id}`);
-  if (!res.ok) {
-    if (res.status === 404) throw new Error("Student not found");
-    throw new Error("Failed to fetch student");
-  }
-
-  const data: StudentAPI = await res.json();
-  return transformStudent(data);
-};
-
+/** Fetches all students */
 const useStudents = (query?: string) => {
   const { data: students, ...queryResult } = useQuery({
-    queryKey: ["students"],
-    queryFn: fetchStudents,
+    queryKey: queryKeys.students.all(),
+    queryFn: async (): Promise<Student[]> => {
+      const students = await fetchApi<StudentAPI[]>("/api/students");
+      return students.map(transformStudent);
+    },
   });
 
   // Memoize filtered and sorted results
@@ -65,11 +34,19 @@ const useStudents = (query?: string) => {
   };
 };
 
-export const useEventStudents = (eventId: string | null, query?: string) => {
+/** Fetches all students included in an event */
+export const useEventStudents = (eventId?: string, query?: string) => {
   const { data: students, ...queryResult } = useQuery({
-    queryKey: [eventId, "students"],
+    queryKey: queryKeys.students.fromEvent(eventId!),
     enabled: !!eventId,
-    queryFn: () => fetchEventStudents(eventId!),
+    queryFn: async () => {
+      if (!eventId) return;
+
+      const students = await fetchApi<StudentAPI[]>(
+        `/api/events/${eventId}/students`
+      );
+      return students.map(transformStudent);
+    },
   });
 
   // Memoize filtered and sorted results
@@ -83,46 +60,45 @@ export const useEventStudents = (eventId: string | null, query?: string) => {
     data: filteredStudents,
   };
 };
-
-// Fetches a student by ID
-export const useStudent = (id: string) => {
-  return useQuery({
-    queryKey: ["student", id],
-    queryFn: () => fetchStudentById(id),
-    // Only run the query if an ID is provided
-    enabled: !!id,
-  });
-};
-
-type StudentFetchOptions = { eventId?: string; studentId?: string };
 
 /**
- * Fetches a student that is included in the event through id
+ * Fetches a student through studentId
+ */
+export const useStudent = (studentId?: string) => {
+  return useQuery({
+    queryKey: queryKeys.students.withId(studentId!),
+    enabled: !!studentId,
+    queryFn: async () => {
+      if (!studentId) return;
+
+      const student = await fetchApi<StudentAPI>(`/api/students/${studentId}`);
+      return transformStudent(student);
+    },
+  });
+};
+
+/**
+ * Fetches a student that is included in the event through eventId and studentId
  *
  * @returns Student, null if they do not exist or is not included in the event
  */
 export const useStudentFromEvent = ({
   eventId,
   studentId,
-}: StudentFetchOptions) => {
+}: {
+  eventId?: string;
+  studentId?: string;
+}) => {
   return useQuery({
-    queryKey: ["students", eventId, studentId],
-    // Only run the query if a student ID is provided
+    queryKey: queryKeys.students.fromEventWithId(eventId!, studentId!),
     enabled: !!eventId && !!studentId,
     queryFn: async () => {
       if (!eventId || !studentId) return null;
 
-      const res = await fetch(`/api/events/${eventId}/students/${studentId}`);
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
-      }
-
-      const data: StudentAPI = await res.json();
-
-      console.log(data)
-      return transformStudent(data);
+      const student = await fetchApi<StudentAPI>(
+        `/api/events/${eventId}/students/${studentId}`
+      );
+      return transformStudent(student);
     },
   });
 };

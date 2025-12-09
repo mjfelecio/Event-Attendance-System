@@ -12,4 +12,9 @@ export type StudentAttendanceRecord = {
 	schoolLevel: SchoolLevel,
 	section: string,
 	timestamp: string; // Date UTC timestamp
-} 
+}
+
+export type StudentAPI = Omit<Student, "createdAt" | "updatedAt"> & {
+  createdAt: string;
+  updatedAt: string;
+};
