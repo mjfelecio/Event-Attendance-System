@@ -1,5 +1,5 @@
 import { prisma } from "@/globals/libs/prisma";
-import { err } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 import { handlePrismaError } from "@/globals/utils/prismaError";
 import { NextRequest, NextResponse } from "next/server";
@@ -31,7 +31,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(student);
+    return NextResponse.json(ok(student), { status: 200 });
   } catch (e) {
     const { status, message } = handlePrismaError(e);
     return NextResponse.json(err(message), { status });

@@ -13,6 +13,7 @@ import {
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
+import { Student } from "@/globals/types/students";
 
 type ScannerSectionProps = {
   selectedEvent: Event | null;
@@ -32,10 +33,12 @@ const NoEventState = () => (
 
 const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
   const [scannedValue, setScannedValue] = useState("");
+  const [displayedStudent, setDisplayedStudent] = useState<Student | null>(
+    null
+  );
+  const [scanSource, setScanSource] = useState<"scan" | "">("");
   const prevScannedValRef = useRef("");
 
-  // Fetches a student based on the scanned value (USN or LRN)
-  // Returns null when the student doesnt exist, or is not included in the event
   const {
     data: student,
     isError: isStudentFetchingError,
@@ -46,46 +49,65 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
     studentId: scannedValue,
   });
 
-  // Saves a student record once it has been scanned
-  const { mutate: createAttendanceRecord, isPending: isSavingRecord } = useCreateRecord(
-    selectedEvent?.id || ""
-  );
+  const { mutate: createAttendanceRecord, isPending: isSavingRecord } =
+    useCreateRecord(selectedEvent?.id || "");
 
   const handleScanResult = useCallback((result: string) => {
-    // TODO: Add validation here to check if its a valid id
     if (!result) {
       toastDanger("Invalid scan result");
       return;
     }
 
-    // Set the scanned value to trigger student fetch
     setScannedValue(result);
+    setScanSource("scan");
+  }, []);
+
+  /**
+   * Manual selection from details page
+   */
+  const handleManualSelect = useCallback((student: Student) => {
+    setDisplayedStudent(student);
+    setScanSource("");
   }, []);
 
   useEffect(() => {
     if (!scannedValue || isFetching) return;
-    // If we already created the event using the same scanned value, then just return
-    if (prevScannedValRef.current === scannedValue) {
-      toastInfo(`This student's attendance is already recorded`);
-      return;
-    }
 
+    if (scanSource !== "scan") return;
+
+    // If fetch failed
     if (studentFetchError) {
-      console.error("Error: ", studentFetchError);
+      console.error("Student fetch error:", studentFetchError);
     }
 
     if (isStudentFetchingError || !student) {
       toastDanger(`No student found with ID: ${scannedValue}`);
       setScannedValue("");
+      setScanSource("");
+      return;
+    }
+
+    // Always show the fetched student
+    setDisplayedStudent(student);
+
+    // Only save if this came from a scan
+    if (scanSource !== "scan") return;
+
+    // Prevent double-saving
+    if (prevScannedValRef.current === scannedValue) {
+      toastInfo(`This student's attendance is already recorded`);
+      setScannedValue("");
+      setScanSource("");
       return;
     }
 
     if (!selectedEvent) {
       toastDanger("Failed to record attendance: No event selected");
+      setScannedValue("");
+      setScanSource("");
       return;
     }
 
-    // Create the record object
     const record: NewRecord = {
       eventId: selectedEvent.id,
       studentId: student.id,
@@ -93,24 +115,36 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
       method: "SCANNED",
     };
 
-    // Save the record
     createAttendanceRecord(record, {
       onError: (error) => {
+        if (error.message.includes("already exists")) {
+          toastWarning("Student attendance was already recorded");
+          return;
+        }
         toastWarning(`Attendance recording failed: ${error.message}`);
-        console.error("Record save error:", error);
+        console.warn("Record save error:", error);
       },
       onSuccess: () => {
         toastSuccess(
           `Successfully recorded attendance for ${student.firstName} ${student.lastName}`
         );
-        // We store this ref as scanned so it doesn't re-save the record for the second time
-        // Since it was saved successfully after all
         prevScannedValRef.current = scannedValue;
       },
     });
 
+    // Reset scan state
     setScannedValue("");
-  }, [student, isFetching, isStudentFetchingError, selectedEvent]);
+    setScanSource("");
+  }, [
+    student,
+    isFetching,
+    isStudentFetchingError,
+    studentFetchError,
+    scanSource,
+    scannedValue,
+    selectedEvent,
+    createAttendanceRecord,
+  ]);
 
   if (!selectedEvent) {
     return <NoEventState />;
@@ -119,11 +153,12 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
   return (
     <div className="flex h-[600px] gap-4 border-2 border-gray-300 w-full rounded-lg p-4 bg-white">
       <Scanner onRead={handleScanResult} isPending={isSavingRecord} />
+
       <StudentDetails
         selectedEvent={selectedEvent}
-        data={student ?? null}
-        onSelect={() => {}}
+        displayedStudent={displayedStudent}
         isFetching={isFetching}
+        onSelect={handleManualSelect}
       />
     </div>
   );

@@ -1,25 +1,22 @@
-import { useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Student } from "@/globals/types/students";
 import { Event } from "@/globals/types/events";
 import { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { useEventStudents } from "@/globals/hooks/useStudents";
 import { fullName } from "@/globals/utils/formatting";
 import SearchBar from "@/features/attendance/components/SearchBar";
-import {
-  useAllRecordsFromEvent,
-  useRecordOfStudentInEvent,
-} from "@/globals/hooks/useRecords";
+import { useRecordOfStudentInEvent } from "@/globals/hooks/useRecords";
 import StudentDetailsDisplay from "@/features/attendance/components/StudentDetailsDisplay";
 
 type StudentDetailsProps = {
-  /** The currently selected student data to display */
-  data: Student | null;
+  /** The student scanned in the scanner */
+  displayedStudent: Student | null;
   /** The event context for filtering students */
   selectedEvent: Event | null;
   /** Whether the current student to be displayed is being fetched */
   isFetching: boolean;
   /** Callback when a student is selected from search */
-  onSelect: (studentId: string) => void;
+  onSelect: (student: Student) => void;
 };
 
 /**
@@ -43,14 +40,17 @@ type StudentDetailsProps = {
  */
 const StudentDetails = ({
   selectedEvent,
-  data,
+  displayedStudent,
   isFetching,
-  onSelect,
+  onSelect
 }: StudentDetailsProps) => {
   const [query, setQuery] = useState("");
 
-  const { data: students } = useEventStudents(selectedEvent?.id ?? null, query);
-  const { data: studentRecord } = useRecordOfStudentInEvent(selectedEvent?.id, data?.id);
+  const { data: students } = useEventStudents(selectedEvent?.id, query);
+  const { data: studentRecord } = useRecordOfStudentInEvent(
+    selectedEvent?.id,
+    displayedStudent?.id
+  );
 
   const searchChoices: ComboBoxValue[] = useMemo(() => {
     if (!students) return [];
@@ -65,6 +65,13 @@ const StudentDetails = ({
     }));
   }, [students]);
 
+  const handleSelectStudent = useCallback((studentId: string) => {
+    const selectedStudent = students?.find((s) => s.id === studentId);
+    if (!selectedStudent) return;
+
+    onSelect(selectedStudent);
+  }, []);
+
   if (!selectedEvent) return null;
 
   return (
@@ -75,7 +82,7 @@ const StudentDetails = ({
           onQueryChange={setQuery}
           placeholder="Search student by name..."
           choices={searchChoices}
-          onSelect={onSelect}
+          onSelect={handleSelectStudent}
         />
       </div>
 
@@ -83,7 +90,7 @@ const StudentDetails = ({
       <div className="flex-1 flex flex-col p-6 overflow-y-auto">
         <StudentDetailsDisplay
           event={selectedEvent}
-          data={data}
+          data={displayedStudent}
           record={studentRecord ?? undefined}
           isLoading={isFetching}
         />
@@ -92,4 +99,4 @@ const StudentDetails = ({
   );
 };
 
-export default StudentDetails;
+export default StudentDetails
