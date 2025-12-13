@@ -1,6 +1,6 @@
 "use client";
 
-import EventCard from "@/features/calendar/components/EventCard";
+import EventCard from "@/globals/components/shared/EventCard";
 import useEvents from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 import { Loader2 } from "lucide-react";
@@ -14,10 +14,16 @@ const EventsList = () => {
   };
 
   return (
-    <div className="border-2 border-gray-300 rounded-md w-96 h-full">
-      <h1 className="text-xl md:text-2xl text-center font-bold my-2">Events</h1>
+    <div className="h-[calc(100vh-64px)] border-2 border-gray-300 rounded-md w-96 overflow-hidden">
+      {/* Header */}
+      <div className="bg-slate-200">
+        <h1 className="text-xl md:text-2xl text-center font-bold py-2">
+          Events
+        </h1>
+      </div>
+
       {/* Upcoming Events List */}
-      <div className="p-2 flex flex-col gap-2 h-[400px] md:h-[420px] rounded-xl overflow-y-auto">
+      <div className="p-2 flex flex-col gap-2 rounded-xl h-full overflow-y-scroll">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
