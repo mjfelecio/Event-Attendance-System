@@ -1,75 +1,83 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Event, NewEvent } from "@/globals/types/events";
-
-type EventAPI = Omit<Event, "start" | "end" | "created_at" | "updated_at"> & {
-  start: string;
-  end: string;
-  created_at: string;
-  updated_at: string;
-};
+import { Event, EventAPI, EventStats, NewEvent } from "@/globals/types/events";
+import { fetchApi } from "@/globals/utils/api";
+import { queryKeys } from "@/globals/utils/queryKeys";
 
 // Transform function to make sure that the dates are actually a Date object
 const transformEvent = (e: EventAPI): Event => ({
   ...e,
   start: new Date(e.start),
   end: new Date(e.end),
-  created_at: new Date(e.created_at),
-  updated_at: new Date(e.updated_at),
+  createdAt: new Date(e.createdAt),
+  updatedAt: new Date(e.updatedAt),
 });
 
-// Fetch
-export const fetchEvents = async (): Promise<Event[]> => {
-  const res = await fetch("/api/events");
-  if (!res.ok) throw new Error("Failed to fetch events");
-
-  const data: EventAPI[] = await res.json();
-  return data.map(transformEvent);
-};
-
-// Upsert (add or edit)
-const saveEvent = async (event: Event | NewEvent) => {
-  const res = await fetch("/api/events", {
-    method: "POST",
-    body: JSON.stringify(event),
-    headers: { "Content-Type": "application/json" },
-  });
-
-  if (!res.ok) throw new Error("Failed to save event");
-  return res.json();
-};
-
-// Delete
-const deleteEvent = async (id: string) => {
-  const res = await fetch("/api/events", {
-    method: "DELETE",
-    body: JSON.stringify({ id }),
-    headers: { "Content-Type": "application/json" },
-  });
-
-  if (!res.ok) throw new Error("Failed to delete event");
-  return res.json();
-};
-
+/**
+ * Creates or Edit an event
+ *
+ * @returns created or edited Event object
+ */
 export const useSaveEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: saveEvent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+    mutationFn: (event: Event | NewEvent) => {
+      return fetchApi("/api/events", {
+        method: "POST",
+        body: JSON.stringify(event),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
   });
 };
 
+/**
+ * Deletes an event
+ *
+ * @returns deleted Event
+ */
 export const useDeleteEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteEvent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+    mutationFn: (id: string) => {
+      return fetchApi("/api/events", {
+        method: "DELETE",
+        body: JSON.stringify({ id }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
   });
 };
 
+/**
+ * Fetches stats from the event
+ *
+ * @returns EventStats
+ */
+export const useStatsOfEvent = (eventId?: string) => {
+  return useQuery({
+    queryKey: queryKeys.events.statsFromEvent(eventId!),
+    enabled: !!eventId,
+    queryFn: () => {
+      if (!eventId) return null;
+
+      return fetchApi<EventStats>(`/api/events/${eventId}/stats`);
+    },
+  });
+};
+
+/**
+ * Fetches all events
+ */
 const useEvents = () => {
   return useQuery({
-    queryKey: ["events"],
-    queryFn: fetchEvents,
+    queryKey: queryKeys.events.all(),
+    queryFn: async () => {
+      const events = await fetchApi<EventAPI[]>("/api/events");
+      return events.map(transformEvent);
+    },
   });
 };
 

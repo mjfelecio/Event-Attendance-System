@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
-import { mapStudentToRow, mapStudentToSource, slugify } from "@/features/manage-list/utils/mapStudentToRow";
+import {
+  mapStudentToRow,
+  mapStudentToSource,
+  slugify,
+} from "@/features/manage-list/utils/mapStudentToRow";
 import { Prisma, SchoolLevel, StudentStatus, YearLevel } from "@prisma/client";
 import { z } from "zod";
+import { err, ok } from "@/globals/utils/api";
 
 const createStudentSchema = z.object({
   id: z.string().length(11).regex(/^\d+$/),
@@ -26,20 +31,21 @@ export async function POST(request: Request) {
     const data = createStudentSchema.parse(payload);
 
     if (data.schoolLevel === SchoolLevel.SHS && !data.shsStrand) {
-      return NextResponse.json(
-        { message: "SHS students require an SHS strand." },
-        { status: 400 }
-      );
+      return NextResponse.json(err("SHS students require an SHS strand."), {
+        status: 400,
+      });
     }
 
     if (data.schoolLevel === SchoolLevel.COLLEGE && !data.collegeProgram) {
       return NextResponse.json(
-        { message: "College students require a college program." },
+        err("College students require a college program."),
         { status: 400 }
       );
     }
 
-    const departmentSlug = data.department ? slugify(data.department) ?? null : null;
+    const departmentSlug = data.department
+      ? slugify(data.department) ?? null
+      : null;
     const houseSlug = data.house ? slugify(data.house) ?? null : null;
 
     const student = await prisma.student.create({
@@ -49,8 +55,12 @@ export async function POST(request: Request) {
         firstName: data.firstName,
         middleName: data.middleName ?? null,
         schoolLevel: data.schoolLevel,
-        shsStrand: data.schoolLevel === SchoolLevel.SHS ? data.shsStrand ?? null : null,
-        collegeProgram: data.schoolLevel === SchoolLevel.COLLEGE ? data.collegeProgram ?? null : null,
+        shsStrand:
+          data.schoolLevel === SchoolLevel.SHS ? data.shsStrand ?? null : null,
+        collegeProgram:
+          data.schoolLevel === SchoolLevel.COLLEGE
+            ? data.collegeProgram ?? null
+            : null,
         section: data.section,
         yearLevel: data.yearLevel,
         status: data.status ?? StudentStatus.ACTIVE,
@@ -69,9 +79,12 @@ export async function POST(request: Request) {
       })
     );
 
-    return NextResponse.json({ student: studentRow }, { status: 201 });
+    return NextResponse.json(ok({ student: studentRow }), { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // TODO: What is this issues object, I need to check how its used like
+      // Since this should conform to ok, err pattern for the NextResponse
+      // Like the other responses that I have modified
       return NextResponse.json(
         { message: "Invalid student data.", issues: error.flatten() },
         { status: 400 }
@@ -81,17 +94,14 @@ export async function POST(request: Request) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         return NextResponse.json(
-          { message: "A student with that ID already exists." },
+          err("A student with that ID already exists.", "DUPLICATE"),
           { status: 409 }
         );
       }
     }
 
     console.error("Failed to create student", error);
-    return NextResponse.json(
-      { message: "Failed to create student." },
-      { status: 500 }
-    );
+    return NextResponse.json(err("Failed to create student."), { status: 500 });
   }
 }
 
@@ -100,12 +110,9 @@ export async function GET() {
   try {
     const students = await prisma.student.findMany();
 
-    return NextResponse.json(students);
+    return NextResponse.json(ok(students));
   } catch (error) {
-    console.error('Error fetching students:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch students' }, 
-      { status: 500 }
-    );
+    console.error("Error fetching students:", error);
+    return NextResponse.json(err("Failed to fetch students"), { status: 500 });
   }
 }

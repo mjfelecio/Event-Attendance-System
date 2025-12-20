@@ -12,48 +12,95 @@ import {
 import { Label } from "@/globals/components/shad-cn/label";
 import ComboBox from "@/globals/components/shared/ComboBox";
 import FormInput from "@/globals/components/shared/FormInput";
-import { EVENT_CHOICES } from "@/features/calendar/constants/index";
 import { Textarea } from "@/globals/components/shad-cn/textarea";
 import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
-import { Controller, useWatch } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { useEventForm } from "@/features/calendar/hooks/useEventForm";
 import { useDeleteEvent, useSaveEvent } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
+import {
+  CATEGORY_GROUPS,
+  EVENT_CHOICES,
+} from "@/features/calendar/constants/categoryGroups";
+import { useMemo } from "react";
+import CheckboxGroup from "@/globals/components/shared/CheckboxGroup";
 
-type Props = {
+type EventDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
   initialData?: Partial<Event>;
   mode: "create" | "edit";
 };
 
-const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
+/**
+ * EventDrawer Component
+ *
+ * A drawer modal for creating and editing calendar events.
+ * Provides form fields for event details including title, location,
+ * category, date/time, and group selection.
+ *
+ * Features:
+ * - Create new events with date/time selection
+ * - Edit existing events with pre-filled data
+ * - Delete events (edit mode only)
+ * - Conditional group selection based on category
+ * - All-day event support
+ */
+const EventDrawer = ({
+  isOpen,
+  onClose,
+  initialData,
+  mode,
+}: EventDrawerProps) => {
   const isEdit = mode === "edit";
 
   const { mutate: saveEvent } = useSaveEvent();
   const { mutate: deleteEvent } = useDeleteEvent();
 
+  // Parse includedGroups from JSON string to array for form population
+  const initData = useMemo(
+    () =>
+      initialData
+        ? {
+            ...initialData,
+            includedGroups: initialData.includedGroups
+              ? JSON.parse(initialData.includedGroups)
+              : null,
+          }
+        : undefined,
+    [initialData]
+  );
+
   const {
     control,
     handleSubmit,
     resetForm,
+    watch,
     formState: { errors },
   } = useEventForm((data) => {
     saveEvent(data);
     onClose();
-  }, initialData);
+  }, initData);
 
-  const allDay = useWatch({
-    control,
-    name: "allDay",
-  });
+  // Watch form field changes to conditionally render sections
+  const allDay = watch("allDay");
+  const category = watch("category");
 
+  // TODO: Reset includedGroups when category changes
+  // Currently, changing category leaves stale group selections in the UI
+
+  /**
+   * Handle drawer close - reset form and close drawer
+   */
   const handleDrawerClose = () => {
     resetForm();
     onClose();
   };
 
+  /**
+   * Handle event deletion with confirmation dialog
+   */
   const handleDeleteEvent = () => {
     const confirmed = confirm("Are you sure you want to delete this event?");
     if (!confirmed || !initialData?.id) return;
@@ -61,6 +108,14 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
     deleteEvent(initialData.id);
     onClose();
   };
+
+  // Only show group selection for categories that require it
+  // (skip for ALL, COLLEGE, SHS which apply to everyone)
+  const showIncludedGroups = !(
+    category === "ALL" ||
+    category === "COLLEGE" ||
+    category === "SHS"
+  );
 
   return (
     <Drawer
@@ -79,9 +134,9 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
             </DrawerTitle>
           </DrawerHeader>
 
-          {/* Form Content */}
+          {/* Main form content */}
           <div className="px-4 flex flex-col gap-3 pb-24">
-            {/* Title */}
+            {/* Event Title Field */}
             <div>
               <Controller
                 name="title"
@@ -100,7 +155,7 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
               )}
             </div>
 
-            {/* Location */}
+            {/* Event Location Field */}
             <Controller
               name="location"
               control={control}
@@ -114,7 +169,7 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
               )}
             />
 
-            {/* Category */}
+            {/* Event Category Field */}
             <div>
               <Label className="text-md mb-1">Category</Label>
               <Controller
@@ -137,11 +192,41 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
               )}
             </div>
 
-            {/* Schedule */}
+            {/* Conditional Group Selection */}
+            {showIncludedGroups && (
+              <div>
+                <Label className="text-md mb-1">Included Groups</Label>
+                <Controller
+                  name="includedGroups"
+                  control={control}
+                  render={({ field }) => (
+                    <>
+                      {field.value && (
+                        <CheckboxGroup
+                          choices={CATEGORY_GROUPS[category].map(
+                            (c) => c.value
+                          )}
+                          placeholder={`Selected ${category.toLowerCase()}s`}
+                          selectedValues={field.value}
+                          onSelect={(v) => field.onChange(v)}
+                        />
+                      )}
+                    </>
+                  )}
+                />
+                {errors.includedGroups && (
+                  <p className="text-sm text-red-500">
+                    {errors.includedGroups.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Schedule Section */}
             <div>
               <p className="text-md font-medium mb-2">Schedule</p>
               <div className="w-full rounded-xl flex flex-col gap-2">
-                {/* All Day */}
+                {/* All Day Toggle */}
                 <div className="flex flex-row items-center gap-3">
                   <p className="font-medium text-sm">All Day</p>
                   <Controller
@@ -156,6 +241,7 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
                   />
                 </div>
 
+                {/* Start Date/Time */}
                 <Controller
                   name="start"
                   control={control}
@@ -169,6 +255,7 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
                   )}
                 />
 
+                {/* End Date/Time */}
                 <Controller
                   name="end"
                   control={control}
@@ -191,7 +278,7 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
               </div>
             </div>
 
-            {/* Description */}
+            {/* Event Description Field */}
             <div>
               <Label htmlFor="description" className="text-md mb-1">
                 Description
@@ -212,7 +299,9 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
             </div>
           </div>
 
+          {/* Action Buttons Footer */}
           <DrawerFooter className="absolute w-full bottom-0 flex flex-row justify-between items-center bg-white">
+            {/* Delete button in edit mode, empty placeholder in create mode */}
             {isEdit ? (
               <Button
                 type="button"
@@ -224,6 +313,8 @@ const EventDrawer = ({ isOpen, onClose, initialData, mode }: Props) => {
             ) : (
               <div></div>
             )}
+
+            {/* Close and Save buttons */}
             <div className="h-8 flex items-center gap-4">
               <DrawerClose asChild>
                 <Button
