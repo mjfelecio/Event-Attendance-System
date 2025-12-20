@@ -20,9 +20,9 @@ const createSlugPayload = (data: { department?: string; house?: string }) => {
 // Fetching a single student by id
 export async function GET(
   req: Request,
-  { params }: { params: { id: string; eventId: string } }
+  { params }: { params: { studentId: string; eventId: string } }
 ) {
-  const { id, eventId } = await params;
+  const { studentId, eventId } = await params;
 
   try {
     let student;
@@ -41,7 +41,7 @@ export async function GET(
     } else {
       student = await prisma.student.findUnique({
         where: {
-          id,
+          id: studentId,
         },
       });
     }
@@ -62,18 +62,18 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { studentId: string } }
 ) {
-  const { id } = params;
+  const { studentId } = params;
 
   try {
     const payload = await request.json();
-    const data = studentUpdateSchema.parse({ ...payload, id });
+    const data = studentUpdateSchema.parse({ ...payload, id: studentId });
 
     const { departmentSlug, houseSlug } = createSlugPayload(data);
 
     const student = await prisma.student.update({
-      where: { id },
+      where: { id: studentId },
       data: {
         lastName: data.lastName,
         firstName: data.firstName,
@@ -120,12 +120,12 @@ export async function PATCH(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { studentId: string } }
 ) {
-  const { id } = params;
+  const { studentId } = params;
 
   try {
-    await prisma.student.delete({ where: { id } });
+    await prisma.student.delete({ where: { id: studentId } });
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
