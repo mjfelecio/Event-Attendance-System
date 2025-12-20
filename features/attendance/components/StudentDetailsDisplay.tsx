@@ -3,72 +3,58 @@ import { FaUser } from "react-icons/fa6";
 import AttendanceActionButtons from "@/features/attendance/components/AttendanceActionButtons";
 import { Event } from "@/globals/types/events";
 import { memo } from "react";
-
-type DetailsDisplayProps = {
-  /** Student data to display */
-  data: Student | null;
-  event: Event;
-  record?: StudentAttendanceRecord;
-  /** Whether the data is currently being fetched */
-  isLoading: boolean;
-};
+import AttendanceStatusCard from "@/features/attendance/components/AttendanceStatusCard";
+import { capitalize } from "lodash";
 
 type DetailRowProps = {
-  /** Label for the detail */
   label: string;
-  /** Value to display */
   value: string | number;
-  /** Optional condition to render the row */
   show?: boolean;
 };
 
-/**
- * Displays a single row of student details
- */
 const DetailRow = ({ label, value, show = true }: DetailRowProps) => {
   if (!show) return null;
-
   return (
-    <div className="flex gap-2">
-      <span className="font-semibold text-gray-900">{label}:</span>
-      <span className="text-gray-700">{value}</span>
+    <div className="flex flex-col">
+      <span className="text-xs uppercase tracking-wide text-gray-400">
+        {label}
+      </span>
+      <span className="text-base font-medium text-gray-900">{value}</span>
     </div>
   );
 };
 
-/**
- * Loading state while fetching student data
- */
 const LoadingState = () => (
   <div className="flex-1 flex items-center justify-center">
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
-      <p className="text-gray-600">Loading student details...</p>
+      <p className="text-gray-600 text-lg">Loading student details...</p>
     </div>
   </div>
 );
 
-/**
- * Empty state when no student is found
- */
 const EmptyState = () => (
-  <div className="flex-1 flex items-center justify-center gap-3">
-    <FaUser className="text-gray-300 text-4xl" />
+  <div className="flex-1 flex items-center justify-center gap-4 flex-col">
+    <FaUser className="text-gray-300 text-6xl" />
     <p className="text-gray-400 text-2xl font-medium">No Student Found</p>
   </div>
 );
 
-/**
- * Displays detailed information about a student
- */
+type Props = {
+  student: Student | null;
+  event: Event;
+  record: StudentAttendanceRecord | null;
+  isLoading: boolean;
+};
+
 const StudentDetailsDisplay = ({
   event,
-  data,
+  student,
   record,
   isLoading,
-}: DetailsDisplayProps) => {
+}: Props) => {
   if (isLoading) return <LoadingState />;
-  if (!data) return <EmptyState />;
+  if (!student) return <EmptyState />;
 
   const {
     id,
@@ -78,38 +64,85 @@ const StudentDetailsDisplay = ({
     schoolLevel,
     yearLevel,
     collegeProgram,
-    contactNumber,
+    shsStrand,
     section,
-    status,
-  } = data;
+    house,
+    department,
+  } = student;
 
   const middleInitial = middleName?.[0] ? `${middleName[0]}.` : "";
   const fullNameDisplay = `${firstName} ${middleInitial} ${lastName}`.trim();
   const isCollege = schoolLevel === "COLLEGE";
+  const isSHS = schoolLevel === "SHS";
+  // program or strand + year + section letter
+  const fullSection = `${
+    isCollege ? collegeProgram : shsStrand
+  } - ${section} • ${id}`;
+  const recordedAt = new Date().toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
-    <div className="flex-1 w-full">
-      <div className="flex flex-row justify-between mb-6 pb-3 border-b-2">
-        <h2 className="text-2xl font-bold text-gray-900">Student Details</h2>
-        <AttendanceActionButtons
-          recordId={record?.id}
-          eventId={event.id}
-          studentId={data.id}
-        />
+    <div className="flex flex-1 w-full bg-white rounded-xl">
+      {/* Left side (Attendance Status n' stuff) */}
+      <div className="flex flex-col gap-4 p-2 bg-gray-50 items-center">
+        <AttendanceStatusCard status="ABSENT" />
+
+        <div className="flex flex-col gap-2 items-center">
+          <p className="font-medium border-b-2">Actions</p>
+          <AttendanceActionButtons
+            recordId={record?.id}
+            eventId={event.id}
+            studentId={student.id}
+          />
+        </div>
       </div>
 
-      <div className="space-y-4">
-        <DetailRow label="Name" value={fullNameDisplay} />
-        <DetailRow label="Student ID" value={id} />
-        <DetailRow label="School Level" value={schoolLevel} />
-        <DetailRow
-          label="Program"
-          value={collegeProgram || "N/A"}
-          show={isCollege}
-        />
-        <DetailRow label="Year & Section" value={`${yearLevel} - ${section}`} />
-        <DetailRow label="Contact Number" value={contactNumber ?? "None"} />
-        <DetailRow label="Status" value={status} />
+      {/* Right side (Student details) */}
+      <div className="flex-1 bg-white border-l-2 border-l-gray-100 p-6 shadow-xs">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              {fullNameDisplay}
+            </h2>
+            <p className="text-gray-500 mt-1 text-md">{fullSection}</p>
+          </div>
+        </div>
+
+        {/* Student Info Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <DetailRow
+            label="Type"
+            value={`${capitalize(schoolLevel)} Student`}
+          />
+          {isCollege && (
+            <DetailRow label="Program" value={collegeProgram || "N/A"} />
+          )}
+          {isSHS && <DetailRow label="Strand" value={shsStrand || "N/A"} />}
+          <DetailRow
+            label="Year & Section"
+            value={`${yearLevel} - ${section}`}
+          />
+          <DetailRow label="Department" value={department || "N/A"} />
+          <DetailRow label="House" value={house || "N/A"} />
+        </div>
+
+        {/* Attendance record / status row */}
+        {record && (
+          <div className="mt-6 border-t border-gray-100 pt-4 flex justify-between items-center">
+            <p className="text-sm text-gray-500 uppercase tracking-wide">
+              Recorded at
+            </p>
+            <span className="text-base font-medium text-gray-900">
+              {recordedAt}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

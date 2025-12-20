@@ -26,17 +26,6 @@ type StudentDetailsProps = {
  * - Search students by name within an event context
  * - Display detailed student information
  * - Loading and empty states
- *
- * @component
- *
- * @example
- * ```tsx
- * <StudentDetails
- *   data={selectedStudent}
- *   selectedEvent={event}
- *   onSelect={(id) => setSelectedStudentId(id)}
- * />
- * ```
  */
 const StudentDetails = ({
   selectedEvent,
@@ -87,11 +76,11 @@ const StudentDetails = ({
       </div>
 
       {/* Details Content */}
-      <div className="flex-1 flex flex-col p-6 overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-y-auto">
         <StudentDetailsDisplay
           event={selectedEvent}
-          data={displayedStudent}
-          record={studentRecord ?? undefined}
+          student={displayedStudent}
+          record={studentRecord ?? null}
           isLoading={isFetching}
         />
       </div>
