@@ -11,6 +11,7 @@ import { FaUserTimes } from "react-icons/fa";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
 import { BiSolidTrash } from "react-icons/bi";
+import { ATTENDANCE_STATUS_ICONS } from "./attendanceStatus";
 
 function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
@@ -44,27 +45,23 @@ function ActionsCell({ row }: { row: any }) {
       {[
         {
           type: "PRESENT",
-          icon: FaUserCheck,
-          color: "text-green-600",
-          hover: "hover:bg-green-100",
+          icon: ATTENDANCE_STATUS_ICONS.PRESENT,
+          color: "text-emerald-600",
         },
         {
           type: "EXCUSED",
-          icon: FaUserClock,
-          color: "text-amber-600",
-          hover: "hover:bg-amber-100",
+          icon: ATTENDANCE_STATUS_ICONS.EXCUSED,
+          color: "text-sky-600",
         },
         {
           type: "ABSENT",
-          icon: FaUserTimes,
-          color: "text-red-600",
-          hover: "hover:bg-red-100",
+          icon: ATTENDANCE_STATUS_ICONS.ABSENT,
+          color: "text-red-400",
         },
         {
           type: "DELETE",
-          icon: BiSolidTrash,
+          icon: ATTENDANCE_STATUS_ICONS.DELETE,
           color: "text-red-500",
-          hover: "hover:bg-gray-100",
           handler: handleDelete,
         },
       ].map(({ type, icon: Icon, color, handler }) => (

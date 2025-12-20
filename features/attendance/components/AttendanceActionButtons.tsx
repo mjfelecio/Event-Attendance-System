@@ -14,6 +14,7 @@ import React from "react";
 import { FaUserCheck, FaUserClock, FaUserTimes } from "react-icons/fa";
 import { BiSolidTrash } from "react-icons/bi";
 import { IconType } from "react-icons/lib";
+import { ATTENDANCE_STATUS_ICONS } from "../constants/attendanceStatus";
 
 type Props = {
   eventId: string;
@@ -29,21 +30,21 @@ const ACTION_BUTTONS: {
 }[] = [
   {
     status: "PRESENT",
-    icon: FaUserCheck,
+    icon: ATTENDANCE_STATUS_ICONS.PRESENT,
     title: "Mark as Present",
-    color: "text-green-600",
+    color: "text-emerald-600",
   },
   {
     status: "EXCUSED",
-    icon: FaUserClock,
+    icon: ATTENDANCE_STATUS_ICONS.EXCUSED,
     title: "Mark as Excused",
-    color: "text-amber-600",
+    color: "text-sky-600",
   },
   {
     status: "ABSENT",
-    icon: FaUserTimes,
+    icon: ATTENDANCE_STATUS_ICONS.ABSENT,
     title: "Mark as Absent",
-    color: "text-red-600",
+    color: "text-red-400",
   },
 ];
 
@@ -118,7 +119,7 @@ const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
         title="Delete Record"
         className="flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95"
       >
-        <BiSolidTrash className="w-5 h-5 text-red-500" />
+        <ATTENDANCE_STATUS_ICONS.DELETE className="w-5 h-5 text-red-500" />
       </button>
     </div>
   );
