@@ -38,7 +38,7 @@ const SearchBar = ({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
-        <div className="flex flex-row items-center border-2 rounded-lg px-3 py-1 gap-1">
+        <div className="flex flex-row items-center bg-white border-2 rounded-lg px-3 py-1 gap-1">
           <input
             onChange={(e) => handleQueryChange(e.target.value)}
             className="focus:outline-none"

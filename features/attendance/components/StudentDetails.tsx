@@ -89,7 +89,7 @@ const StudentDetails = ({
   return (
     <div className="flex flex-1 w-full bg-white rounded-xl">
       {/* Left side (Attendance Status n' stuff) */}
-      <div className="flex flex-col gap-4 p-2 bg-gray-50 items-center">
+      <div className="flex flex-col gap-4 p-2 bg-slate-50/50 items-center">
         <AttendanceStatusCard status="ABSENT" />
 
         <div className="flex flex-col gap-2 items-center">
@@ -103,7 +103,7 @@ const StudentDetails = ({
       </div>
 
       {/* Right side (Student details) */}
-      <div className="flex-1 bg-white border-l-2 border-l-gray-100 p-6 shadow-xs">
+      <div className="flex-1 bg-white border-l-2 border-l-gray-200 p-8">
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <div>
@@ -135,7 +135,7 @@ const StudentDetails = ({
         {/* Attendance record / status row */}
         {record && (
           <div className="mt-6 border-t border-gray-100 pt-4 flex justify-between items-center">
-            <p className="text-sm text-gray-500 uppercase tracking-wide">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">
               Recorded at
             </p>
             <span className="text-base font-medium text-gray-900">

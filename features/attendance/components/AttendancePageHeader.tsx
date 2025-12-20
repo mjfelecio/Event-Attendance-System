@@ -33,7 +33,9 @@ const AttendancePageHeader: React.FC<Props> = ({
   const attendanceRate = useMemo(() => {
     if (!eventStats || !eventStats.eligible || eventStats.eligible === 0)
       return undefined;
-    return Number(((eventStats.present / eventStats.eligible) * 100).toPrecision(4));
+    return Number(
+      ((eventStats.present / eventStats.eligible) * 100).toPrecision(4)
+    );
   }, [eventStats]);
 
   // Build combobox options
@@ -63,11 +65,13 @@ const AttendancePageHeader: React.FC<Props> = ({
           <h1 className="text-3xl font-bold text-gray-800">
             Attendance Tracking
           </h1>
-          {selectedEvent && isNaN(attendanceRate ?? NaN) && (
-            <p className="text-sm text-red-600 mt-1">
-              No eligible students found for this event.
-            </p>
-          )}
+          {selectedEvent &&
+            (!isEventsLoading && !isStatsLoading) &&
+            isNaN(attendanceRate ?? NaN) && (
+              <p className="text-sm text-red-600 mt-1">
+                No eligible students found for this event.
+              </p>
+            )}
           {isStatsError && (
             <p className="text-sm text-red-500 mt-1">
               Error fetching attendance data.
