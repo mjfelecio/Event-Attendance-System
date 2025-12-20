@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Scanner from "@/features/attendance/components/Scanner";
 import { useStudentFromEvent } from "@/globals/hooks/useStudents";
-import StudentDetails from "@/features/attendance/components/StudentDetails";
+import ManualAttendanceSection from "@/features/attendance/components/ManualAttendanceSection";
 import { useCreateRecord } from "@/globals/hooks/useRecords";
 import { NewRecord } from "@/globals/types/records";
 import { Event } from "@/globals/types/events";
@@ -154,7 +154,7 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
     <div className="flex h-[600px] gap-4 border-2 border-gray-300 w-full rounded-lg p-4 bg-white">
       <Scanner onRead={handleScanResult} isPending={isSavingRecord} />
 
-      <StudentDetails
+      <ManualAttendanceSection
         selectedEvent={selectedEvent}
         displayedStudent={displayedStudent}
         isFetching={isFetching}
