@@ -17,8 +17,8 @@ interface DataTableProps<TData> {
 
 function DataTable<TData>({ table }: DataTableProps<TData>) {
   return (
-    <div>
-      <div className="overflow-hidden rounded-md border">
+    <div className="flex flex-col overflow-auto">
+      <div className="flex-1 overflow-auto rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
