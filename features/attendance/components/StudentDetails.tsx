@@ -70,7 +70,7 @@ const StudentDetails = ({
     if (!selectedStudent) return;
 
     onSelect(selectedStudent);
-  }, []);
+  }, [students]);
 
   if (!selectedEvent) return null;
 
