@@ -1,18 +1,6 @@
 "use client";
 
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  Table as TableType,
-  useReactTable,
-} from "@tanstack/react-table";
-
+import { flexRender, Table as TableType } from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -21,36 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/globals/components/shad-cn/table";
-import { memo, useState } from "react";
 import DataTablePagination from "./DataTablePagination";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+interface DataTableProps<TData> {
+  table: TableType<TData>;
 }
 
-function DataTableImpl<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-    },
-  });
-
+function DataTable<TData>({ table }: DataTableProps<TData>) {
   return (
     <div>
       <div className="overflow-hidden rounded-md border">
@@ -93,7 +58,7 @@ function DataTableImpl<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={table.getAllColumns().length}
                   className="h-24 text-center"
                 >
                   No results.
@@ -108,5 +73,4 @@ function DataTableImpl<TData, TValue>({
   );
 }
 
-const DataTable = memo(DataTableImpl) as typeof DataTableImpl;
 export default DataTable;

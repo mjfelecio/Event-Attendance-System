@@ -134,6 +134,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
+    enableGlobalFilter: false
   },
   {
     accessorKey: "section",
@@ -151,6 +152,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
+    enableGlobalFilter: false
   },
   {
     accessorKey: "timestamp",
@@ -175,6 +177,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
+    enableGlobalFilter: false
   },
   {
     accessorKey: "status",
@@ -192,6 +195,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
+    enableGlobalFilter: false
   },
   {
     id: "actions",

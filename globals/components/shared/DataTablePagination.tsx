@@ -16,13 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/globals/components/shad-cn/select";
-import { memo } from "react";
 
 type DataTablePaginationProps<TData> = {
   table: TableType<TData>;
 };
 
-function DataTablePaginationImpl<TData>({
+function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
   return (
@@ -103,5 +102,4 @@ function DataTablePaginationImpl<TData>({
   );
 }
 
-const DataTablePagination = memo(DataTablePaginationImpl) as typeof DataTablePaginationImpl
 export default DataTablePagination;
