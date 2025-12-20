@@ -31,16 +31,16 @@ const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
   }
 
   return (
-    <div className="flex flex-col gap-4 border-2 border-gray-300 w-full rounded-md px-4 pt-4">
+    <div className="flex flex-col gap-4 border-2 border-gray-300 w-full rounded-md p-4">
       <div className="flex flex-row justify-between">
         <h3 className="text-3xl font-semibold">Attendance Records</h3>
         <div className="flex flex-row gap-2">
           <DataTableSearch table={table} />
-          <SortButton />
-          <FilterButton />
+          {/* <SortButton /> */}
+          {/* <FilterButton /> */}
         </div>
       </div>
-      <ShowUnattendedStudentsToggle />
+      {/* <ShowUnattendedStudentsToggle /> */}
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center gap-4 border-2 border-gray-300 w-full rounded-md p-6">
