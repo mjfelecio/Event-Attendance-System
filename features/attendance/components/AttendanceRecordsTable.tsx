@@ -1,7 +1,7 @@
 "use client";
 
 import DataTable from "@/globals/components/shared/DataTable";
-import { columns } from "@/features/attendance/constants/table";
+import { columns } from "@/features/attendance/constants/eventAttendanceTable";
 import SortButton from "@/features/attendance/components/SortButton";
 import FilterButton from "@/features/attendance/components/FilterButton";
 import { Event } from "@/globals/types/events";
