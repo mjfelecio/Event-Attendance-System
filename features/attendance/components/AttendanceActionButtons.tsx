@@ -1,4 +1,3 @@
-import { Button } from "@/globals/components/shad-cn/button";
 import {
   toastDanger,
   toastSuccess,
@@ -12,156 +11,115 @@ import {
 import { NewRecord } from "@/globals/types/records";
 import { AttendanceStatus } from "@prisma/client";
 import React from "react";
-import { FaTimes } from "react-icons/fa";
-import { FaCheck, FaClock, FaTrash } from "react-icons/fa6";
+import { FaUserCheck, FaUserClock, FaUserTimes } from "react-icons/fa";
+import { BiSolidTrash } from "react-icons/bi";
+import { IconType } from "react-icons/lib";
 
-type AttendanceActionButtonsProps = {
-  /** The event ID for which attendance is being recorded */
+type Props = {
   eventId: string;
-  /** The student ID whose attendance is being managed */
   studentId: string;
-  /** Optional existing record ID if the student already has an attendance record */
   recordId?: string;
 };
 
-type ActionButtonConfig = {
+const ACTION_BUTTONS: {
   status: AttendanceStatus;
-  icon: React.ReactNode;
+  icon: IconType;
   title: string;
   color: string;
-};
-
-const ACTION_BUTTONS: ActionButtonConfig[] = [
+}[] = [
   {
     status: "PRESENT",
-    icon: <FaCheck />,
+    icon: FaUserCheck,
     title: "Mark as Present",
-    color: "oklch(72.3% 0.219 149.579)", // Green
+    color: "text-green-600",
   },
   {
     status: "EXCUSED",
-    icon: <FaClock />,
+    icon: FaUserClock,
     title: "Mark as Excused",
-    color: "oklch(82.8% 0.189 84.429)", // Yellow
+    color: "text-amber-600",
   },
   {
     status: "ABSENT",
-    icon: <FaTimes />,
+    icon: FaUserTimes,
     title: "Mark as Absent",
-    color: "red",
+    color: "text-red-600",
   },
 ];
 
-/**
- * Component that handles attendance record actions
- * 
- * Features:
- * - Creates new attendance records
- * - Updates existing record status
- * - Deletes attendance records
- * 
- * Logic:
- * - If no recordId exists, creates a new record with the selected status
- * - If recordId exists, updates the existing record's status
- * - Delete removes the record entirely
- * 
- * @component
- * 
- * @example
- * ```tsx
- * <AttendanceActionButtons
- *   eventId="event-123"
- *   studentId="student-456"
- *   recordId={existingRecord?.id}
- * />
- * ```
- */
-const AttendanceActionButtons = ({
-  eventId,
-  studentId,
-  recordId,
-}: AttendanceActionButtonsProps) => {
-  const { mutateAsync: createRecord, isPending: isCreating } = useCreateRecord(eventId);
-  const { mutateAsync: updateStatus, isPending: isUpdating } = useUpdateRecordStatus(eventId);
-  const { mutateAsync: deleteRecord, isPending: isDeleting } = useDeleteRecord(eventId);
+const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
+  const { mutateAsync: createRecord, isPending: isCreating } =
+    useCreateRecord(eventId);
+  const { mutateAsync: updateStatus, isPending: isUpdating } =
+    useUpdateRecordStatus(eventId);
+  const { mutateAsync: deleteRecord, isPending: isDeleting } =
+    useDeleteRecord(eventId);
 
-  /**
-   * Handles setting attendance status
-   * - Creates new record if none exists
-   * - Updates existing record if recordId is provided
-   */
+  const isLoading = isCreating || isUpdating || isDeleting;
+
   const handleSetStatus = async (status: AttendanceStatus) => {
     try {
       if (!recordId) {
-        // No existing record - create new one
-        const newRecord: NewRecord = {
+        await createRecord({
           eventId,
           studentId,
           status,
           method: "MANUAL",
-        };
-
-        await createRecord(newRecord);
+        } as NewRecord);
         toastSuccess(`Marked student as ${status.toLowerCase()}`);
       } else {
-        // Record exists - update status
         await updateStatus({ recordId, status });
         toastSuccess(`Updated status to ${status.toLowerCase()}`);
       }
     } catch (error) {
-      console.error("Error setting attendance status:", error);
-      toastWarning(`Failed to set status: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toastWarning(
+        `Failed to set status: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
-  /**
-   * Handles deleting an attendance record
-   */
   const handleDelete = async () => {
     if (!recordId) {
       toastWarning("No attendance record to delete");
       return;
     }
-
     try {
       await deleteRecord(recordId);
       toastSuccess("Attendance record deleted");
     } catch (error) {
-      console.error("Error deleting record:", error);
-      toastDanger(`Failed to delete record: ${error instanceof Error ? error.message : "Unknown error"}`);
+      toastDanger(
+        `Failed to delete record: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
-  const isLoading = isCreating || isUpdating || isDeleting;
-
   return (
-    <div className="flex gap-1 items-center justify-center">
-      {/* Status action buttons */}
-      {ACTION_BUTTONS.map(({ status, icon, title, color }) => (
-        <Button
+    <div className="flex gap-1 justify-center items-center">
+      {ACTION_BUTTONS.map(({ status, icon: Icon, title, color }) => (
+        <button
           key={status}
           onClick={() => handleSetStatus(status)}
-          variant="ghost"
-          size="icon"
-          title={title}
           disabled={isLoading}
-          className="hover:bg-gray-100"
+          title={title}
+          className="flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95"
         >
-          <span style={{ color }}>{icon}</span>
-        </Button>
+          <Icon className={`w-5 h-5 ${color}`} />
+        </button>
       ))}
 
       {/* Delete button */}
-      <Button
+      <button
         onClick={handleDelete}
-        variant="ghost"
-        size="sm"
-        title="Delete Record"
         disabled={isLoading || !recordId}
-        className="hover:bg-gray-100"
+        title="Delete Record"
+        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95"
       >
-        <FaTrash className="text-gray-500" />
-      </Button>
+        <BiSolidTrash className="w-5 h-5 text-red-500" />
+      </button>
     </div>
   );
 };

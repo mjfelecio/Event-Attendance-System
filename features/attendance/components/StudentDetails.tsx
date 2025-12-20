@@ -77,7 +77,7 @@ const StudentDetails = ({
   return (
     <div className="flex-1 flex flex-col bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
       {/* Search Header */}
-      <div className="border-b-2 border-gray-200 p-6 bg-gray-50">
+      <div className="border-b-2 border-gray-200 p-4 bg-gray-50">
         <SearchBar
           onQueryChange={setQuery}
           placeholder="Search student by name..."
