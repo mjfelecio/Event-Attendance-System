@@ -205,10 +205,10 @@ export const useRecordOfStudentInEvent = (eventId?: string, studentId?: string) 
   return useQuery({
     queryKey: queryKeys.records.fromEventForStudent(eventId!, studentId!),
     enabled: !!eventId && !!studentId,
-    queryFn: async (): Promise<StudentAttendanceRecord | null> => {
+    queryFn: async () => {
       if (!eventId || !studentId) return null;
 
-      return fetchApi<StudentAttendanceRecord>(
+      return fetchApi<Record>(
         `/api/records?eventId=${eventId}&studentId=${studentId}`
       );
     },

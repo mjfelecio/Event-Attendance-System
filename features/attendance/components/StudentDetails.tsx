@@ -5,6 +5,7 @@ import { Event } from "@/globals/types/events";
 import { memo } from "react";
 import AttendanceStatusCard from "@/features/attendance/components/AttendanceStatusCard";
 import { capitalize } from "lodash";
+import { Record } from "@/globals/types/records";
 
 type DetailRowProps = {
   label: string;
@@ -43,7 +44,7 @@ const EmptyState = () => (
 type Props = {
   student: Student | null;
   event: Event;
-  record: StudentAttendanceRecord | null;
+  record: Record | null;
   isLoading: boolean;
 };
 
@@ -90,7 +91,7 @@ const StudentDetails = ({
     <div className="flex flex-1 w-full bg-white rounded-xl">
       {/* Left side (Attendance Status n' stuff) */}
       <div className="flex flex-col gap-4 pt-6 p-2 bg-slate-50/50 items-center">
-        <AttendanceStatusCard status="ABSENT" />
+        <AttendanceStatusCard status={record ? record.status : "ABSENT"} />
 
         <div className="flex flex-col gap-2 items-center">
           <p className="font-medium border-b-2">Actions</p>
