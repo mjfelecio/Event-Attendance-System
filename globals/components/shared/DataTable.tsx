@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/globals/components/shad-cn/table";
 import { Button } from "@/globals/components/shad-cn/button";
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -46,7 +46,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+function DataTableImpl<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -125,7 +125,7 @@ export function DataTable<TData, TValue>({
   );
 }
 
-export function DataTablePagination<TData>({
+function DataTablePaginationImpl<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
   return (
@@ -205,3 +205,10 @@ export function DataTablePagination<TData>({
     </div>
   );
 }
+
+const DataTable = memo(DataTableImpl) as typeof DataTableImpl;
+const DataTablePagination = memo(
+  DataTablePaginationImpl
+) as typeof DataTablePaginationImpl;
+
+export { DataTable, DataTablePagination };
