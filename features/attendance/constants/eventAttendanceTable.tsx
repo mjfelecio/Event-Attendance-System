@@ -1,16 +1,16 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
-import { FaCheck, FaClock, FaTrash } from "react-icons/fa6";
-import { toast } from "sonner";
+import { FaUserCheck, FaUserClock } from "react-icons/fa6";
 import {
   useDeleteRecord,
   useUpdateRecordStatus,
 } from "@/globals/hooks/useRecords";
 import { AttendanceStatus } from "@prisma/client";
-import { FaTimes } from "react-icons/fa";
+import { FaUserTimes } from "react-icons/fa";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
+import { BiSolidTrash } from "react-icons/bi";
 
 function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
@@ -22,7 +22,6 @@ function ActionsCell({ row }: { row: any }) {
   const handleActions = async (status: AttendanceStatus) => {
     try {
       await updateStatus({ recordId, status });
-      toastSuccess(`${status}: ${studentId}`);
     } catch (error) {
       console.error("Error updating status:", error);
       toastDanger(`Failed to update status for ${studentId}`);
@@ -32,7 +31,6 @@ function ActionsCell({ row }: { row: any }) {
   const handleDelete = async () => {
     try {
       await deleteRecord(recordId);
-      toastSuccess(`Deleted ${studentId}`);
     } catch (error) {
       console.error("Error deleting record:", error);
       toastDanger(`Failed to delete record for ${studentId}`);
@@ -42,43 +40,46 @@ function ActionsCell({ row }: { row: any }) {
   const isLoading = isDeleting || isUpdating;
 
   return (
-    <div className="flex gap-1 items-center justify-center">
-      <Button
-        onClick={() => handleActions("PRESENT")}
-        variant="ghost"
-        size="sm"
-        title="Present"
-        disabled={isLoading}
-      >
-        <FaCheck color="oklch(72.3% 0.219 149.579)" />
-      </Button>
-      <Button
-        onClick={() => handleActions("EXCUSED")}
-        variant="ghost"
-        size="sm"
-        title="Excuse"
-        disabled={isLoading}
-      >
-        <FaClock color="oklch(82.8% 0.189 84.429)" />
-      </Button>
-      <Button
-        onClick={() => handleActions("ABSENT")}
-        variant="ghost"
-        size="sm"
-        title="Absent"
-        disabled={isLoading}
-      >
-        <FaTimes color="red" />
-      </Button>
-      <Button
-        onClick={handleDelete}
-        variant="ghost"
-        size="sm"
-        title="Clear"
-        disabled={isLoading}
-      >
-        <FaTrash color="gray" />
-      </Button>
+    <div className="flex gap-2 justify-center items-center">
+      {[
+        {
+          type: "PRESENT",
+          icon: FaUserCheck,
+          color: "text-green-600",
+          hover: "hover:bg-green-100",
+        },
+        {
+          type: "EXCUSED",
+          icon: FaUserClock,
+          color: "text-amber-600",
+          hover: "hover:bg-amber-100",
+        },
+        {
+          type: "ABSENT",
+          icon: FaUserTimes,
+          color: "text-red-600",
+          hover: "hover:bg-red-100",
+        },
+        {
+          type: "DELETE",
+          icon: BiSolidTrash,
+          color: "text-red-500",
+          hover: "hover:bg-gray-100",
+          handler: handleDelete,
+        },
+      ].map(({ type, icon: Icon, color, handler }) => (
+        <button
+          key={type}
+          onClick={() =>
+            handler ? handler() : handleActions(type as AttendanceStatus)
+          }
+          disabled={isLoading}
+          title={type.charAt(0) + type.slice(1).toLowerCase()}
+          className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95`}
+        >
+          <Icon className={`w-5 h-5 ${color}`} />
+        </button>
+      ))}
     </div>
   );
 }
@@ -134,7 +135,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
-    enableGlobalFilter: false
+    enableGlobalFilter: false,
   },
   {
     accessorKey: "section",
@@ -152,7 +153,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
-    enableGlobalFilter: false
+    enableGlobalFilter: false,
   },
   {
     accessorKey: "timestamp",
@@ -177,7 +178,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
-    enableGlobalFilter: false
+    enableGlobalFilter: false,
   },
   {
     accessorKey: "status",
@@ -195,7 +196,7 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
-    enableGlobalFilter: false
+    enableGlobalFilter: false,
   },
   {
     id: "actions",
