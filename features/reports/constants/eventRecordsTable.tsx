@@ -169,10 +169,10 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: StatusCell,
     enableGlobalFilter: false,
   },
-  {
-    id: "view",
-    header: () => <div className="text-center">Details</div>,
-    cell: ({ row }) => <ViewRecordCell row={row} />,
-    enableSorting: false,
-  },
+  // {
+  //   id: "view",
+  //   header: () => <div className="text-center">Details</div>,
+  //   cell: ({ row }) => <ViewRecordCell row={row} />,
+  //   enableSorting: false,
+  // },
 ];
