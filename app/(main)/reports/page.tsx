@@ -2,15 +2,21 @@
 
 import EventsList from "@/features/reports/components/EventsList";
 import RecordsList from "@/features/reports/components/RecordsList";
-import React from "react";
+import { Event } from "@/globals/types/events";
+import React, { useState } from "react";
 
 const ReportsPage = () => {
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
   return (
     <div className="flex flex-col flex-1 p-4">
       <h1 className="text-3xl font-medium mb-4">Reports Page</h1>
       <div className="flex flex-1 gap-4">
-        <EventsList />
-        <RecordsList />
+        <EventsList
+          selectedEvent={selectedEvent}
+          onSelectEvent={setSelectedEvent}
+        />
+        <RecordsList selectedEvent={selectedEvent} />
       </div>
     </div>
   );

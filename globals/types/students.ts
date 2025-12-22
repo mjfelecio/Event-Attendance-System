@@ -1,4 +1,4 @@
-import { Student as PrismaStudent, SchoolLevel  } from "@prisma/client";
+import { AttendanceStatus, Student as PrismaStudent, SchoolLevel  } from "@prisma/client";
 
 export type Student = PrismaStudent;
 
@@ -8,6 +8,7 @@ export type StudentAttendanceRecord = {
 	id: string;
 	eventId: string,
 	studentId: string,
+	status: AttendanceStatus,
 	fullName: string,
 	schoolLevel: SchoolLevel,
 	section: string,

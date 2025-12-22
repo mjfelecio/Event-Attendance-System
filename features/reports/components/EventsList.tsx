@@ -4,17 +4,22 @@ import EventCard from "@/globals/components/shared/EventCard";
 import useEvents from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 import { Loader2 } from "lucide-react";
-import React from "react";
+import React, { useCallback } from "react";
 
-const EventsList = () => {
+type Props = {
+  selectedEvent: Event | null;
+  onSelectEvent: (event: Event) => void;
+};
+
+const EventsList = ({ selectedEvent, onSelectEvent }: Props) => {
   const { data: events, isLoading, error } = useEvents();
 
-  const handleEventClick = (event: Event) => {
-    alert(`Opened ${event.title} event`);
-  };
+  const handleEventClick = useCallback((event: Event) => {
+    onSelectEvent(event);
+  }, []);
 
   return (
-    <div className="h-[calc(100vh-64px)] border-2 border-gray-300 rounded-md w-96 overflow-hidden">
+    <div className="h-[calc(100vh-64px)] basis-3/12 border-2 border-gray-300 rounded-md overflow-hidden">
       {/* Header */}
       <div className="bg-slate-200">
         <h1 className="text-xl md:text-2xl text-center font-bold py-2">
