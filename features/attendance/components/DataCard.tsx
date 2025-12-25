@@ -25,12 +25,15 @@ const DataCard: React.FC<DataCardProps> = ({
 }) => {
   const renderValue = () => {
     if (isLoading) {
-      return (
-        <div className="h-12 w-20 bg-gray-200 animate-pulse rounded-md" />
-      );
+      return <div className="h-12 w-20 bg-gray-200 animate-pulse rounded-md" />;
     }
 
-    if (value === undefined || value === null || value === "" || isNaN(Number(value))) {
+    if (
+      value === undefined ||
+      value === null ||
+      value === "" ||
+      isNaN(Number(value))
+    ) {
       return <span className="text-4xl font-bold">None</span>;
     }
 

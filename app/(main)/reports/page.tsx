@@ -1,6 +1,7 @@
 "use client";
 
 import EventsList from "@/features/reports/components/EventsList";
+import EventSummary from "@/features/reports/components/EventSummary";
 import RecordsList from "@/features/reports/components/RecordsList";
 import { Event } from "@/globals/types/events";
 import React, { useState } from "react";
@@ -16,7 +17,7 @@ const ReportsPage = () => {
           selectedEvent={selectedEvent}
           onSelectEvent={setSelectedEvent}
         />
-        <RecordsList selectedEvent={selectedEvent} />
+        <EventSummary selectedEvent={selectedEvent} />
       </div>
     </div>
   );
