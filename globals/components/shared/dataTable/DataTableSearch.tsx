@@ -1,5 +1,5 @@
 import { Table } from "@tanstack/react-table";
-import SearchBar from "./SearchBar";
+import SearchBar from "../SearchBar";
 
 interface Props<TData> {
   table: Table<TData>;
