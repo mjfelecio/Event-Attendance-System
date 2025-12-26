@@ -19,10 +19,10 @@ const EventsList = ({ selectedEvent, onSelectEvent }: Props) => {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-64px)] basis-[30%] border-2 border-gray-300 rounded-md overflow-hidden">
+    <div className="h-[calc(100vh-64px)] basis-[30%] bg-background border rounded-md overflow-hidden">
       {/* Header */}
-      <div className="bg-slate-200">
-        <h1 className="text-xl md:text-2xl text-center font-bold py-2">
+      <div className="bg-slate-50 border-b">
+        <h1 className="text-xl md:text-2xl text-center font-semibold py-2">
           Events
         </h1>
       </div>

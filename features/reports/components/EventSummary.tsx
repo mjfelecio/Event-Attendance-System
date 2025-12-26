@@ -19,7 +19,7 @@ type Props = {
 
 const NoSelectionScreen = () => {
   return (
-    <div className="flex items-center justify-center rounded-md border bg-muted/40 p-8 text-sm text-muted-foreground">
+    <div className="flex flex-2 items-center justify-center rounded-md border bg-muted/40 p-8 text-muted-foreground">
       Select an event to view its summary
     </div>
   );
@@ -28,9 +28,7 @@ const NoSelectionScreen = () => {
 const EventSummary = ({ selectedEvent }: Props) => {
   const router = useRouter();
 
-  const { data: eventStats, isLoading } = useStatsOfEvent(
-    selectedEvent?.id
-  );
+  const { data: eventStats, isLoading } = useStatsOfEvent(selectedEvent?.id);
 
   const attendanceRate = useMemo(() => {
     if (!eventStats?.eligible) return "—";
@@ -42,75 +40,78 @@ const EventSummary = ({ selectedEvent }: Props) => {
   }
 
   return (
-    <div className="flex flex-2 flex-col gap-6 rounded-md border p-6 bg-background">
+    <div className="flex flex-2 flex-col gap-6 rounded-md border bg-background overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold">
-          {selectedEvent.title}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {readableDate(selectedEvent.start)} •{" "}
-          {capitalize(selectedEvent.category)} Event
-        </p>
+      <div className="bg-slate-50 border-b">
+        <h1 className="text-xl md:text-2xl text-center font-bold py-2">
+          Summary
+        </h1>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <DataCard
-          label="Present"
-          description="Checked in"
-          icon={IoMdCheckmarkCircleOutline}
-          value={String(eventStats?.present ?? 0)}
-          isLoading={isLoading}
-        />
-
-        <DataCard
-          label="Eligible"
-          description="Registered"
-          icon={FaUserGroup}
-          value={String(eventStats?.eligible ?? 0)}
-          isLoading={isLoading}
-        />
-
-        <DataCard
-          label="Attendance Rate"
-          description="Turnout"
-          icon={VscPercentage}
-          value={attendanceRate}
-          isLoading={isLoading}
-        />
-      </div>
-
-      {/* Event metadata */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-        <div>
-          <p className="text-muted-foreground">Organizer</p>
-          <p className="font-medium">{selectedEvent.userId}</p>
-        </div>
-
-        <div>
-          <p className="text-muted-foreground">Location</p>
-          <p className="font-medium">{selectedEvent.location}</p>
-        </div>
-
-        <div>
-          <p className="text-muted-foreground">Participant Groups</p>
-          <p className="font-medium">
-            {selectedEvent.includedGroups}
+      <div className="flex flex-col gap-6 px-6">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
+          <p className="text-sm text-muted-foreground">
+            {readableDate(selectedEvent.start)} •{" "}
+            {capitalize(selectedEvent.category)} Event
           </p>
         </div>
-      </div>
 
-      {/* CTA */}
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          onClick={() =>
-            router.push(`/reports/events/${selectedEvent.id}`)
-          }
-        >
-          View detailed report
-        </Button>
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <DataCard
+            label="Present"
+            description="Checked in"
+            icon={IoMdCheckmarkCircleOutline}
+            value={String(eventStats?.present ?? 0)}
+            isLoading={isLoading}
+          />
+
+          <DataCard
+            label="Eligible"
+            description="Registered"
+            icon={FaUserGroup}
+            value={String(eventStats?.eligible ?? 0)}
+            isLoading={isLoading}
+          />
+
+          <DataCard
+            label="Attendance Rate"
+            description="Turnout"
+            icon={VscPercentage}
+            value={attendanceRate}
+            isLoading={isLoading}
+          />
+        </div>
+
+        {/* Event metadata */}
+        <section className="rounded-md border bg-muted/30 p-4 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm px-6">
+            <div>
+              <p className="text-muted-foreground">Organizer</p>
+              <p className="font-medium">{selectedEvent.userId}</p>
+            </div>
+
+            <div>
+              <p className="text-muted-foreground">Location</p>
+              <p className="font-medium">{selectedEvent.location}</p>
+            </div>
+
+            <div>
+              <p className="text-muted-foreground">Participant Groups</p>
+              <p className="font-medium">{selectedEvent.includedGroups}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <div className="flex justify-end">
+          <Button
+            onClick={() => router.push(`/reports/events/${selectedEvent.id}`)}
+          >
+            View detailed report
+          </Button>
+        </div>
       </div>
     </div>
   );
