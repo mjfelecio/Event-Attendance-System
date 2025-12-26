@@ -7,7 +7,6 @@ import { useMemo } from "react";
 import { FaUserGroup } from "react-icons/fa6";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { VscPercentage } from "react-icons/vsc";
-import StatCard from "./StatCard";
 
 type Props = {
   selectedEvent: Event | null;
@@ -17,6 +16,7 @@ import React from "react";
 import { readableDate } from "@/globals/utils/formatting";
 import { capitalize } from "lodash";
 import { Button } from "@/globals/components/shad-cn/button";
+import { useRouter } from "next/navigation";
 
 const NoSelectionScreen = () => {
   return (
@@ -27,6 +27,7 @@ const NoSelectionScreen = () => {
 };
 
 const EventSummary = ({ selectedEvent }: Props) => {
+  const router = useRouter();
   const { data: eventStats, isLoading: isStatsLoading } = useStatsOfEvent(
     selectedEvent?.id
   );
@@ -101,9 +102,17 @@ const EventSummary = ({ selectedEvent }: Props) => {
           </span>
         </p>
       </div>
-      
+
       {/* View Reports */}
-      <Button size={"lg"} className="self-end">View Detailed Report</Button>
+      <Button
+        size={"lg"}
+        className="self-end"
+        onClick={() =>
+          router.push(`/reports/events/${selectedEvent.id}`)
+        }
+      >
+        View Detailed Report
+      </Button>
     </div>
   );
 };
