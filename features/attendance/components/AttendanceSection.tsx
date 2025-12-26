@@ -23,8 +23,8 @@ type ScannerSectionProps = {
  * Empty state when no event is selected
  */
 const NoEventState = () => (
-  <div className="flex flex-col items-center justify-center h-[600px] border-2 border-gray-300 w-full rounded-lg p-8 bg-gray-50">
-    <h1 className="text-4xl font-bold text-gray-800 mb-2">No Event Selected</h1>
+  <div className="flex flex-col items-center justify-center h-[400px] shadow-sm border w-full rounded-lg p-8">
+    <h1 className="text-3xl font-bold text-gray-800 mb-2">No Event Selected</h1>
     <p className="text-lg text-gray-500">
       Select an event first to start attendance
     </p>
@@ -151,7 +151,7 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
   }
 
   return (
-    <div className="flex h-[600px] gap-4 border-2 border-gray-300 w-full rounded-lg p-4 bg-white">
+    <div className="flex h-[600px] gap-4 border w-full rounded-lg p-4 shadow-sm bg-white">
       <Scanner onRead={handleScanResult} isPending={isSavingRecord} />
 
       <ManualAttendanceSection

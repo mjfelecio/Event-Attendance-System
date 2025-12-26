@@ -64,9 +64,9 @@ const ManualAttendanceSection = ({
   if (!selectedEvent) return null;
 
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-lg border-2 border-gray-200 overflow-hidden">
+    <div className="flex-1 flex flex-col bg-white rounded-lg border overflow-hidden">
       {/* Search Header */}
-      <div className="border-b-2 border-gray-200 p-4 bg-slate-200/50">
+      <div className="border-b bg-gray-100 p-4">
         <SearchBar
           onQueryChange={setQuery}
           placeholder="Search student by name..."

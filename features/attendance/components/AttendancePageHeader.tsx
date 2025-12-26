@@ -48,7 +48,7 @@ const AttendancePageHeader: React.FC<Props> = ({
   const handleSelectEvent = (eventId: string) => {
     const found = events?.find((e) => e.id === eventId);
     if (!found) {
-      console.warn("⚠️ Selected event not found in events list");
+      console.warn("Selected event not found in events list");
       return;
     }
     onChangeEvent(found);
@@ -89,7 +89,7 @@ const AttendancePageHeader: React.FC<Props> = ({
       {/* === Header Bottom === */}
       <div className="flex flex-wrap gap-6 justify-between">
         {/* Event Selection */}
-        <div className="border-2 border-gray-300 rounded-md p-4 flex flex-col gap-2 min-w-[280px]">
+        <div className="border shadow-sm rounded-md p-4 flex flex-col gap-2 min-w-[280px]">
           <p className="font-medium text-lg text-gray-700">Select Event</p>
           <ComboBox
             choices={eventChoices}
