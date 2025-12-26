@@ -134,7 +134,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`min-h-screen flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
+      className={`min-h-screen print:hidden flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
     >
       <div>
         {/* Sidebar Header */}

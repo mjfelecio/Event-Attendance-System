@@ -63,7 +63,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Student ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4 print:hidden" />
         </Button>
       </div>
     ),
@@ -80,7 +80,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Full Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4 print:hidden" />
         </Button>
       </div>
     ),
@@ -97,7 +97,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Level
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4 print:hidden" />
         </Button>
       </div>
     ),
@@ -115,7 +115,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Section
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4 print:hidden" />
         </Button>
       </div>
     ),
@@ -133,7 +133,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Time Recorded
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4 print:hidden" />
         </Button>
       </div>
     ),
@@ -162,7 +162,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Status
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="ml-2 h-4 w-4 print:hidden" />
         </Button>
       </div>
     ),

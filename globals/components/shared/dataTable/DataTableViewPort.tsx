@@ -50,7 +50,7 @@ const DataTableViewport = <TData,>({ table, isLoading }: Props<TData>) => {
         )
       ) : (
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
