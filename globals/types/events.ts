@@ -7,7 +7,7 @@ export type NewEvent = Omit<Event, "id" | "createdAt" | "updatedAt">;
 export type EventStats = {
   eligible: number;
   present: number;
-  unattended: number;
+  absent: number;
 };
 
 export type EventAPI = Omit<
