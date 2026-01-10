@@ -12,6 +12,7 @@ import { useStatsOfEvent } from "@/globals/hooks/useEvents";
 import { readableDate } from "@/globals/utils/formatting";
 import { Event } from "@/globals/types/events";
 import { Button } from "@/globals/components/shad-cn/button";
+import EventMetadataCard from "./EventMetadataCard";
 
 type Props = {
   selectedEvent: Event | null;
@@ -85,24 +86,7 @@ const EventSummary = ({ selectedEvent }: Props) => {
         </div>
 
         {/* Event metadata */}
-        <section className="rounded-md border bg-muted/30 p-4 shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm px-6">
-            <div>
-              <p className="text-muted-foreground">Organizer</p>
-              <p className="font-medium">{selectedEvent.userId}</p>
-            </div>
-
-            <div>
-              <p className="text-muted-foreground">Location</p>
-              <p className="font-medium">{selectedEvent.location}</p>
-            </div>
-
-            <div>
-              <p className="text-muted-foreground">Participant Groups</p>
-              <p className="font-medium">{selectedEvent.includedGroups}</p>
-            </div>
-          </div>
-        </section>
+        <EventMetadataCard event={selectedEvent} />
 
         {/* CTA */}
         <div className="flex justify-end">

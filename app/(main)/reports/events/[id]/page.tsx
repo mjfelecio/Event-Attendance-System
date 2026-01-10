@@ -14,6 +14,7 @@ import { useFetchEvent, useStatsOfEvent } from "@/globals/hooks/useEvents";
 import { useDataExport } from "@/globals/hooks/useDataExport";
 import { readableDate } from "@/globals/utils/formatting";
 import RecordsList from "@/features/reports/components/RecordsList";
+import EventMetadataCard from "@/features/reports/components/EventMetadataCard";
 
 const EventReportsPage = () => {
   const { id } = useParams();
@@ -38,7 +39,7 @@ const EventReportsPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-8 p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-8 p-6 w-4xl mx-auto">
       {/* ================= Header ================= */}
       <section className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
@@ -82,35 +83,7 @@ const EventReportsPage = () => {
         />
       </section>
 
-      {/* ================= Event Metadata ================= */}
-      <section className="rounded-md border bg-muted/30 p-4 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6 text-sm">
-          <div>
-            <p className="text-muted-foreground">Organizer</p>
-            <p className="font-medium">{event.userId}</p>
-          </div>
-
-          <div>
-            <p className="text-muted-foreground">Location</p>
-            <p className="font-medium">{event.location}</p>
-          </div>
-
-          <div>
-            <p className="text-muted-foreground">Participant Groups</p>
-            <p className="font-medium">{event.includedGroups}</p>
-          </div>
-
-          <div>
-            <p className="text-muted-foreground">Start Time</p>
-            <p className="font-medium">{readableDate(event.start)}</p>
-          </div>
-
-          <div>
-            <p className="text-muted-foreground">Event Type</p>
-            <p className="font-medium">{capitalize(event.category)} Event</p>
-          </div>
-        </div>
-      </section>
+      <EventMetadataCard event={event} />
 
       {/* ================= Attendance Records ================= */}
       <section className="flex flex-col gap-4">
