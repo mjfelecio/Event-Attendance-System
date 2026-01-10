@@ -133,40 +133,44 @@ const Sidebar = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen print:hidden flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
-    >
-      <div>
-        {/* Sidebar Header */}
-        <div
-          className="mb-6 rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
-          onClick={() => toggleExpanded()}
-        >
-          <GiHamburgerMenu size={22} />
+    <div className={`${conditionalSidebarStyles}`}>
+      <div
+        className={`min-h-screen fixed print:hidden flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
+      >
+        <div>
+          {/* Sidebar Header */}
+          <div
+            className="mb-6 rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
+            onClick={() => toggleExpanded()}
+          >
+            <GiHamburgerMenu size={22} />
+          </div>
+
+          {/* Sidebar Navigations */}
+          <div className="flex flex-col gap-1">
+            {navigationItems.map((item, index) => (
+              <SidebarButton
+                key={index}
+                text={item.text}
+                icon={item.icon}
+                isExpanded={isExpanded}
+                onClick={() =>
+                  item.route !== pathname && router.push(item.route)
+                }
+                active={pathname === item.route}
+                theme={theme}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Sidebar Navigations */}
-        <div className="flex flex-col gap-1">
-          {navigationItems.map((item, index) => (
-            <SidebarButton
-              key={index}
-              text={item.text}
-              icon={item.icon}
-              isExpanded={isExpanded}
-              onClick={() => item.route !== pathname && router.push(item.route)}
-              active={pathname === item.route}
-              theme={theme}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Logout Button pinned at bottom */}
-      <div className="mb-2 flex flex-row justify-between items-center">
-        <LogoutButton isExpanded={isExpanded} onClick={handleLogout} />
-        {/* {expanded && (
+        {/* Logout Button pinned at bottom */}
+        <div className="mb-2 flex flex-row justify-between items-center">
+          <LogoutButton isExpanded={isExpanded} onClick={handleLogout} />
+          {/* {expanded && (
           <ThemeSwitch theme={theme} setTheme={(theme) => setTheme(theme)} />
         )} */}
+        </div>
       </div>
     </div>
   );
