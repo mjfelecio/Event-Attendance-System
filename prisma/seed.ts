@@ -9,11 +9,13 @@ import {
   YearLevel,
 } from "@prisma/client";
 import { faker } from "@faker-js/faker";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 type ComboBoxValue = {
-    value: string;
-    label: string;
-}
+  value: string;
+  label: string;
+};
+
 export const CATEGORY_GROUPS: Record<EventCategory, ComboBoxValue[]> = {
   ALL: [],
   COLLEGE: [],
@@ -50,21 +52,23 @@ export const CATEGORY_GROUPS: Record<EventCategory, ComboBoxValue[]> = {
   ],
 };
 
-const prisma = new PrismaClient();
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL || ":memory:",
+});
+const prisma = new PrismaClient({ adapter });
 
-// Helper function to pick random element from an array
-function randomChoice<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+// Utility functions
+const randomChoice = <T>(arr: T[]): T =>
+  arr[Math.floor(Math.random() * arr.length)];
 
-const slugify = (value: string | null | undefined) =>
+const slugify = (value: string | null | undefined): string | undefined =>
   value
     ?.toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 
-// Realistic strand and program options
+// Constants
 const SHS_STRANDS = ["STEM", "ABM", "HUMSS", "GAS"];
 const COLLEGE_PROGRAMS = ["BSCS", "BSIT", "BSHM", "BSBA"];
 const SECTIONS = ["A", "B", "C", "D", "E"];
@@ -86,86 +90,111 @@ const EVENT_CATEGORIES: EventCategory[] = [
   "YEAR",
 ];
 
-// Generate realistic but varied event data
-function generateEvent(organizerId: string, baseDate: Date, index: number) {
+const EVENT_TITLES: Record<EventCategory, string[]> = {
+  ALL: [
+    "General Assembly",
+    "Whole School Gathering",
+    "All Hands Meeting",
+    "Campus-Wide Event",
+    "Open Forum",
+  ],
+  COLLEGE: [
+    "College Convocation",
+    "College Seminar",
+    "College Workshop",
+    "College Sports Day",
+    "College Awards Night",
+  ],
+  SHS: [
+    "Senior High Assembly",
+    "SHS Orientation",
+    "SHS Competition",
+    "SHS Cultural Night",
+    "SHS Academic Forum",
+  ],
+  DEPARTMENT: [
+    "Department Meeting",
+    "Department Workshop",
+    "Department Seminar",
+    "Department Awards",
+    "Department Gathering",
+  ],
+  STRAND: [
+    "Strand-Specific Training",
+    "Strand Workshop",
+    "Strand Competition",
+    "Strand Meeting",
+    "Strand Project Showcase",
+  ],
+  HOUSE: [
+    "House Assembly",
+    "House Competition",
+    "House Building Activity",
+    "House Meeting",
+    "House Awards Ceremony",
+  ],
+  PROGRAM: [
+    "Program Orientation",
+    "Program Workshop",
+    "Program Competition",
+    "Program Meeting",
+    "Program Showcase",
+  ],
+  SECTION: [
+    "Section Meeting",
+    "Section Activity",
+    "Section Gathering",
+    "Section Workshop",
+    "Section Event",
+  ],
+  YEAR: [
+    "Year Level Assembly",
+    "Year Level Workshop",
+    "Year Level Competition",
+    "Year Level Meeting",
+    "Year Level Activity",
+  ],
+};
+
+const LOCATIONS = [
+  "Room 204, CS Building",
+  "Innovation Lab",
+  "Auditorium",
+  "Tech Hub",
+  "Main Campus Grounds",
+  "Conference Room A",
+  "Gymnasium",
+  "Open Field",
+  "Student Center",
+  "Lecture Hall 101",
+];
+
+// Data generation functions
+function generateEvent(
+  organizerId: string,
+  baseDate: Date,
+  index: number
+): Prisma.EventCreateManyInput {
   const eventType = randomChoice(EVENT_CATEGORIES);
-  const isAllDay = randomChoice([true, false]);
+  const isAllDay = Math.random() < 0.3;
 
-  let startDate = new Date(baseDate);
-  startDate.setDate(startDate.getDate() + index * 2); // Spread events across days
+  const startDate = new Date(baseDate);
+  startDate.setDate(startDate.getDate() + index * 2);
+  startDate.setHours(randomChoice([8, 9, 10, 13, 14, 15]), 0, 0, 0);
 
-  let endDate = new Date(startDate);
+  const endDate = new Date(startDate);
   if (isAllDay) {
-    endDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
   } else {
     endDate.setHours(startDate.getHours() + randomChoice([1, 2, 3, 4]));
   }
 
-  const eventTitles: Record<string, string[]> = {
-    ALL: [
-      "General Assembly",
-      "Whole School Gathering",
-      "All Hands Meeting",
-      "Campus-Wide Event",
-      "Open Forum",
-    ],
-    COLLEGE: [
-      "College Convocation",
-      "College Seminar",
-      "College Workshop",
-      "College Sports Day",
-      "College Awards Night",
-    ],
-    SHS: [
-      "Senior High Assembly",
-      "SHS Orientation",
-      "SHS Competition",
-      "SHS Cultural Night",
-      "SHS Academic Forum",
-    ],
-    DEPARTMENT: [
-      "Department Meeting",
-      "Department Workshop",
-      "Department Seminar",
-      "Department Awards",
-      "Department Gathering",
-    ],
-    STRAND: [
-      "Strand-Specific Training",
-      "Strand Workshop",
-      "Strand Competition",
-      "Strand Meeting",
-      "Strand Project Showcase",
-    ],
-    HOUSE: [
-      "House Assembly",
-      "House Competition",
-      "House Building Activity",
-      "House Meeting",
-      "House Awards Ceremony",
-    ],
-  };
-
-  const title = randomChoice(eventTitles[eventType] || eventTitles.ALL);
-  const locations = [
-    "Room 204, CS Building",
-    "Innovation Lab",
-    "Auditorium",
-    "Tech Hub",
-    "Main Campus Grounds",
-    "Conference Room A",
-    "Gymnasium",
-    "Open Field",
-    "Student Center",
-    "Lecture Hall 101",
-  ];
-
-  // Get the included groups based on the event's category
+  const title = randomChoice(EVENT_TITLES[eventType]);
   const includedGroups = CATEGORY_GROUPS[eventType] || [];
 
   return {
     title,
-    location: randomChoice(locations),
+    location: randomChoice(LOCATIONS),
     description: faker.lorem.sentence(),
     category: eventType,
     includedGroups: JSON.stringify(includedGroups.map((g) => g.value)),
@@ -176,7 +205,6 @@ function generateEvent(organizerId: string, baseDate: Date, index: number) {
   };
 }
 
-// Generate realistic student data
 function generateStudent(index: number): Prisma.StudentCreateInput {
   const schoolLevel = randomChoice([SchoolLevel.SHS, SchoolLevel.COLLEGE]);
   const yearLevel =
@@ -192,43 +220,56 @@ function generateStudent(index: number): Prisma.StudentCreateInput {
   const section = randomChoice(SECTIONS);
   const department = randomChoice(DEPARTMENTS);
   const house = randomChoice(HOUSES);
-  const status = randomChoice([
-    StudentStatus.ACTIVE,
-    StudentStatus.ACTIVE,
-    StudentStatus.INACTIVE,
-  ]);
+  const status =
+    Math.random() < 0.9 ? StudentStatus.ACTIVE : StudentStatus.INACTIVE;
 
   const baseData = {
     id: String(20250000001 + index),
     lastName: faker.person.lastName(),
     firstName: faker.person.firstName(),
-    middleName: randomChoice([faker.person.firstName(), undefined]),
+    middleName: Math.random() < 0.7 ? faker.person.firstName() : undefined,
     section,
     yearLevel,
     schoolLevel,
     status,
-    contactNumber: "0" + faker.phone.number(),
+    contactNumber: `09${faker.string.numeric(9)}`,
     department,
-    departmentSlug: slugify(department) ?? undefined,
+    departmentSlug: slugify(department),
     house,
-    houseSlug: slugify(house) ?? undefined,
+    houseSlug: slugify(house),
   };
 
   if (schoolLevel === SchoolLevel.SHS) {
     return {
       ...baseData,
       shsStrand: randomChoice(SHS_STRANDS),
-    } as Prisma.StudentCreateInput;
+    };
   } else {
     return {
       ...baseData,
       collegeProgram: randomChoice(COLLEGE_PROGRAMS),
-    } as Prisma.StudentCreateInput;
+    };
   }
 }
 
+function getRealisticStatus(): AttendanceStatus {
+  const rand = Math.random();
+  if (rand < 0.75) return "PRESENT";
+  if (rand < 0.85) return "LATE";
+  if (rand < 0.92) return "EXCUSED";
+  return "ABSENT";
+}
+
+// Main seeding function
 async function main() {
-  console.log("🌱 Starting seed...");
+  console.log("Starting database seed...");
+
+  // Clear existing data
+  console.log("Clearing existing data...");
+  await prisma.record.deleteMany();
+  await prisma.event.deleteMany();
+  await prisma.student.deleteMany();
+  await prisma.user.deleteMany();
 
   // Create users
   const organizer = await prisma.user.create({
@@ -249,22 +290,21 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created 2 users (organizer, admin)`);
+  console.log(`Created ${2} users`);
 
-  // Create 15 varied events
-  const baseDate = new Date("2025-09-20T00:00:00Z");
-  const eventsData = Array.from({ length: 15 }, (_, i) =>
+  // Create events
+  const baseDate = new Date("2025-01-01T00:00:00Z");
+  const eventsData = Array.from({ length: 20 }, (_, i) =>
     generateEvent(organizer.id, baseDate, i)
   );
 
-  await prisma.event.createMany({
-    data: eventsData,
-  });
+  await prisma.event.createMany({ data: eventsData });
+  console.log(`Created ${eventsData.length} events`);
 
-  console.log(`✅ Created ${eventsData.length} events`);
-
-  // Create 50 varied students
-  const studentsData = Array.from({ length: 50 }, (_, i) => generateStudent(i));
+  // Create students
+  const studentsData = Array.from({ length: 100 }, (_, i) =>
+    generateStudent(i)
+  );
 
   for (const student of studentsData) {
     await prisma.student.upsert({
@@ -273,32 +313,23 @@ async function main() {
       create: student,
     });
   }
+  console.log(`Created ${studentsData.length} students`);
 
-  console.log(`✅ Created ${studentsData.length} students`);
-
-  // Fetch all events and students
+  // Create attendance records
   const allEvents = await prisma.event.findMany();
   const allStudents = await prisma.student.findMany();
-
-  // Attendance statuses and methods
   const methods: AttendanceMethod[] = ["MANUAL", "SCANNED"];
 
-  // Weighted attendance distribution (more realistic)
-  function getRealisticStatus(): AttendanceStatus {
-    const rand = Math.random();
-    if (rand < 0.75) return "PRESENT";
-    if (rand < 0.85) return "LATE";
-    if (rand < 0.92) return "EXCUSED";
-    return "ABSENT";
-  }
-
-  // Generate attendance records with realistic distribution
   const recordsData: Prisma.RecordCreateManyInput[] = [];
 
   for (const event of allEvents) {
-    for (const student of allStudents) {
-      if (Math.random() >= 0.3) continue;
+    // Each event has 40-80% of students attending
+    const attendanceRate = 0.4 + Math.random() * 0.4;
+    const attendingCount = Math.floor(allStudents.length * attendanceRate);
+    const shuffledStudents = [...allStudents].sort(() => Math.random() - 0.5);
+    const attendingStudents = shuffledStudents.slice(0, attendingCount);
 
+    for (const student of attendingStudents) {
       recordsData.push({
         eventId: event.id,
         studentId: student.id,
@@ -308,17 +339,15 @@ async function main() {
     }
   }
 
-  await prisma.record.createMany({
-    data: recordsData,
-  });
+  await prisma.record.createMany({ data: recordsData });
+  console.log(`Created ${recordsData.length} attendance records`);
 
-  console.log(`✅ Created ${recordsData.length} attendance records`);
-  console.log("🎉 Seed completed successfully!");
+  console.log("Database seed completed successfully");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("Seed failed:", e);
     process.exit(1);
   })
   .finally(async () => {
