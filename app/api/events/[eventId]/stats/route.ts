@@ -37,14 +37,14 @@ export async function GET(
       },
     });
 
-    const unattendedStudentsCount =
+    const absentStudentsCount =
       eligibleStudentsCount - presentStudentsCount;
 
     return NextResponse.json(
       ok({
         eligible: eligibleStudentsCount,
         present: presentStudentsCount,
-        unattended: unattendedStudentsCount,
+        absent: absentStudentsCount,
       }),
       { status: 200 }
     );

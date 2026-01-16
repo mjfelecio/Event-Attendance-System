@@ -7,7 +7,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { eventId: string } }
 ) {
-  const { eventId } = params;
+  const { eventId } = await params;
 
   try {
     const event = await prisma.event.findUnique({ where: { id: eventId } });

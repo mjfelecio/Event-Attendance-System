@@ -27,7 +27,8 @@ export const useSaveEvent = () => {
         headers: { "Content-Type": "application/json" },
       });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
   });
 };
 
@@ -78,6 +79,20 @@ const useEvents = () => {
       const events = await fetchApi<EventAPI[]>("/api/events");
       return events.map(transformEvent);
     },
+  });
+};
+
+/**
+ * Fetches an event through its id
+ */
+export const useFetchEvent = (eventId?: string) => {
+  return useQuery({
+    queryKey: queryKeys.events.withId(eventId!),
+    queryFn: async () => {
+      const event = await fetchApi<EventAPI>(`/api/events/${eventId}`);
+      return transformEvent(event);
+    },
+    enabled: !!eventId,
   });
 };
 

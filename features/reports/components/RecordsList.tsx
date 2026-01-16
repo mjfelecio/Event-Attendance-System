@@ -1,16 +1,16 @@
 "use client";
 
-import { columns } from "@/features/attendance/constants/eventAttendanceTable";
 import { Event } from "@/globals/types/events";
+import React, { useMemo } from "react";
 import { useAllRecordsFromEvent } from "@/globals/hooks/useRecords";
-import { useMemo } from "react";
+import { reportColumns } from "../constants/eventRecordsTable";
 import DataTable from "@/globals/components/shared/dataTable/DataTable";
 
 type Props = {
   selectedEvent: Event | null;
 };
 
-const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
+const RecordsList = ({ selectedEvent }: Props) => {
   const { data, isLoading } = useAllRecordsFromEvent(selectedEvent?.id);
   const records = useMemo(() => data ?? [], [data]);
 
@@ -18,7 +18,7 @@ const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
 
   return (
     <DataTable
-      columns={columns}
+      columns={reportColumns}
       data={records}
       isLoading={isLoading}
       title="Attendance Records"
@@ -26,4 +26,4 @@ const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
   );
 };
 
-export default AttendanceRecordsTable;
+export default RecordsList;

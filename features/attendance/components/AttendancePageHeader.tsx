@@ -31,11 +31,8 @@ const AttendancePageHeader: React.FC<Props> = ({
 
   // Compute attendance rate
   const attendanceRate = useMemo(() => {
-    if (!eventStats || !eventStats.eligible || eventStats.eligible === 0)
-      return undefined;
-    return Number(
-      ((eventStats.present / eventStats.eligible) * 100).toPrecision(4)
-    );
+    if (!eventStats?.eligible) return "—";
+    return `${((eventStats.present / eventStats.eligible) * 100).toFixed(1)}%`;
   }, [eventStats]);
 
   // Build combobox options
@@ -51,7 +48,7 @@ const AttendancePageHeader: React.FC<Props> = ({
   const handleSelectEvent = (eventId: string) => {
     const found = events?.find((e) => e.id === eventId);
     if (!found) {
-      console.warn("⚠️ Selected event not found in events list");
+      console.warn("Selected event not found in events list");
       return;
     }
     onChangeEvent(found);
@@ -66,8 +63,9 @@ const AttendancePageHeader: React.FC<Props> = ({
             Attendance Tracking
           </h1>
           {selectedEvent &&
-            (!isEventsLoading && !isStatsLoading) &&
-            isNaN(attendanceRate ?? NaN) && (
+            !isEventsLoading &&
+            !isStatsLoading &&
+            attendanceRate === "—" && (
               <p className="text-sm text-red-600 mt-1">
                 No eligible students found for this event.
               </p>
@@ -91,7 +89,7 @@ const AttendancePageHeader: React.FC<Props> = ({
       {/* === Header Bottom === */}
       <div className="flex flex-wrap gap-6 justify-between">
         {/* Event Selection */}
-        <div className="border-2 border-gray-300 rounded-md p-4 flex flex-col gap-2 min-w-[280px]">
+        <div className="border shadow-sm rounded-md p-4 flex flex-col gap-2 min-w-[280px]">
           <p className="font-medium text-lg text-gray-700">Select Event</p>
           <ComboBox
             choices={eventChoices}
@@ -107,26 +105,25 @@ const AttendancePageHeader: React.FC<Props> = ({
         {/* Stats Cards */}
         <div className="flex flex-wrap gap-6">
           <DataCard
-            title="Present"
-            subtitle="Students checked in"
+            label="Present"
+            description="Students checked in"
             icon={IoMdCheckmarkCircleOutline}
-            value={eventStats?.present}
+            value={String(eventStats?.present ?? "—")}
             isLoading={isStatsLoading}
           />
           <DataCard
-            title="Total Registered"
-            subtitle="Eligible attendees"
+            label="Total Registered"
+            description="Eligible attendees"
             icon={FaUserGroup}
-            value={eventStats?.eligible}
+            value={String(eventStats?.eligible ?? "—")}
             isLoading={isStatsLoading}
           />
           <DataCard
-            title="Attendance Rate"
-            subtitle="Current percentage"
+            label="Attendance Rate"
+            description="Current percentage"
             icon={VscPercentage}
             value={attendanceRate}
             isLoading={isStatsLoading}
-            isPercentage
           />
         </div>
       </div>
