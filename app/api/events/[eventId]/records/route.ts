@@ -21,6 +21,8 @@ export async function GET(
         eventId: true,
         studentId: true,
         createdAt: true,
+        timein: true,
+        timeout: true,
         student: {
           select: {
             firstName: true,
@@ -46,7 +48,8 @@ export async function GET(
         ),
         schoolLevel: r.student.schoolLevel,
         section: r.student.section,
-        timestamp: r.createdAt,
+        timein: r.timein,
+        timeout: r.timout,
       })
     );
 
