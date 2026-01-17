@@ -42,5 +42,4 @@ next-env.d.ts
 
 /app/generated/prisma
 prisma/migrations/migration_lock.toml
-prisma/attendance.db
-prisma/attendance.sqlite
+prisma/dev.db
