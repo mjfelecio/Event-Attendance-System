@@ -153,25 +153,56 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     enableGlobalFilter: false,
   },
   {
-    accessorKey: "timestamp",
+    accessorKey: "timein",
     header: ({ column }) => (
       <div className="text-center">
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Timestamp
+          Time in
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       </div>
     ),
-    accessorFn: (row) =>
-      new Date(row.timestamp).toLocaleString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }),
+    accessorFn: (row) => {
+      return row.timein
+        ? new Date(row.timein).toLocaleString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          })
+        : "N/A";
+    },
+    cell: ({ getValue }) => (
+      <div className="text-center">{getValue() as string}</div>
+    ),
+    enableGlobalFilter: false,
+  },
+  {
+    accessorKey: "timeout",
+    header: ({ column }) => (
+      <div className="text-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Time out
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    accessorFn: (row) => {
+      return row.timeout
+        ? new Date(row.timeout).toLocaleString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          })
+        : "N/A";
+    },
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
