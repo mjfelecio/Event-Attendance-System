@@ -3,6 +3,7 @@ import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/globals/providers/QueryProvider";
 import { Toaster } from "@/globals/components/shad-cn/sonner";
+import { AuthProvider } from "@/globals/contexts/AuthContext";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -28,7 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} ${geistMono.variable} antialiased`}>
-        <QueryProvider>{children}</QueryProvider>
+        <AuthProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>
