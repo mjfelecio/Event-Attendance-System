@@ -4,9 +4,11 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 
 const userRoleEnum = z.enum(["ORGANIZER", "ADMIN"]);
+const userStatusEnum = z.enum(["PENDING", "ACTIVE", "REJECTED"]);
 const eventStatusEnum = z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]);
 
 type UserRole = z.infer<typeof userRoleEnum>;
+type UserStatus = z.infer<typeof userStatusEnum>;
 type EventStatus = z.infer<typeof eventStatusEnum>;
 
 export const AUTH_COOKIE = "event-attendance-auth";
@@ -16,6 +18,8 @@ const authSessionSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
   role: userRoleEnum,
+  status: userStatusEnum,
+  rejectionReason: z.string().nullable().optional(),
 });
 
 export type AuthSession = z.infer<typeof authSessionSchema>;
