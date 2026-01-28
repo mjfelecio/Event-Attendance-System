@@ -42,10 +42,19 @@ export async function POST(req: Request) {
       name: user.name,
       email: user.email,
       role: user.role,
+      status: user.status,
+      rejectionReason: user.rejectionReason,
     });
 
     return NextResponse.json(
-      ok({ id: user.id, name: user.name, email: user.email, role: user.role }),
+      ok({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        rejectionReason: user.rejectionReason,
+      }),
       { status: 200 }
     );
   } catch (error) {
