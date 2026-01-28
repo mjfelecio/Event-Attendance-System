@@ -12,6 +12,7 @@ import { useSidebar } from "@/globals/contexts/SidebarContext";
 import { LuQrCode } from "react-icons/lu";
 import { useAuth } from "@/globals/contexts/AuthContext";
 import { Database } from "lucide-react";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 /**
  * Represents a single navigation item in the sidebar.
