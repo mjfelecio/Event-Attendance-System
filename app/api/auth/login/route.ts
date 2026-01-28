@@ -21,6 +21,22 @@ export async function POST(req: Request) {
       return NextResponse.json(err("Invalid credentials."), { status: 401 });
     }
 
+    if (user.status === "PENDING") {
+      return NextResponse.json(err("Account pending admin approval."), {
+        status: 403,
+      });
+    }
+
+    if (user.status === "REJECTED") {
+      return NextResponse.json(
+        err(
+          user.rejectionReason ??
+            "Your registration was rejected. Please contact an administrator."
+        ),
+        { status: 403 }
+      );
+    }
+
     await setAuthSession({
       id: user.id,
       name: user.name,
