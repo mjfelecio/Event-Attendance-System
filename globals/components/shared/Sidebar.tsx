@@ -11,6 +11,7 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import { LuQrCode } from "react-icons/lu";
 import { Database } from "lucide-react";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 /**
  * Represents a single navigation item in the sidebar.
