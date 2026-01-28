@@ -76,6 +76,8 @@ model User {
   role     UserRole @default(ORGANIZER)
   email    String   @unique
   password String
+  status   UserStatus @default(PENDING)
+  rejectionReason String?
   createdEvents  Event[] @relation("EventCreator")
   reviewedEvents Event[] @relation("EventReviewer")
 
@@ -86,6 +88,12 @@ model User {
 enum UserRole {
   ORGANIZER
   ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  REJECTED
 }
 
 enum EventStatus {
