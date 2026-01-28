@@ -8,7 +8,7 @@ const LoginPage = () => {
   const { login, isLoading, user } = useAuth();
   const router = useRouter();
 
-  const [username, setUsername] = useState("admin");
+  const [email, setEmail] = useState("organizer@example.com");
   const [password, setPassword] = useState("password");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,12 +37,12 @@ const LoginPage = () => {
     setError(null);
     setIsSubmitting(true);
 
-    const success = await login(username, password);
+    const success = await login(email, password);
 
     setIsSubmitting(false);
 
     if (!success) {
-      setError("Invalid credentials. Try admin / password");
+      setError("Invalid email or password");
       return;
     }
 
@@ -59,12 +59,13 @@ const LoginPage = () => {
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <label className="block text-sm font-medium text-slate-700">
-            Username
+            Email
             <input
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
-              value={username}
-              autoComplete="username"
-              onChange={(event) => setUsername(event.target.value)}
+              type="email"
+              value={email}
+              autoComplete="email"
+              onChange={(event) => setEmail(event.target.value)}
             />
           </label>
 
