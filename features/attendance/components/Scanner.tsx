@@ -25,11 +25,7 @@ const CameraOffState = ({ onOpen }: { onOpen: () => void }) => (
     <p className="text-2xl font-medium text-gray-600 mb-6 text-center">
       Turn on camera to start attendance
     </p>
-    <Button
-      onClick={onOpen}
-      size="lg"
-      className="text-lg px-8 py-6"
-    >
+    <Button onClick={onOpen} size="lg" className="text-lg px-8 py-6">
       Open Camera
     </Button>
   </div>
@@ -68,9 +64,9 @@ const Scanner = ({ onRead, isPending = false }: ScannerProps) => {
   );
 
   return (
-    <div className="flex-1 h-full bg-white border-2 rounded-lg flex flex-col items-center justify-center overflow-hidden">
+    <div className="flex-1 h-full bg-white border rounded-lg flex flex-col items-center justify-center overflow-hidden">
       {cameraOpen ? (
-        <div className="relative w-full h-full flex items-center justify-center bg-gray-100">
+        <div className="relative w-full h-full flex items-center justify-center">
           <div className="w-full h-full max-w-[500px] max-h-[500px]">
             <QRScanner
               components={{
@@ -85,7 +81,7 @@ const Scanner = ({ onRead, isPending = false }: ScannerProps) => {
               }}
             />
           </div>
-          
+
           {/* Close button */}
           <button
             onClick={() => setCameraOpen(false)}
