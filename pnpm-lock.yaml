@@ -141,9 +141,6 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.13
-      '@types/bcryptjs':
-        specifier: ^2.4.6
-        version: 2.4.6
       '@types/lodash':
         specifier: ^4.17.20
         version: 4.17.20
