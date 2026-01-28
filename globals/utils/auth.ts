@@ -83,6 +83,12 @@ export async function requireAuth(): Promise<AuthSession> {
   return session;
 }
 
+export function assertActiveUser(user: AuthSession) {
+  if (user.status !== "ACTIVE") {
+    throw new AuthError("Account not active", 403, "INACTIVE_USER");
+  }
+}
+
 export function requireRole(user: AuthSession, allowed: UserRole | UserRole[]) {
   const allowedRoles = Array.isArray(allowed) ? allowed : [allowed];
   if (!allowedRoles.includes(user.role)) {
