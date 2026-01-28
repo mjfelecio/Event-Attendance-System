@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { useAuth } from "@/globals/contexts/AuthContext";
 
-const LoginPage = () => {
-  const { login, isLoading, user } = useAuth();
+const SignupPage = () => {
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  const [email, setEmail] = useState("organizer@example.com");
-  const [password, setPassword] = useState("password");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -23,7 +26,7 @@ const LoginPage = () => {
   if (isLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-slate-100 text-slate-600">
-        Preparing sign in…
+        Preparing signup…
       </main>
     );
   }
@@ -36,30 +39,62 @@ const LoginPage = () => {
     event.preventDefault();
 
     setError(null);
+    setSuccess(null);
     setIsSubmitting(true);
 
-    const result = await login(email, password);
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    setIsSubmitting(false);
+      const json = await res.json();
 
-    if (!result.success) {
-      setError(result.message ?? "Unable to sign in.");
-      return;
+      if (!res.ok || !json.success) {
+        setError(
+          typeof json.error === "string"
+            ? json.error
+            : "Unable to submit signup."
+        );
+        return;
+      }
+
+      setSuccess(
+        "Request submitted! An admin will review your account shortly."
+      );
+      setName("");
+      setEmail("");
+      setPassword("");
+    } catch (submitError) {
+      setError("Unexpected error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    router.replace("/dashboard");
   };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg border border-slate-200">
-        <h1 className="text-2xl font-semibold text-slate-900">Event Attendance</h1>
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg border border-slate-200">
+        <h1 className="text-2xl font-semibold text-slate-900">Organizer access</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Use the admin credentials shared in the README or create an organizer
-          account for approval.
+          Submit your details below. An administrator will approve or reject
+          your request.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <label className="block text-sm font-medium text-slate-700">
+            Full name
+            <input
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              type="text"
+              value={name}
+              autoComplete="name"
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </label>
+
           <label className="block text-sm font-medium text-slate-700">
             Email
             <input
@@ -68,6 +103,7 @@ const LoginPage = () => {
               value={email}
               autoComplete="email"
               onChange={(event) => setEmail(event.target.value)}
+              required
             />
           </label>
 
@@ -77,8 +113,10 @@ const LoginPage = () => {
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
               type="password"
               value={password}
-              autoComplete="current-password"
+              autoComplete="new-password"
               onChange={(event) => setPassword(event.target.value)}
+              minLength={6}
+              required
             />
           </label>
 
@@ -88,22 +126,28 @@ const LoginPage = () => {
             </p>
           ) : null}
 
+          {success ? (
+            <p className="text-sm text-green-600" role="status">
+              {success}
+            </p>
+          ) : null}
+
           <button
             type="submit"
             className="w-full rounded-lg bg-slate-900 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={isSubmitting || isLoading}
+            disabled={isSubmitting}
           >
-            {isSubmitting ? "Signing in..." : "Sign in"}
+            {isSubmitting ? "Submitting..." : "Submit request"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600">
-          New organizer?{" "}
+          Already approved?{" "}
           <Link
-            href="/signup"
+            href="/login"
             className="font-semibold text-slate-900 underline-offset-2 hover:underline"
           >
-            Request access
+            Return to login
           </Link>
         </p>
       </div>
@@ -111,4 +155,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default SignupPage;
