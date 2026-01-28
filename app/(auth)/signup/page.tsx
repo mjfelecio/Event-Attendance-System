@@ -38,6 +38,24 @@ const SignupPage = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (!event.currentTarget.checkValidity()) {
+      event.currentTarget.reportValidity();
+      return;
+    }
+
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
+      setError("Name is required.");
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setError("Email is required.");
+      return;
+    }
+
     setError(null);
     setSuccess(null);
     setIsSubmitting(true);
@@ -46,7 +64,7 @@ const SignupPage = () => {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name: trimmedName, email: trimmedEmail, password }),
       });
 
       const json = await res.json();

@@ -174,7 +174,7 @@ function generateEvent(
   organizerId: string,
   baseDate: Date,
   index: number
-): Prisma.EventCreateManyInput {
+): Prisma.EventCreateInput {
   const eventType = randomChoice(EVENT_CATEGORIES);
   const isAllDay = Math.random() < 0.3;
 
@@ -197,11 +197,14 @@ function generateEvent(
     location: randomChoice(LOCATIONS),
     description: faker.lorem.sentence(),
     category: eventType,
-    includedGroups: JSON.stringify(includedGroups.map((g) => g.value)),
+    includedGroups:
+      includedGroups.length > 0
+        ? JSON.stringify(includedGroups.map((g) => g.value))
+        : null,
     start: startDate,
     end: endDate,
     allDay: isAllDay,
-    userId: organizerId,
+    createdById: organizerId,
   };
 }
 
@@ -271,35 +274,101 @@ async function main() {
   await prisma.student.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create users
-  const organizer = await prisma.user.create({
-    data: {
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
-      role: "ORGANIZER",
-    },
-  });
-
+  // Create users with deterministic credentials for testing
   const admin = await prisma.user.create({
     data: {
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      password: faker.internet.password(),
+      name: "System Administrator",
+      email: "admin@gmail.com",
+      password: "adminama123",
       role: "ADMIN",
+      status: "ACTIVE",
     },
   });
 
-  console.log(`Created ${2} users`);
+  const primaryOrganizer = await prisma.user.create({
+    data: {
+      name: "Campus Organizer",
+      email: "organizer@example.com",
+      password: "password",
+      role: "ORGANIZER",
+      status: "ACTIVE",
+    },
+  });
+
+  const secondaryOrganizer = await prisma.user.create({
+    data: {
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: "password",
+      role: "ORGANIZER",
+      status: "ACTIVE",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: "password",
+      role: "ORGANIZER",
+      status: "PENDING",
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: "password",
+      role: "ORGANIZER",
+      status: "REJECTED",
+      rejectionReason: "Missing organization requirements.",
+    },
+  });
+
+  console.log("Created admin and sample organizers (active/pending/rejected)");
 
   // Create events
   const baseDate = new Date("2025-01-01T00:00:00Z");
-  const eventsData = Array.from({ length: 20 }, (_, i) =>
-    generateEvent(organizer.id, baseDate, i)
-  );
+  const statusCycle: Array<"DRAFT" | "PENDING" | "APPROVED" | "REJECTED"> = [
+    "DRAFT",
+    "DRAFT",
+    "PENDING",
+    "APPROVED",
+    "APPROVED",
+    "REJECTED",
+  ];
 
-  await prisma.event.createMany({ data: eventsData });
-  console.log(`Created ${eventsData.length} events`);
+  const createdEvents: Prisma.Event[] = [];
+
+  for (let i = 0; i < 18; i++) {
+    const baseData = generateEvent(primaryOrganizer.id, baseDate, i);
+    const status = statusCycle[i % statusCycle.length];
+
+    let reviewedById: string | null = null;
+    let reviewedAt: Date | null = null;
+    let rejectionReason: string | null = null;
+
+    if (status === "APPROVED" || status === "REJECTED") {
+      reviewedById = admin.id;
+      reviewedAt = new Date(baseData.start ?? new Date());
+      rejectionReason = status === "REJECTED" ? "Insufficient details." : null;
+    }
+
+    const event = await prisma.event.create({
+      data: {
+        ...baseData,
+        status,
+        reviewedById,
+        reviewedAt,
+        rejectionReason,
+      },
+    });
+
+    createdEvents.push(event);
+  }
+
+  console.log(`Created ${createdEvents.length} events`);
 
   // Create students
   const studentsData = Array.from({ length: 100 }, (_, i) =>
@@ -316,14 +385,14 @@ async function main() {
   console.log(`Created ${studentsData.length} students`);
 
   // Create attendance records
-  const allEvents = await prisma.event.findMany();
+  const approvedEvents = createdEvents.filter((event) => event.status === "APPROVED");
   const allStudents = await prisma.student.findMany();
   const methods: AttendanceMethod[] = ["MANUAL", "SCANNED"];
 
   const recordsData: Prisma.RecordCreateManyInput[] = [];
 
-  for (const event of allEvents) {
-    // Each event has 40-80% of students attending
+  for (const event of approvedEvents) {
+    // Each approved event has 40-80% of students attending
     const attendanceRate = 0.4 + Math.random() * 0.4;
     const attendingCount = Math.floor(allStudents.length * attendanceRate);
     const shuffledStudents = [...allStudents].sort(() => Math.random() - 0.5);
@@ -340,7 +409,7 @@ async function main() {
   }
 
   await prisma.record.createMany({ data: recordsData });
-  console.log(`Created ${recordsData.length} attendance records`);
+  console.log(`Created ${recordsData.length} attendance records for approved events`);
 
   console.log("Database seed completed successfully");
 }
