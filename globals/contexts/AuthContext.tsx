@@ -9,17 +9,25 @@ import {
   type ReactNode,
 } from "react";
 
+type UserStatus = "PENDING" | "ACTIVE" | "REJECTED";
+
 export type AuthUser = {
   id: string;
   name: string;
   email: string;
   role: "ADMIN" | "ORGANIZER";
+  status: UserStatus;
+  rejectionReason?: string | null;
 };
+
+type LoginResult =
+  | { success: true }
+  | { success: false; message?: string };
 
 type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
 };
 
@@ -65,11 +73,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const json = await res.json();
 
     if (!res.ok || !json.success) {
-      return false;
+      return {
+        success: false,
+        message:
+          typeof json.error === "string" ? json.error : "Unable to sign in.",
+      };
     }
 
     setUser(json.data);
-    return true;
+    return { success: true };
   };
 
   const logout = async () => {
