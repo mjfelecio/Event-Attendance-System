@@ -9,8 +9,6 @@ import {
   type ReactNode,
 } from "react";
 
-import { err } from "@/globals/utils/api";
-
 export type AuthUser = {
   id: string;
   name: string;
