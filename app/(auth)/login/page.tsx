@@ -51,7 +51,7 @@ const LoginPage = () => {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-100">
+    <main className="min-h-screen flex items-center bg-[url('/login/bg.png')] bg-cover bg-center justify-center">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg border border-slate-200">
         <h1 className="text-2xl font-semibold text-slate-900">Event Attendance</h1>
         <p className="mt-1 text-sm text-slate-500">
