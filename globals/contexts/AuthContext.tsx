@@ -75,8 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!res.ok || !json.success) {
       return {
         success: false,
-        message:
-          typeof json.error === "string" ? json.error : "Unable to sign in.",
+        message: json.message || "Unable to sign in.",
       };
     }
 
