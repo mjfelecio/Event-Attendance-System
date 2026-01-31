@@ -11,6 +11,7 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import { LuQrCode } from "react-icons/lu";
 import { Database } from "lucide-react";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 /**
  * Represents a single navigation item in the sidebar.
@@ -116,6 +117,7 @@ const ThemeSwitch = ({ theme, setTheme }: ThemeSwitchProps) => {
 
 const Sidebar = () => {
   const { toggleExpanded, isExpanded } = useSidebar();
+  const { logout } = useAuth();
 
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const router = useRouter();
@@ -129,7 +131,8 @@ const Sidebar = () => {
       : "bg-gray-100 text-black border-r border-gray-300";
 
   const handleLogout = () => {
-    alert("Logging out...");
+    logout();
+    router.replace("/login");
   };
 
   return (
