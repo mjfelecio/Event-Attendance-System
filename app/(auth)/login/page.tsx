@@ -1,24 +1,89 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/globals/contexts/AuthContext";
+import { loginSchema } from "@/features/auth/schema/loginSchema";
+import { ZodError } from "zod";
 
 const LoginPage = () => {
   const { login, isLoading, user } = useAuth();
   const router = useRouter();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<
+    "email" | "password",
+    string
+  > | null>(null);
 
   useEffect(() => {
     if (!isLoading && user) {
       router.replace("/dashboard");
     }
   }, [isLoading, user, router]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    try {
+      setLoginError(null);
+      setFieldErrors(null);
+      setIsSubmitting(true);
+
+      const { email: validatedEmail, password: validatedPass } =
+        loginSchema.parse({ email, password });
+
+      const result = await login(validatedEmail, validatedPass);
+
+      setIsSubmitting(false);
+
+      if (!result.success) {
+        setLoginError(result.message ?? "Unable to sign in.");
+        return;
+      }
+
+      router.replace("/dashboard");
+    } catch (error) {
+      if (error instanceof ZodError) {
+        handleFieldErrors(error);
+      }
+
+      if (error instanceof Error) {
+        setLoginError(error.message);
+        console.log(`Unknown error prevented submission: ${error}`);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFieldErrors = useCallback((error: ZodError) => {
+    // Note that this only catches the form errors client side,
+    // the login errors received from the server will just show
+    // the error message below directly
+    const errors = {
+      email: "",
+      password: "",
+    };
+
+    error.issues.forEach((iss) => {
+      if (iss.path.includes("email")) {
+        errors.email = iss.message;
+      }
+
+      if (iss.path.includes("password")) {
+        errors.password = iss.message;
+      }
+    });
+
+    setFieldErrors(errors);
+  }, []);
 
   if (isLoading) {
     return (
@@ -30,27 +95,8 @@ const LoginPage = () => {
 
   if (user) return null;
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    setError(null);
-    setIsSubmitting(true);
-
-    const result = await login(email, password);
-
-    setIsSubmitting(false);
-
-    if (!result.success) {
-      setError(result.message ?? "Unable to sign in.");
-      return;
-    }
-
-    router.replace("/dashboard");
-  };
-
   return (
     <main className="relative min-h-screen flex items-center justify-center bg-[url('/login/bg.png')] bg-cover bg-center">
-
       {/* Glass Card */}
       <div
         className="
@@ -71,43 +117,57 @@ const LoginPage = () => {
           </h1>
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            <label className="block text-sm font-medium text-slate-700">
-              Email
-              <input
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                Email
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="
                   mt-1 w-full rounded-lg
                   bg-white/50 border border-white/60
                   px-3 py-2 text-sm
                   placeholder:text-slate-400
                   focus:border-white focus:ring-2 focus:ring-white/60 focus:outline-none
                 "
-              />
-            </label>
+                />
+              </label>
+              {fieldErrors?.email && (
+                <p className="text-sm text-red-600" role="alert">
+                  * {fieldErrors.email}
+                </p>
+              )}
+            </div>
 
-            <label className="block text-sm font-medium text-slate-700">
-              Password
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                Password
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="
                   mt-1 w-full rounded-lg
                   bg-white/50 border border-white/60
                   px-3 py-2 text-sm
                   placeholder:text-slate-400
                   focus:border-white focus:ring-2 focus:ring-white/60 focus:outline-none
                 "
-              />
-            </label>
+                />
+              </label>
+              {fieldErrors?.password && (
+                <p className="text-sm text-red-600" role="alert">
+                  * {fieldErrors.password}
+                </p>
+              )}
+            </div>
 
-            {error && (
+            {loginError && (
               <p className="text-sm text-red-600" role="alert">
-                {error}
+                * {loginError}
               </p>
             )}
 
