@@ -20,6 +20,7 @@ import { formatEventPayload, useEventForm } from "@/features/calendar/hooks/useE
 import {
   useDeleteEvent,
   useSaveEvent,
+  useApproveEvent,
   useSubmitEvent,
 } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
@@ -62,10 +63,12 @@ const EventDrawer = ({
   const isEdit = mode === "edit";
   const { user } = useAuth();
   const isOrganizer = user?.role === "ORGANIZER";
+  const isAdmin = user?.role === "ADMIN";
 
   const { mutateAsync: saveEvent, isPending: isSaving } = useSaveEvent();
   const { mutate: deleteEvent } = useDeleteEvent();
   const { mutateAsync: submitEvent, isPending: isSubmitting } = useSubmitEvent();
+  const { mutateAsync: approveEvent, isPending: isApproving } = useApproveEvent();
 
   // Parse includedGroups from JSON string to array for form population
   const initData = useMemo(
@@ -131,6 +134,20 @@ const EventDrawer = ({
     }
   });
 
+  const handleApproveNow = handleSubmitRaw(async (data) => {
+    try {
+      const saved = await saveEvent(formatEventPayload(data));
+      await approveEvent({ id: saved.id });
+      toastSuccess("Event approved", "The event is now live.");
+      onClose();
+    } catch (error) {
+      toastDanger(
+        "Approval failed",
+        error instanceof Error ? error.message : undefined
+      );
+    }
+  });
+
   /**
    * Handle event deletion with confirmation dialog
    */
@@ -150,7 +167,10 @@ const EventDrawer = ({
     category === "SHS"
   );
 
-  const canSubmit = isOrganizer && (initialData?.status ?? "DRAFT") === "DRAFT";
+  const eventStatus = initialData?.status ?? "DRAFT";
+  const canSubmit = isOrganizer && eventStatus === "DRAFT";
+  const canApprove = isAdmin && (eventStatus === "DRAFT" || eventStatus === "PENDING");
+  const isBusy = isSaving || isSubmitting || isApproving;
 
   return (
     <Drawer
@@ -342,7 +362,7 @@ const EventDrawer = ({
                 type="button"
                 variant="destructive"
                 onClick={handleDeleteEvent}
-                disabled={isSaving || isSubmitting}
+                disabled={isBusy}
               >
                 Delete
               </Button>
@@ -357,7 +377,7 @@ const EventDrawer = ({
                   type="button"
                   variant="destructive"
                   onClick={handleDrawerClose}
-                  disabled={isSaving || isSubmitting}
+                  disabled={isBusy}
                 >
                   Close
                 </Button>
@@ -367,12 +387,22 @@ const EventDrawer = ({
                   type="button"
                   variant="secondary"
                   onClick={handleSubmitForReview}
-                  disabled={isSaving || isSubmitting}
+                  disabled={isBusy}
                 >
                   {isSubmitting ? "Submitting..." : "Submit for review"}
                 </Button>
               ) : null}
-              <Button type="submit" variant="default" disabled={isSaving || isSubmitting}>
+              {canApprove ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleApproveNow}
+                  disabled={isBusy}
+                >
+                  {isApproving ? "Approving..." : "Approve now"}
+                </Button>
+              ) : null}
+              <Button type="submit" variant="default" disabled={isBusy}>
                 {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
