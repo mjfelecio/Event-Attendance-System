@@ -86,16 +86,20 @@ const CalendarPage = () => {
   }, [searchParams, handleDrawerOpen]);
 
   return (
-    <div className="flex flex-col flex-1 bg-white p-4 md:p-8 gap-6">
-      {/* Calendar Component - displays events and allows date selection */}
-      <Calendar
-        isDrawerOpen={isDrawerOpen}
-        onSelectDate={handleSelectDate}
-        onEditEvent={handleEditEvent}
-      />
+    <div className="flex flex-col flex-1 bg-white p-4 md:p-8">
+      <section className="min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-5rem)]">
+        {/* Calendar Component - displays events and allows date selection */}
+        <Calendar
+          isDrawerOpen={isDrawerOpen}
+          onSelectDate={handleSelectDate}
+          onEditEvent={handleEditEvent}
+        />
+      </section>
 
       {/* Events Container - displays list of upcoming/all events */}
-      <EventsContainer onDrawerOpen={handleDrawerOpen} />
+      <section className="mt-6">
+        <EventsContainer onDrawerOpen={handleDrawerOpen} />
+      </section>
 
       {/* Event Drawer - form for creating/editing events */}
       <EventDrawer
