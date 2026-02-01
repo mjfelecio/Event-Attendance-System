@@ -4,7 +4,8 @@ import Calendar from "@/features/calendar/components/Calendar";
 import EventDrawer from "@/features/calendar/components/EventDrawer";
 import EventsContainer from "@/features/calendar/components/EventsContainer";
 import { Event } from "@/globals/types/events";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 /**
  * CalendarPage Component
@@ -18,6 +19,8 @@ import { useCallback, useState } from "react";
  * - Coordinate event selection from calendar or list
  */
 const CalendarPage = () => {
+  const searchParams = useSearchParams();
+  const hasOpenedCreate = useRef(false);
   // Drawer visibility state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -74,8 +77,16 @@ const CalendarPage = () => {
     [handleDrawerOpen]
   );
 
+  useEffect(() => {
+    const shouldCreate = searchParams.get("create") === "1";
+    if (shouldCreate && !hasOpenedCreate.current) {
+      handleDrawerOpen(null);
+      hasOpenedCreate.current = true;
+    }
+  }, [searchParams, handleDrawerOpen]);
+
   return (
-    <div className="flex flex-col md:flex-row flex-1 bg-white p-4 md:p-8 gap-4 max-h-[680px]">
+    <div className="flex flex-col flex-1 bg-white p-4 md:p-8 gap-6">
       {/* Calendar Component - displays events and allows date selection */}
       <Calendar
         isDrawerOpen={isDrawerOpen}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 import { useAuth } from "@/globals/contexts/AuthContext";
 import useEvents from "@/globals/hooks/useEvents";
@@ -16,6 +17,7 @@ import {
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
+import { Button } from "@/globals/components/shad-cn/button";
 
 const DashboardPage = () => {
   const { user, isLoading } = useAuth();
@@ -41,6 +43,7 @@ const DashboardPage = () => {
 
 const AdminDashboard = () => {
   const { data, isLoading, isError } = usePendingOrganizers();
+  const { data: events, isLoading: isEventsLoading } = useEvents();
   const approve = useApproveOrganizer();
   const reject = useRejectOrganizer();
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -105,6 +108,8 @@ const AdminDashboard = () => {
   };
 
   const pendingCount = data?.length ?? 0;
+  const pendingEventsCount =
+    events?.filter((event) => event.status === "PENDING").length ?? 0;
 
   return (
     <div className="flex-1 bg-slate-50 p-6 space-y-6 overflow-y-auto">
@@ -140,10 +145,12 @@ const AdminDashboard = () => {
           </p>
         </div>
         <div className="rounded-2xl bg-white shadow border border-slate-200 p-5">
-          <p className="text-sm text-slate-500">Instructions</p>
-          <p className="text-sm text-slate-700 mt-2">
-            Approving grants dashboard + event access. Rejection sends your
-            note to the organizer.
+          <p className="text-sm text-slate-500">Pending events</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            {isEventsLoading ? "—" : pendingEventsCount}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            Review submissions in the calendar workspace.
           </p>
         </div>
       </div>
@@ -306,16 +313,21 @@ const OrganizerDashboard = () => {
 
   return (
     <div className="flex-1 bg-slate-50 p-6 space-y-6 overflow-y-auto">
-      <div>
-        <p className="text-sm uppercase tracking-wide text-slate-500">
-          Organizer overview
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-900 mt-1">
-          Event workflow status
-        </h1>
-        <p className="text-sm text-slate-600 mt-2">
-          Track drafts, submissions, approvals, and rejections at a glance.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-slate-500">
+            Organizer overview
+          </p>
+          <h1 className="text-3xl font-semibold text-slate-900 mt-1">
+            Event workflow status
+          </h1>
+          <p className="text-sm text-slate-600 mt-2">
+            Track drafts, submissions, approvals, and rejections at a glance.
+          </p>
+        </div>
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/calendar?create=1">Create event</Link>
+        </Button>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
