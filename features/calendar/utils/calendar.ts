@@ -9,6 +9,9 @@ export const transformEventsForCalendar = (events: Event[]): CalendarEvent[] => 
     start: event.start,
     end: event.end,
     allDay: event.allDay,
+    extendedProps: {
+      status: event.status,
+    },
   })) ?? [];
 };
 
