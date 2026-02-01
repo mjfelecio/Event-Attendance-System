@@ -32,6 +32,30 @@ export const useSaveEvent = () => {
   });
 };
 
+const useEventAction = (action: "SUBMIT" | "APPROVE" | "REJECT") => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { id: string; reason?: string }) => {
+      return fetchApi<Event>(`/api/events/${payload.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          action === "REJECT"
+            ? { action, reason: payload.reason }
+            : { action }
+        ),
+      });
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
+  });
+};
+
+export const useSubmitEvent = () => useEventAction("SUBMIT");
+export const useApproveEvent = () => useEventAction("APPROVE");
+export const useRejectEvent = () => useEventAction("REJECT");
+
 /**
  * Deletes an event
  *
