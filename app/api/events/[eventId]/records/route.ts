@@ -1,29 +1,19 @@
-import { NextResponse } from "next/server";
-
 import { prisma } from "@/globals/libs/prisma";
 import { StudentAttendanceRecord } from "@/globals/types/students";
-import { ok } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
 import { fullName } from "@/globals/utils/formatting";
-import { assertEventVisibility, requireAuth } from "@/globals/utils/auth";
-import { respondWithError } from "@/globals/utils/httpError";
+import { handlePrismaError } from "@/globals/utils/prismaError";
+import { NextResponse } from "next/server";
 
 // Fetch all attendance record of a specific event
 export async function GET(
   req: Request,
   { params }: { params: { eventId: string } }
 ) {
+  const { eventId } = await params;
+
   try {
-    const user = await requireAuth();
-    const { eventId } = await params;
-
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
-    if (!event) {
-      return NextResponse.json(ok(null), { status: 404 });
-    }
-
-    assertEventVisibility(event, user);
-
-    const recordsWithStudent = await prisma.record.findMany({
+    const recordsWithStudent: any = await prisma.record.findMany({
       where: { eventId },
       select: {
         id: true,
@@ -43,10 +33,8 @@ export async function GET(
       },
     });
 
-    type RecordWithStudent = typeof recordsWithStudent[number];
-
     const records: StudentAttendanceRecord[] = recordsWithStudent.map(
-      (r: RecordWithStudent) => ({
+      (r: any) => ({
         id: r.id,
         status: r.status,
         eventId: r.eventId,
@@ -63,7 +51,8 @@ export async function GET(
     );
 
     return NextResponse.json(ok(records), { status: 200 });
-  } catch (error) {
-    return respondWithError(error);
+  } catch (e) {
+    const { message, status } = handlePrismaError(e);
+    return NextResponse.json(err(message), { status });
   }
 }

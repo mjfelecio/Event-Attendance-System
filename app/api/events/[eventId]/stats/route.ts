@@ -1,26 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-
 import { prisma } from "@/globals/libs/prisma";
-import { ok } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
-import { assertEventVisibility, requireAuth } from "@/globals/utils/auth";
-import { respondWithError } from "@/globals/utils/httpError";
+import { handlePrismaError } from "@/globals/utils/prismaError";
+import { AttendanceStatus } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { eventId: string } }
 ) {
   try {
-    const user = await requireAuth();
     const { eventId } = await params;
+
+    if (!eventId) {
+      return NextResponse.json(err("Missing event id"), { status: 400 });
+    }
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
 
     if (!event) {
-      return NextResponse.json(ok(null), { status: 404 });
+      return NextResponse.json(err("Event not found"), { status: 404 });
     }
-
-    assertEventVisibility(event, user);
 
     // Eligible students based on event criteria
     const eligibleStudentsCount = await prisma.student.count({
@@ -32,7 +32,7 @@ export async function GET(
       where: {
         eventId,
         status: {
-          in: ["PRESENT", "LATE"],
+          in: [AttendanceStatus.PRESENT, AttendanceStatus.LATE],
         },
       },
     });
@@ -48,7 +48,8 @@ export async function GET(
       }),
       { status: 200 }
     );
-  } catch (error) {
-    return respondWithError(error);
+  } catch (e) {
+    const { message, status } = handlePrismaError(e);
+    return NextResponse.json(err(message), { status });
   }
 }
