@@ -1,6 +1,7 @@
 import {
   AttendanceMethod,
   AttendanceStatus,
+  Event,
   EventCategory,
   Prisma,
   PrismaClient,
@@ -173,8 +174,8 @@ const LOCATIONS = [
 function generateEvent(
   organizerId: string,
   baseDate: Date,
-  index: number
-): Prisma.EventCreateInput {
+  index: number,
+): Prisma.EventCreateManyInput {
   const eventType = randomChoice(EVENT_CATEGORIES);
   const isAllDay = Math.random() < 0.3;
 
@@ -197,10 +198,7 @@ function generateEvent(
     location: randomChoice(LOCATIONS),
     description: faker.lorem.sentence(),
     category: eventType,
-    includedGroups:
-      includedGroups.length > 0
-        ? JSON.stringify(includedGroups.map((g) => g.value))
-        : null,
+    includedGroups: JSON.stringify(includedGroups.map((g) => g.value)),
     start: startDate,
     end: endDate,
     allDay: isAllDay,
@@ -339,7 +337,7 @@ async function main() {
     "REJECTED",
   ];
 
-  const createdEvents: Prisma.Event[] = [];
+  const createdEvents: Event[] = [];
 
   for (let i = 0; i < 18; i++) {
     const baseData = generateEvent(primaryOrganizer.id, baseDate, i);
@@ -368,11 +366,11 @@ async function main() {
     createdEvents.push(event);
   }
 
-  console.log(`Created ${createdEvents.length} events`);
+    console.log(`Created ${createdEvents.length} events`);
 
   // Create students
   const studentsData = Array.from({ length: 100 }, (_, i) =>
-    generateStudent(i)
+    generateStudent(i),
   );
 
   for (const student of studentsData) {
@@ -385,7 +383,7 @@ async function main() {
   console.log(`Created ${studentsData.length} students`);
 
   // Create attendance records
-  const approvedEvents = createdEvents.filter((event) => event.status === "APPROVED");
+  const approvedEvents = createdEvents.filter(e => e.status === "APPROVED");
   const allStudents = await prisma.student.findMany();
   const methods: AttendanceMethod[] = ["MANUAL", "SCANNED"];
 
