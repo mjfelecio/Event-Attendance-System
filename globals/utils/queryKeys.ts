@@ -25,7 +25,4 @@ export const queryKeys = {
     fromEventForStudent: (eventId: string, studentId: string) =>
       ["records", "fromEventForStudent", eventId, studentId] as const,
   },
-  admin: {
-    pendingOrganizers: () => ["admin", "pendingOrganizers"] as const,
-  },
 };

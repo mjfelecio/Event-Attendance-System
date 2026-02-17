@@ -16,21 +16,13 @@ model Event {
   end            DateTime
   allDay         Boolean       @default(false)
   includedGroups String?
-  status         EventStatus   @default(DRAFT)
-  createdById    String?
-  reviewedById   String?
-  reviewedAt     DateTime?
-  rejectionReason String?
 
-  Record      Record[]
-  createdBy   User?        @relation("EventCreator", fields: [createdById], references: [id])
-  reviewedBy  User?        @relation("EventReviewer", fields: [reviewedById], references: [id])
+  Record Record[]
+  User   User?    @relation(fields: [userId], references: [id])
+  userId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([status])
-  @@index([createdById])
 }
 
 model Student {
@@ -76,10 +68,7 @@ model User {
   role     UserRole @default(ORGANIZER)
   email    String   @unique
   password String
-  status   UserStatus @default(PENDING)
-  rejectionReason String?
-  createdEvents  Event[] @relation("EventCreator")
-  reviewedEvents Event[] @relation("EventReviewer")
+  Event    Event[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,19 +77,6 @@ model User {
 enum UserRole {
   ORGANIZER
   ADMIN
-}
-
-enum UserStatus {
-  PENDING
-  ACTIVE
-  REJECTED
-}
-
-enum EventStatus {
-  DRAFT
-  PENDING
-  APPROVED
-  REJECTED
 }
 
 enum AttendanceMethod {
