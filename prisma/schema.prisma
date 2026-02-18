@@ -63,6 +63,8 @@ model Record {
   student   Student          @relation(fields: [studentId], references: [id])
   status    AttendanceStatus @default(PRESENT)
   method    AttendanceMethod
+  timein    DateTime         @default(now())
+  timeout   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
