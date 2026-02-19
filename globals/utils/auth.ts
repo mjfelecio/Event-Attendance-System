@@ -100,6 +100,10 @@ export function assertEventOwnership(
   event: { createdById: string | null },
   user: AuthSession
 ) {
+  if (user.role === "ADMIN") {
+    return;
+  }
+
   if (!event.createdById || event.createdById !== user.id) {
     throw new AuthError("Forbidden", 403, "FORBIDDEN");
   }
