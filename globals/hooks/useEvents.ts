@@ -83,6 +83,19 @@ const useEvents = () => {
 };
 
 /**
+ * Fetches all events
+ */
+export const useFetchApprovedEvents = () => {
+  return useQuery({
+    queryKey: queryKeys.events.allApproved(),
+    queryFn: async () => {
+      const events = await fetchApi<EventAPI[]>("/api/events?status=APPROVED");
+      return events.map(transformEvent);
+    },
+  });
+};
+
+/**
  * Fetches an event through its id
  */
 export const useFetchEvent = (eventId?: string) => {

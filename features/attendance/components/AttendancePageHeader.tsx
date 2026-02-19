@@ -10,7 +10,7 @@ import ButtonWithIcon from "@/globals/components/shared/ButtonWithIcon";
 import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import DataCard from "@/features/attendance/components/DataCard";
 
-import useEvents, { useStatsOfEvent } from "@/globals/hooks/useEvents";
+import { useFetchApprovedEvents, useStatsOfEvent } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 
 type Props = {
@@ -22,7 +22,7 @@ const AttendancePageHeader: React.FC<Props> = ({
   selectedEvent,
   onChangeEvent,
 }) => {
-  const { data: events, isLoading: isEventsLoading } = useEvents();
+  const { data: events, isLoading: isEventsLoading } = useFetchApprovedEvents();
   const {
     data: eventStats,
     isLoading: isStatsLoading,
