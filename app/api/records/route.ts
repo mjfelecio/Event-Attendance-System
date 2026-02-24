@@ -7,13 +7,31 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    const event = await prisma.event.findUnique({
+      where: { id: body.eventId },
+    });
+
+    if (!event) {
+      return NextResponse.json(
+        err("Cannot create record with no event attached"),
+        { status: 404 },
+      );
+    }
+
+    const now = new Date();
+
     const created = await prisma.record.create({
-      data: body,
+      data: {
+        ...body,
+        timein: event.isTimeout ? null : now, 
+        timeout: event.isTimeout ? now : null, 
+      },
     });
 
     return NextResponse.json(ok(created), { status: 201 });
   } catch (e) {
     const { status, message } = handlePrismaError(e);
+    console.warn(JSON.stringify(e))
     return NextResponse.json(err(message), { status });
   }
 }

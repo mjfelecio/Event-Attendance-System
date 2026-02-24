@@ -1,8 +1,4 @@
-import {
-  AttendanceStatus,
-  Student as PrismaStudent,
-  SchoolLevel,
-} from "@prisma/client";
+import { Student as PrismaStudent, SchoolLevel } from "@prisma/client";
 
 export type Student = PrismaStudent;
 
@@ -15,12 +11,11 @@ export type StudentAttendanceRecord = {
   id: string;
   eventId: string;
   studentId: string;
-  status: AttendanceStatus;
   fullName: string;
   schoolLevel: SchoolLevel;
   section: string;
-  timein: string; // Date UTC timestamp
-  timeout: string; // Date UTC timestamp
+  timein: string | null; // Date UTC timestamp
+  timeout: string | null; // Date UTC timestamp
 };
 
 export type StudentAPI = Omit<Student, "createdAt" | "updatedAt"> & {

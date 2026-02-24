@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Record, NewRecord } from "@/globals/types/records";
 import { StudentAttendanceRecord } from "@/globals/types/students";
-import { AttendanceStatus } from "@prisma/client";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
 
@@ -37,10 +36,12 @@ export const useCreateRecord = (eventId: string) => {
       // Apply optimistic update
       if (previousRecords) {
         const optimisticRecord: Record = {
-          ...(newRecord as Record),
+          ...newRecord,
           id: `temp-${Date.now()}`, // Temporary client-only ID
           createdAt: new Date(),
           updatedAt: new Date(),
+          timein: new Date(),
+          timeout: null,
         };
 
         queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
@@ -59,66 +60,6 @@ export const useCreateRecord = (eventId: string) => {
     },
 
     /** Re-sync server state after success */
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.records.fromEvent(eventId),
-        exact: true,
-      });
-    },
-  });
-};
-
-/**
- * Updates the attendance status of a single record.
- *
- * Uses optimistic updates so the UI feels instant.
- */
-export const useUpdateRecordStatus = (eventId: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      recordId,
-      status,
-    }: {
-      recordId: string;
-      status: AttendanceStatus;
-    }) => {
-      return fetchApi<Record>(`/api/records/${recordId}/${status}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-      });
-    },
-
-    onMutate: async ({ recordId, status }) => {
-      const key = queryKeys.records.fromEvent(eventId);
-
-      await queryClient.cancelQueries({ queryKey: key });
-
-      // Snapshot current cache
-      const previousRecords =
-        queryClient.getQueryData<StudentAttendanceRecord[]>(key);
-
-      // Optimistic in-place update
-      if (previousRecords) {
-        queryClient.setQueryData(
-          key,
-          previousRecords.map((record) =>
-            record.id === recordId ? { ...record, status } : record
-          )
-        );
-      }
-
-      return { previousRecords };
-    },
-
-    onError: (_err, _vars, context) => {
-      const key = queryKeys.records.fromEvent(eventId);
-      if (context?.previousRecords) {
-        queryClient.setQueryData(key, context.previousRecords);
-      }
-    },
-
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEvent(eventId),
@@ -156,7 +97,7 @@ export const useDeleteRecord = (eventId: string) => {
       if (previousRecords) {
         queryClient.setQueryData(
           key,
-          previousRecords.filter((record) => record.id !== recordId)
+          previousRecords.filter((record) => record.id !== recordId),
         );
       }
 
@@ -190,7 +131,7 @@ export const useAllRecordsFromEvent = (eventId?: string) => {
       if (!eventId) return null;
 
       return fetchApi<StudentAttendanceRecord[]>(
-        `/api/events/${eventId}/records`
+        `/api/events/${eventId}/records`,
       );
     },
   });
@@ -201,7 +142,10 @@ export const useAllRecordsFromEvent = (eventId?: string) => {
  *
  * Returns null when no record exists.
  */
-export const useRecordOfStudentInEvent = (eventId?: string, studentId?: string) => {
+export const useRecordOfStudentInEvent = (
+  eventId?: string,
+  studentId?: string,
+) => {
   return useQuery({
     queryKey: queryKeys.records.fromEventForStudent(eventId!, studentId!),
     enabled: !!eventId && !!studentId,
@@ -209,7 +153,7 @@ export const useRecordOfStudentInEvent = (eventId?: string, studentId?: string) 
       if (!eventId || !studentId) return null;
 
       return fetchApi<Record>(
-        `/api/records?eventId=${eventId}&studentId=${studentId}`
+        `/api/records?eventId=${eventId}&studentId=${studentId}`,
       );
     },
   });

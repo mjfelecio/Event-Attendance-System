@@ -9,8 +9,8 @@ import { respondWithError } from "@/globals/utils/httpError";
 
 // Fetch all attendance record of a specific event
 export async function GET(
-  req: Request,
-  { params }: { params: { eventId: string } }
+  _req: Request,
+  { params }: { params: { eventId: string } },
 ) {
   try {
     const user = await requireAuth();
@@ -27,7 +27,6 @@ export async function GET(
       where: { eventId },
       select: {
         id: true,
-        status: true,
         eventId: true,
         studentId: true,
         createdAt: true,
@@ -45,24 +44,23 @@ export async function GET(
       },
     });
 
-    type RecordWithStudent = typeof recordsWithStudent[number];
+    type RecordWithStudent = (typeof recordsWithStudent)[number];
 
     const records: StudentAttendanceRecord[] = recordsWithStudent.map(
       (r: RecordWithStudent) => ({
         id: r.id,
-        status: r.status,
         eventId: r.eventId,
         studentId: r.studentId,
         fullName: fullName(
           r.student.firstName,
-          r.student.middleName,
-          r.student.lastName
+          r.student.middleName || "",
+          r.student.lastName,
         ),
         schoolLevel: r.student.schoolLevel,
         section: r.student.section,
-        timein: r.timein,
-        timeout: r.timout,
-      })
+        timein: r.timein ? new Date(r.timein).toString() : null,
+        timeout: r.timeout ? new Date(r.timeout).toString() : null,
+      }),
     );
 
     return NextResponse.json(ok(records), { status: 200 });

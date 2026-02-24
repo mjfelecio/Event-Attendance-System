@@ -1,28 +1,28 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
-import { FaUserCheck, FaUserClock } from "react-icons/fa6";
-import {
-  useDeleteRecord,
-  useUpdateRecordStatus,
-} from "@/globals/hooks/useRecords";
-import { AttendanceStatus } from "@prisma/client";
-import { FaUserTimes } from "react-icons/fa";
-import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
+import { useCreateRecord, useDeleteRecord } from "@/globals/hooks/useRecords";
+import { toastDanger } from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
-import { BiSolidTrash } from "react-icons/bi";
 import { ATTENDANCE_STATUS_ICONS } from "./attendanceStatus";
+import { NewRecord } from "@/globals/types/records";
 
 function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
-  const { mutateAsync: updateStatus, isPending: isUpdating } =
-    useUpdateRecordStatus(eventId);
+  const { mutateAsync: createRecord, isPending: isUpdating } =
+    useCreateRecord(eventId);
 
-  const handleActions = async (status: AttendanceStatus) => {
+  const handleCreate = async () => {
+    const payload: NewRecord = {
+      eventId: eventId,
+      studentId: studentId,
+      method: "MANUAL",
+    };
+
     try {
-      await updateStatus({ recordId, status });
+      await createRecord(payload);
     } catch (error) {
       console.error("Error updating status:", error);
       toastDanger(`Failed to update status for ${studentId}`);
@@ -45,31 +45,24 @@ function ActionsCell({ row }: { row: any }) {
       {[
         {
           type: "PRESENT",
-          icon: ATTENDANCE_STATUS_ICONS.PRESENT,
+          icon: ATTENDANCE_STATUS_ICONS.present,
           color: "text-emerald-600",
         },
         {
-          type: "EXCUSED",
-          icon: ATTENDANCE_STATUS_ICONS.EXCUSED,
-          color: "text-sky-600",
-        },
-        {
           type: "ABSENT",
-          icon: ATTENDANCE_STATUS_ICONS.ABSENT,
+          icon: ATTENDANCE_STATUS_ICONS.absent,
           color: "text-red-400",
         },
         {
           type: "DELETE",
-          icon: ATTENDANCE_STATUS_ICONS.DELETE,
+          icon: ATTENDANCE_STATUS_ICONS.delete,
           color: "text-red-500",
           handler: handleDelete,
         },
       ].map(({ type, icon: Icon, color, handler }) => (
         <button
           key={type}
-          onClick={() =>
-            handler ? handler() : handleActions(type as AttendanceStatus)
-          }
+          onClick={() => (handler ? handler() : handleCreate())}
           disabled={isLoading}
           title={type.charAt(0) + type.slice(1).toLowerCase()}
           className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95`}
@@ -208,24 +201,24 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     ),
     enableGlobalFilter: false,
   },
-  {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <div className="text-center">
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Status
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-    ),
-    cell: ({ getValue }) => (
-      <div className="text-center">{getValue() as string}</div>
-    ),
-    enableGlobalFilter: false,
-  },
+  // {
+  //   accessorKey: "status",
+  //   header: ({ column }) => (
+  //     <div className="text-center">
+  //       <Button
+  //         variant="ghost"
+  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  //       >
+  //         Status
+  //         <ArrowUpDown className="ml-2 h-4 w-4" />
+  //       </Button>
+  //     </div>
+  //   ),
+  //   cell: ({ getValue }) => (
+  //     <div className="text-center">{getValue() as string}</div>
+  //   ),
+  //   enableGlobalFilter: false,
+  // },
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,

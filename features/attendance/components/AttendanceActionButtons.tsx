@@ -3,18 +3,11 @@ import {
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
-import {
-  useDeleteRecord,
-  useCreateRecord,
-  useUpdateRecordStatus,
-} from "@/globals/hooks/useRecords";
-import { NewRecord } from "@/globals/types/records";
-import { AttendanceStatus } from "@prisma/client";
+import { useDeleteRecord, useCreateRecord } from "@/globals/hooks/useRecords";
+import { AttendanceStatus, NewRecord } from "@/globals/types/records";
 import React from "react";
-import { FaUserCheck, FaUserClock, FaUserTimes } from "react-icons/fa";
-import { BiSolidTrash } from "react-icons/bi";
 import { IconType } from "react-icons/lib";
-import { ATTENDANCE_STATUS_ICONS } from "../constants/attendanceStatus";
+import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 
 type Props = {
   eventId: string;
@@ -29,20 +22,14 @@ const ACTION_BUTTONS: {
   color: string;
 }[] = [
   {
-    status: "PRESENT",
-    icon: ATTENDANCE_STATUS_ICONS.PRESENT,
+    status: "present",
+    icon: ATTENDANCE_STATUS_ICONS.present,
     title: "Mark as Present",
     color: "text-emerald-600",
   },
   {
-    status: "EXCUSED",
-    icon: ATTENDANCE_STATUS_ICONS.EXCUSED,
-    title: "Mark as Excused",
-    color: "text-sky-600",
-  },
-  {
-    status: "ABSENT",
-    icon: ATTENDANCE_STATUS_ICONS.ABSENT,
+    status: "absent",
+    icon: ATTENDANCE_STATUS_ICONS.absent,
     title: "Mark as Absent",
     color: "text-red-400",
   },
@@ -51,32 +38,26 @@ const ACTION_BUTTONS: {
 const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
   const { mutateAsync: createRecord, isPending: isCreating } =
     useCreateRecord(eventId);
-  const { mutateAsync: updateStatus, isPending: isUpdating } =
-    useUpdateRecordStatus(eventId);
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
 
-  const isLoading = isCreating || isUpdating || isDeleting;
+  const isLoading = isCreating || isDeleting;
 
   const handleSetStatus = async (status: AttendanceStatus) => {
     try {
-      if (!recordId) {
-        await createRecord({
-          eventId,
-          studentId,
-          status,
-          method: "MANUAL",
-        } as NewRecord);
-        toastSuccess(`Marked student as ${status.toLowerCase()}`);
-      } else {
-        await updateStatus({ recordId, status });
-        toastSuccess(`Updated status to ${status.toLowerCase()}`);
-      }
+      await createRecord({
+        eventId,
+        studentId,
+        status,
+        method: "MANUAL",
+      } as NewRecord);
+
+      toastSuccess(`Marked student as ${status.toLowerCase()}`);
     } catch (error) {
       toastWarning(
-        `Failed to set status: ${
+        `Failed to set record: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     }
   };
@@ -93,7 +74,7 @@ const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
       toastDanger(
         `Failed to delete record: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     }
   };
@@ -119,7 +100,7 @@ const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
         title="Delete Record"
         className="flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95"
       >
-        <ATTENDANCE_STATUS_ICONS.DELETE className="w-5 h-5 text-red-500" />
+        <ATTENDANCE_STATUS_ICONS.delete className="w-5 h-5 text-red-500" />
       </button>
     </div>
   );

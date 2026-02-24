@@ -62,9 +62,8 @@ model Record {
   event     Event            @relation(fields: [eventId], references: [id])
   studentId String
   student   Student          @relation(fields: [studentId], references: [id])
-  status    AttendanceStatus @default(PRESENT)
   method    AttendanceMethod
-  timein    DateTime         @default(now())
+  timein    DateTime?
   timeout   DateTime?
 
   createdAt DateTime @default(now())
@@ -109,13 +108,6 @@ enum EventStatus {
 enum AttendanceMethod {
   MANUAL
   SCANNED
-}
-
-enum AttendanceStatus {
-  PRESENT
-  LATE
-  EXCUSED
-  ABSENT
 }
 
 enum YearLevel {

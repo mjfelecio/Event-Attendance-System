@@ -91,7 +91,7 @@ const StudentDetails = ({
     <div className="flex flex-1 w-full bg-white rounded-xl">
       {/* Left side (Attendance Status n' stuff) */}
       <div className="flex flex-col gap-4 pt-6 p-2 bg-gray-50/50 items-center">
-        <AttendanceStatusCard status={record ? record.status : "ABSENT"} />
+        <AttendanceStatusCard status={record ? "present" : "absent"} />
 
         <div className="flex flex-col gap-2 items-center">
           <p className="font-medium border-b-2">Actions</p>
