@@ -10,7 +10,9 @@ import {
 } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { AttendanceStatus } from "@/globals/types/records";
+import {
+  isStudentInEvent,
+} from "@/globals/utils/buildEventStudentFilter";
 
 type ComboBoxValue = {
   value: string;
@@ -383,15 +385,17 @@ async function main() {
   const recordsData: Prisma.RecordCreateManyInput[] = [];
 
   for (const event of approvedEvents) {
+    const studentsInEvent = allStudents.filter((s) => isStudentInEvent(s, event));
+    
     // Each approved event has 40-80% of students attending
     const attendanceRate = 0.4 + Math.random() * 0.4;
-    const attendingCount = Math.floor(allStudents.length * attendanceRate);
-    const shuffledStudents = [...allStudents].sort(() => Math.random() - 0.5);
+    const attendingCount = Math.floor(studentsInEvent.length * attendanceRate);
+    const shuffledStudents = [...studentsInEvent].sort(() => Math.random() - 0.5);
     const attendingStudents = shuffledStudents.slice(0, attendingCount);
 
     for (const student of attendingStudents) {
       const recordDate = new Date(baseDate);
-      recordDate.setDate(recordDate.getDate() + attendanceRate * 2);
+      recordDate.setDate(recordDate.getDate() + Math.random() * 2);
       recordDate.setHours(randomChoice([8, 9, 10, 13, 14, 15]), 0, 0, 0);
 
       recordsData.push({
