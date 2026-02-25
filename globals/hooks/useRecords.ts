@@ -122,10 +122,8 @@ export const useUpdateAttendanceRecord = (eventId: string) => {
     /** Re-sync server state after success */
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: [
-          queryKeys.records.fromEvent(eventId),
-          queryKeys.records.fromEventForStudent(eventId, data.studentId),
-        ],
+        queryKey: queryKeys.records.fromEvent(eventId),
+        // queryKeys.records.fromEventForStudent(eventId, data.studentId),
         exact: true,
       });
     },
