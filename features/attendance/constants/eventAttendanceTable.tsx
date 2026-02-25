@@ -1,28 +1,21 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
-import { useCreateRecord, useDeleteRecord } from "@/globals/hooks/useRecords";
+import { useDeleteRecord, useUpdateAttendanceRecord } from "@/globals/hooks/useRecords";
 import { toastDanger } from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "./attendanceStatus";
-import { NewRecord } from "@/globals/types/records";
 
 function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
-  const { mutateAsync: createRecord, isPending: isUpdating } =
-    useCreateRecord(eventId);
+  const { mutateAsync: recordAttendance, isPending: isUpdating } =
+    useUpdateAttendanceRecord(eventId);
 
-  const handleCreate = async () => {
-    const payload: NewRecord = {
-      eventId: eventId,
-      studentId: studentId,
-      method: "MANUAL",
-    };
-
+  const handleRecordAttendance = async () => {
     try {
-      await createRecord(payload);
+      await recordAttendance(recordId);
     } catch (error) {
       console.error("Error updating status:", error);
       toastDanger(`Failed to update status for ${studentId}`);
@@ -62,7 +55,7 @@ function ActionsCell({ row }: { row: any }) {
       ].map(({ type, icon: Icon, color, handler }) => (
         <button
           key={type}
-          onClick={() => (handler ? handler() : handleCreate())}
+          onClick={() => (handler ? handler() : handleRecordAttendance())}
           disabled={isLoading}
           title={type.charAt(0) + type.slice(1).toLowerCase()}
           className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95`}

@@ -70,6 +70,69 @@ export const useCreateRecord = (eventId: string) => {
 };
 
 /**
+ * Updates an attendance record.
+ *
+ * Uses optimistic updates to immediately reflect the new record in the UI
+ * before the server confirms the change.
+ */
+export const useUpdateAttendanceRecord = (eventId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (recordId: string) => {
+      return fetchApi<Record>(`/api/records/${recordId}`, {
+        method: "PATCH",
+      });
+    },
+
+    /** Runs before the mutation request is sent */
+    onMutate: async (recordId) => {
+      const key = queryKeys.records.fromEvent(eventId);
+
+      // Cancel outgoing refetches to prevent overwriting optimistic state
+      await queryClient.cancelQueries({ queryKey: key });
+
+      // Snapshot current cache state so we can rollback if needed
+      const previousRecords = queryClient.getQueryData<Record[]>(key);
+
+      const existingRecord = previousRecords?.find((r) => r.id === recordId);
+
+      // Apply optimistic update
+      if (previousRecords && existingRecord) {
+        const optimisticRecord: Record = {
+          ...existingRecord,
+          timeout: new Date(),
+        };
+
+        queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
+      }
+
+      // Return context for rollback in onError
+      return { previousRecords };
+    },
+
+    /** Rollback optimistic update if server request fails */
+    onError: (_err, _variables, context) => {
+      const key = queryKeys.records.fromEvent(eventId);
+      if (context?.previousRecords) {
+        queryClient.setQueryData(key, context.previousRecords);
+      }
+    },
+
+    /** Re-sync server state after success */
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          queryKeys.records.fromEvent(eventId),
+          queryKeys.records.fromEventForStudent(eventId, data.studentId),
+        ],
+        exact: true,
+      });
+    },
+  });
+};
+
+/**
  * Deletes a single attendance record.
  *
  * Uses optimistic removal so the row disappears instantly.

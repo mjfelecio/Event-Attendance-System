@@ -13,6 +13,16 @@ type DetailRowProps = {
   show?: boolean;
 };
 
+function formatDate(date: Date) {
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 const DetailRow = ({ label, value, show = true }: DetailRowProps) => {
   if (!show) return null;
   return (
@@ -48,12 +58,7 @@ type Props = {
   isLoading: boolean;
 };
 
-const StudentDetails = ({
-  event,
-  student,
-  record,
-  isLoading,
-}: Props) => {
+const StudentDetails = ({ event, student, record, isLoading }: Props) => {
   if (isLoading) return <LoadingState />;
   if (!student) return <EmptyState />;
 
@@ -79,13 +84,10 @@ const StudentDetails = ({
   const fullSection = `${
     isCollege ? collegeProgram : shsStrand
   } - ${section} • ${id}`;
-  const recordedAt = new Date().toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeIn = record?.timein ? formatDate(new Date(record?.timein)) : "N/A";
+  const timeOut = record?.timeout
+    ? formatDate(new Date(record?.timeout))
+    : "N/A";
 
   return (
     <div className="flex flex-1 w-full bg-white rounded-xl">
@@ -135,14 +137,24 @@ const StudentDetails = ({
 
         {/* Attendance record / status row */}
         {record && (
-          <div className="mt-6 border-t-2 border-t-gray-100 pt-2 flex justify-between items-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">
-              Recorded at
-            </p>
-            <span className="text-base font-medium text-gray-900">
-              {recordedAt}
-            </span>
-          </div>
+          <>
+            <div className="mt-6 border-t-2 border-t-gray-100 pt-2 flex justify-between items-center">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">
+                Time In at
+              </p>
+              <span className="text-base font-medium text-gray-900">
+                {timeIn}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">
+                Time Out at
+              </p>
+              <span className="text-base font-medium text-gray-900">
+                {timeOut}
+              </span>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -2,8 +2,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
 import { ArrowUpDown, FileText } from "lucide-react";
-import { AttendanceStatus } from "@prisma/client";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
+import { AttendanceStatus } from "@/globals/types/records";
 
 function ViewRecordCell({ row }: { row: any }) {
   const { id: recordId } = row.original;
@@ -29,24 +29,23 @@ function ViewRecordCell({ row }: { row: any }) {
 }
 
 function StatusCell({ getValue }: { getValue: () => any }) {
-  const status = getValue() as AttendanceStatus;
-  const Icon = ATTENDANCE_STATUS_ICONS[status] || ATTENDANCE_STATUS_ICONS.PRESENT;
+  const Icon = ATTENDANCE_STATUS_ICONS.present;
   
   const statusConfig: Record<AttendanceStatus, Record<any, any>> = {
-    PRESENT: { color: "text-emerald-600", bg: "bg-emerald-50" },
-    EXCUSED: { color: "text-sky-600", bg: "bg-sky-50" },
-    ABSENT: { color: "text-red-600", bg: "bg-red-50" },
-		LATE: {}
+    present: { color: "text-emerald-600", bg: "bg-emerald-50" },
+    // EXCUSED: { color: "text-sky-600", bg: "bg-sky-50" },
+    absent: { color: "text-red-600", bg: "bg-red-50" },
+		// LATE: {}
   };
 
-  const config = statusConfig[status] || statusConfig.PRESENT;
+  const config = statusConfig.present;
 
   return (
     <div className="flex justify-center">
       <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${config.bg}`}>
         <Icon className={`h-4 w-4 ${config.color}`} />
         <span className={`text-sm font-medium ${config.color}`}>
-          {status}
+          {"PRESENT"}
         </span>
       </div>
     </div>

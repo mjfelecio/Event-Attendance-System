@@ -111,7 +111,6 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
     const record: NewRecord = {
       eventId: selectedEvent.id,
       studentId: student.id,
-      status: "PRESENT",
       method: "SCANNED",
     };
 
