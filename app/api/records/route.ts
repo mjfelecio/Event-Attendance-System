@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
 import { handlePrismaError } from "@/globals/utils/prismaError";
+import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 
 export async function POST(req: Request) {
   try {
@@ -13,25 +14,35 @@ export async function POST(req: Request) {
 
     if (!event) {
       return NextResponse.json(
-        err("Cannot create record with no event attached"),
+        err("Cannot create record with no event attached."),
         { status: 404 },
       );
     }
 
     const now = new Date();
 
+    const student = await prisma.student.findUnique({
+      where: { id: body.studentId, ...buildEventStudentFilter(event) },
+    });
+
+    if (!student) {
+      return NextResponse.json(err("Student is not included in the event."), {
+        status: 404,
+      });
+    }
+
     const created = await prisma.record.create({
       data: {
         ...body,
-        timein: event.isTimeout ? null : now, 
-        timeout: event.isTimeout ? now : null, 
+        timein: event.isTimeout ? null : now,
+        timeout: event.isTimeout ? now : null,
       },
     });
 
     return NextResponse.json(ok(created), { status: 201 });
   } catch (e) {
     const { status, message } = handlePrismaError(e);
-    console.warn(JSON.stringify(e))
+    console.warn(JSON.stringify(e));
     return NextResponse.json(err(message), { status });
   }
 }
