@@ -60,9 +60,14 @@ export const useCreateRecord = (eventId: string) => {
     },
 
     /** Re-sync server state after success */
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEvent(eventId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
         exact: true,
       });
     },
@@ -123,7 +128,11 @@ export const useUpdateAttendanceRecord = (eventId: string) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEvent(eventId),
-        // queryKeys.records.fromEventForStudent(eventId, data.studentId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
         exact: true,
       });
     },
