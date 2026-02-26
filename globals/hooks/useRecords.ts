@@ -181,9 +181,14 @@ export const useDeleteRecord = (eventId: string) => {
       }
     },
 
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEvent(eventId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
         exact: true,
       });
     },
