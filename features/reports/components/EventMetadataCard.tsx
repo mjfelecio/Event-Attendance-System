@@ -11,10 +11,10 @@ const EventMetadataCard = ({ event }: { event: Event }) => {
   return (
     <section className="rounded-md border bg-muted/30 p-4 shadow-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6 text-sm">
-        {event.userId && (
+        {event.createdById && (
           <div>
             <p className="text-muted-foreground">Organizer</p>
-            <p className="font-medium">{event.userId}</p>
+            <p className="font-medium">{event.createdById}</p>
           </div>
         )}
 
