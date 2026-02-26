@@ -3,18 +3,14 @@ import {
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
-import {
-  useDeleteRecord,
-  useCreateRecord,
-  useUpdateRecordStatus,
-} from "@/globals/hooks/useRecords";
+import { useDeleteRecord, useCreateRecord } from "@/globals/hooks/useRecords";
 import { NewRecord } from "@/globals/types/records";
-import { AttendanceStatus } from "@prisma/client";
 import React from "react";
-import { FaUserCheck, FaUserClock, FaUserTimes } from "react-icons/fa";
-import { BiSolidTrash } from "react-icons/bi";
 import { IconType } from "react-icons/lib";
-import { ATTENDANCE_STATUS_ICONS } from "../constants/attendanceStatus";
+import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
+import { Button } from "@/globals/components/shad-cn/button";
+import { capitalize } from "lodash";
+import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 type Props = {
   eventId: string;
@@ -23,27 +19,21 @@ type Props = {
 };
 
 const ACTION_BUTTONS: {
-  status: AttendanceStatus;
+  action: "present" | "absent";
   icon: IconType;
   title: string;
   color: string;
 }[] = [
   {
-    status: "PRESENT",
-    icon: ATTENDANCE_STATUS_ICONS.PRESENT,
+    action: "present",
+    icon: ATTENDANCE_STATUS_ICONS.present,
     title: "Mark as Present",
     color: "text-emerald-600",
   },
   {
-    status: "EXCUSED",
-    icon: ATTENDANCE_STATUS_ICONS.EXCUSED,
-    title: "Mark as Excused",
-    color: "text-sky-600",
-  },
-  {
-    status: "ABSENT",
-    icon: ATTENDANCE_STATUS_ICONS.ABSENT,
-    title: "Mark as Absent",
+    action: "absent",
+    icon: ATTENDANCE_STATUS_ICONS.absent,
+    title: "Mark as Absent (Delete Record)",
     color: "text-red-400",
   },
 ];
@@ -51,76 +41,76 @@ const ACTION_BUTTONS: {
 const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
   const { mutateAsync: createRecord, isPending: isCreating } =
     useCreateRecord(eventId);
-  const { mutateAsync: updateStatus, isPending: isUpdating } =
-    useUpdateRecordStatus(eventId);
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
+  const confirm = useConfirm();
 
-  const isLoading = isCreating || isUpdating || isDeleting;
+  const isLoading = isCreating || isDeleting;
 
-  const handleSetStatus = async (status: AttendanceStatus) => {
-    try {
-      if (!recordId) {
+  const handleAction = async (action: "present" | "absent") => {
+    if (action === "present") {
+      try {
         await createRecord({
           eventId,
           studentId,
-          status,
           method: "MANUAL",
         } as NewRecord);
-        toastSuccess(`Marked student as ${status.toLowerCase()}`);
-      } else {
-        await updateStatus({ recordId, status });
-        toastSuccess(`Updated status to ${status.toLowerCase()}`);
-      }
-    } catch (error) {
-      toastWarning(
-        `Failed to set status: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    }
-  };
 
-  const handleDelete = async () => {
-    if (!recordId) {
-      toastWarning("No attendance record to delete");
-      return;
-    }
-    try {
-      await deleteRecord(recordId);
-      toastSuccess("Attendance record deleted");
-    } catch (error) {
-      toastDanger(
-        `Failed to delete record: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+        if (!recordId) {
+          toastSuccess("Student marked as present");
+        } else {
+          toastSuccess("Updated student record");
+        }
+      } catch (error) {
+        toastWarning(
+          `Failed to set record: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    } else {
+      // Absent action = Delete
+      if (!recordId) return; // Already absent
+
+      const confirmed = await confirm({
+        title: "Mark as absent?",
+        description:
+          "This removes the student record from this event. This is an irreversable action.",
+      });
+
+      if (!confirmed) return;
+
+      try {
+        await deleteRecord(recordId);
+        toastSuccess("Attendance record removed");
+      } catch (error) {
+        toastDanger(
+          `Failed to delete: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
     }
   };
 
   return (
-    <div className="flex gap-1 justify-center items-center">
-      {ACTION_BUTTONS.map(({ status, icon: Icon, title, color }) => (
-        <button
-          key={status}
-          onClick={() => handleSetStatus(status)}
-          disabled={isLoading}
-          title={title}
-          className="flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95"
-        >
-          <Icon className={`w-5 h-5 ${color}`} />
-        </button>
-      ))}
+    <div className="flex flex-col gap-2 justify-center items-center">
+      {ACTION_BUTTONS.map(({ action, icon: Icon, title, color }) => {
+        // Disable "absent" button if there's no record to delete
+        const isDisabled = isLoading || (action === "absent" && !recordId);
 
-      {/* Delete button */}
-      <button
-        onClick={handleDelete}
-        disabled={isLoading || !recordId}
-        title="Delete Record"
-        className="flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95"
-      >
-        <ATTENDANCE_STATUS_ICONS.DELETE className="w-5 h-5 text-red-500" />
-      </button>
+        return (
+          <Button
+            key={action}
+            onClick={() => handleAction(action)}
+            disabled={isDisabled}
+            variant={"outline"}
+            title={title}
+            className={`${color} flex items-center justify-center text-xs rounded-full transition-colors hover:scale-110 active:scale-95 ${
+              isDisabled ? "opacity-30 grayscale" : ""
+            }`}
+          >
+            <Icon className={`w-5 h-5 ${color}`} />
+            {capitalize(action)}
+          </Button>
+        );
+      })}
     </div>
   );
 };

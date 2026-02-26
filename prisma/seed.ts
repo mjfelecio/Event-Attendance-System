@@ -1,6 +1,5 @@
 import {
   AttendanceMethod,
-  AttendanceStatus,
   Event,
   EventCategory,
   Prisma,
@@ -11,6 +10,9 @@ import {
 } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import {
+  isStudentInEvent,
+} from "@/globals/utils/buildEventStudentFilter";
 
 type ComboBoxValue = {
   value: string;
@@ -203,6 +205,7 @@ function generateEvent(
     end: endDate,
     allDay: isAllDay,
     createdById: organizerId,
+    isTimeout: randomChoice([true, false]),
   };
 }
 
@@ -251,14 +254,6 @@ function generateStudent(index: number): Prisma.StudentCreateInput {
       collegeProgram: randomChoice(COLLEGE_PROGRAMS),
     };
   }
-}
-
-function getRealisticStatus(): AttendanceStatus {
-  const rand = Math.random();
-  if (rand < 0.75) return "PRESENT";
-  if (rand < 0.85) return "LATE";
-  if (rand < 0.92) return "EXCUSED";
-  return "ABSENT";
 }
 
 // Main seeding function
@@ -366,7 +361,7 @@ async function main() {
     createdEvents.push(event);
   }
 
-    console.log(`Created ${createdEvents.length} events`);
+  console.log(`Created ${createdEvents.length} events`);
 
   // Create students
   const studentsData = Array.from({ length: 100 }, (_, i) =>
@@ -383,31 +378,40 @@ async function main() {
   console.log(`Created ${studentsData.length} students`);
 
   // Create attendance records
-  const approvedEvents = createdEvents.filter(e => e.status === "APPROVED");
+  const approvedEvents = createdEvents.filter((e) => e.status === "APPROVED");
   const allStudents = await prisma.student.findMany();
   const methods: AttendanceMethod[] = ["MANUAL", "SCANNED"];
 
   const recordsData: Prisma.RecordCreateManyInput[] = [];
 
   for (const event of approvedEvents) {
+    const studentsInEvent = allStudents.filter((s) => isStudentInEvent(s, event));
+    
     // Each approved event has 40-80% of students attending
     const attendanceRate = 0.4 + Math.random() * 0.4;
-    const attendingCount = Math.floor(allStudents.length * attendanceRate);
-    const shuffledStudents = [...allStudents].sort(() => Math.random() - 0.5);
+    const attendingCount = Math.floor(studentsInEvent.length * attendanceRate);
+    const shuffledStudents = [...studentsInEvent].sort(() => Math.random() - 0.5);
     const attendingStudents = shuffledStudents.slice(0, attendingCount);
 
     for (const student of attendingStudents) {
+      const recordDate = new Date(baseDate);
+      recordDate.setDate(recordDate.getDate() + Math.random() * 2);
+      recordDate.setHours(randomChoice([8, 9, 10, 13, 14, 15]), 0, 0, 0);
+
       recordsData.push({
         eventId: event.id,
         studentId: student.id,
-        status: getRealisticStatus(),
         method: randomChoice(methods),
+        timein: recordDate,
+        timeout: event.isTimeout ? randomChoice([recordDate, null]) : null,
       });
     }
   }
 
   await prisma.record.createMany({ data: recordsData });
-  console.log(`Created ${recordsData.length} attendance records for approved events`);
+  console.log(
+    `Created ${recordsData.length} attendance records for approved events`,
+  );
 
   console.log("Database seed completed successfully");
 }

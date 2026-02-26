@@ -14,6 +14,8 @@ const RecordsList = ({ selectedEvent }: Props) => {
   const { data, isLoading } = useAllRecordsFromEvent(selectedEvent?.id);
   const records = useMemo(() => data ?? [], [data]);
 
+  console.table(data?.[0])
+
   if (!selectedEvent) return null;
 
   return (

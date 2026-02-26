@@ -1,40 +1,48 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
-import { FaUserCheck, FaUserClock } from "react-icons/fa6";
 import {
   useDeleteRecord,
-  useUpdateRecordStatus,
+  useUpdateAttendanceRecord,
 } from "@/globals/hooks/useRecords";
-import { AttendanceStatus } from "@prisma/client";
-import { FaUserTimes } from "react-icons/fa";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
-import { BiSolidTrash } from "react-icons/bi";
-import { ATTENDANCE_STATUS_ICONS } from "./attendanceStatus";
+import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
+import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
-  const { mutateAsync: updateStatus, isPending: isUpdating } =
-    useUpdateRecordStatus(eventId);
+  const { mutateAsync: recordAttendance, isPending: isUpdating } =
+    useUpdateAttendanceRecord(eventId);
+  const confirm = useConfirm();
 
-  const handleActions = async (status: AttendanceStatus) => {
+  const handleRecordAttendance = async () => {
     try {
-      await updateStatus({ recordId, status });
+      await recordAttendance(recordId);
+      toastSuccess("Attendance updated");
     } catch (error) {
-      console.error("Error updating status:", error);
-      toastDanger(`Failed to update status for ${studentId}`);
+      toastDanger(`Failed to update: ${studentId}`);
     }
   };
 
   const handleDelete = async () => {
+    if (!recordId) return;
+
+    const confirmed = await confirm({
+      title: "Mark as absent?",
+      description:
+        "This removes the student record from this event. This is an irreversable action.",
+    });
+
+    if (!confirmed) return;
+
     try {
       await deleteRecord(recordId);
+      toastSuccess("Record removed");
     } catch (error) {
-      console.error("Error deleting record:", error);
-      toastDanger(`Failed to delete record for ${studentId}`);
+      toastDanger(`Failed to delete: ${studentId}`);
     }
   };
 
@@ -44,35 +52,30 @@ function ActionsCell({ row }: { row: any }) {
     <div className="flex gap-2 justify-center items-center">
       {[
         {
-          type: "PRESENT",
-          icon: ATTENDANCE_STATUS_ICONS.PRESENT,
+          id: "present",
+          icon: ATTENDANCE_STATUS_ICONS.present,
           color: "text-emerald-600",
+          handler: handleRecordAttendance,
+          disabled: isLoading,
+          title: "Mark as Present",
         },
         {
-          type: "EXCUSED",
-          icon: ATTENDANCE_STATUS_ICONS.EXCUSED,
-          color: "text-sky-600",
-        },
-        {
-          type: "ABSENT",
-          icon: ATTENDANCE_STATUS_ICONS.ABSENT,
+          id: "absent",
+          icon: ATTENDANCE_STATUS_ICONS.absent,
           color: "text-red-400",
-        },
-        {
-          type: "DELETE",
-          icon: ATTENDANCE_STATUS_ICONS.DELETE,
-          color: "text-red-500",
           handler: handleDelete,
+          disabled: isLoading || !recordId,
+          title: "Mark as Absent (Delete Record)",
         },
-      ].map(({ type, icon: Icon, color, handler }) => (
+      ].map(({ id, icon: Icon, color, handler, disabled, title }) => (
         <button
-          key={type}
-          onClick={() =>
-            handler ? handler() : handleActions(type as AttendanceStatus)
-          }
-          disabled={isLoading}
-          title={type.charAt(0) + type.slice(1).toLowerCase()}
-          className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95`}
+          key={id}
+          onClick={handler}
+          disabled={disabled}
+          title={title}
+          className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95 ${
+            disabled ? "opacity-30 grayscale" : ""
+          }`}
         >
           <Icon className={`w-5 h-5 ${color}`} />
         </button>
@@ -153,48 +156,79 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
     enableGlobalFilter: false,
   },
   {
-    accessorKey: "timestamp",
+    accessorKey: "timein",
     header: ({ column }) => (
       <div className="text-center">
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Timestamp
+          Time in
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       </div>
     ),
-    accessorFn: (row) =>
-      new Date(row.timestamp).toLocaleString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }),
+    accessorFn: (row) => {
+      return row.timein
+        ? new Date(row.timein).toLocaleString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          })
+        : "N/A";
+    },
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
     enableGlobalFilter: false,
   },
   {
-    accessorKey: "status",
+    accessorKey: "timeout",
     header: ({ column }) => (
       <div className="text-center">
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Status
+          Time out
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       </div>
     ),
+    accessorFn: (row) => {
+      return row.timeout
+        ? new Date(row.timeout).toLocaleString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          })
+        : "N/A";
+    },
     cell: ({ getValue }) => (
       <div className="text-center">{getValue() as string}</div>
     ),
     enableGlobalFilter: false,
   },
+  // {
+  //   accessorKey: "status",
+  //   header: ({ column }) => (
+  //     <div className="text-center">
+  //       <Button
+  //         variant="ghost"
+  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  //       >
+  //         Status
+  //         <ArrowUpDown className="ml-2 h-4 w-4" />
+  //       </Button>
+  //     </div>
+  //   ),
+  //   cell: ({ getValue }) => (
+  //     <div className="text-center">{getValue() as string}</div>
+  //   ),
+  //   enableGlobalFilter: false,
+  // },
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,

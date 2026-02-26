@@ -8,7 +8,7 @@ import { respondWithError } from "@/globals/utils/httpError";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: { eventId: string } },
 ) {
   try {
     const user = await requireAuth();
@@ -31,14 +31,10 @@ export async function GET(
     const presentStudentsCount = await prisma.record.count({
       where: {
         eventId,
-        status: {
-          in: ["PRESENT", "LATE"],
-        },
       },
     });
 
-    const absentStudentsCount =
-      eligibleStudentsCount - presentStudentsCount;
+    const absentStudentsCount = eligibleStudentsCount - presentStudentsCount;
 
     return NextResponse.json(
       ok({
@@ -46,7 +42,7 @@ export async function GET(
         present: presentStudentsCount,
         absent: absentStudentsCount,
       }),
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return respondWithError(error);
