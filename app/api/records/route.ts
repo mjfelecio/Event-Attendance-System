@@ -7,9 +7,10 @@ import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const { eventId, studentId, ...rest } = body;
 
     const event = await prisma.event.findUnique({
-      where: { id: body.eventId },
+      where: { id: eventId },
     });
 
     if (!event) {
@@ -19,10 +20,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const now = new Date();
-
     const student = await prisma.student.findUnique({
-      where: { id: body.studentId, ...buildEventStudentFilter(event) },
+      where: { id: studentId, ...buildEventStudentFilter(event) },
     });
 
     if (!student) {
@@ -31,15 +30,35 @@ export async function POST(req: Request) {
       });
     }
 
-    const created = await prisma.record.create({
-      data: {
-        ...body,
-        timein: event.isTimeout ? null : now,
-        timeout: event.isTimeout ? now : null,
+    const now = new Date();
+
+    // Determine the update/create payload based on the event type
+    const recordData = {
+      timein: event.isTimeout ? undefined : now,
+      timeout: event.isTimeout ? now : undefined,
+    };
+
+    // Use upsert to create if new, or update timestamps if exists
+    const result = await prisma.record.upsert({
+      where: {
+        eventId_studentId: {
+          eventId: eventId,
+          studentId: studentId,
+        },
+      },
+      update: {
+        ...recordData,
+      },
+      create: {
+        eventId,
+        studentId,
+        ...rest,
+        ...recordData,
       },
     });
 
-    return NextResponse.json(ok(created), { status: 201 });
+    const isNew = result.createdAt.getTime() === result.updatedAt.getTime();
+    return NextResponse.json(ok(result), { status: isNew ? 201 : 200 });
   } catch (e) {
     const { status, message } = handlePrismaError(e);
     console.warn(JSON.stringify(e));
