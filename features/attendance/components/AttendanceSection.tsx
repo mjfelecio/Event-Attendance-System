@@ -37,7 +37,6 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
     null
   );
   const [scanSource, setScanSource] = useState<"scan" | "">("");
-  const prevScannedValRef = useRef("");
 
   const {
     data: student,
@@ -93,14 +92,6 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
     // Only save if this came from a scan
     if (scanSource !== "scan") return;
 
-    // Prevent double-saving
-    if (prevScannedValRef.current === scannedValue) {
-      toastInfo(`This student's attendance is already recorded`);
-      setScannedValue("");
-      setScanSource("");
-      return;
-    }
-
     if (!selectedEvent) {
       toastDanger("Failed to record attendance: No event selected");
       setScannedValue("");
@@ -127,7 +118,6 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
         toastSuccess(
           `Successfully recorded attendance for ${student.firstName} ${student.lastName}`
         );
-        prevScannedValRef.current = scannedValue;
       },
     });
 
