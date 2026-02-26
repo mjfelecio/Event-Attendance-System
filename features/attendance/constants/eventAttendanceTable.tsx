@@ -1,15 +1,22 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
-import { useDeleteRecord, useUpdateAttendanceRecord } from "@/globals/hooks/useRecords";
+import {
+  useDeleteRecord,
+  useUpdateAttendanceRecord,
+} from "@/globals/hooks/useRecords";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
+import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
-  const { mutateAsync: deleteRecord, isPending: isDeleting } = useDeleteRecord(eventId);
-  const { mutateAsync: recordAttendance, isPending: isUpdating } = useUpdateAttendanceRecord(eventId);
+  const { mutateAsync: deleteRecord, isPending: isDeleting } =
+    useDeleteRecord(eventId);
+  const { mutateAsync: recordAttendance, isPending: isUpdating } =
+    useUpdateAttendanceRecord(eventId);
+  const confirm = useConfirm();
 
   const handleRecordAttendance = async () => {
     try {
@@ -22,6 +29,15 @@ function ActionsCell({ row }: { row: any }) {
 
   const handleDelete = async () => {
     if (!recordId) return;
+
+    const confirmed = await confirm({
+      title: "Mark as absent?",
+      description:
+        "This removes the student record from this event. This is an irreversable action.",
+    });
+
+    if (!confirmed) return;
+
     try {
       await deleteRecord(recordId);
       toastSuccess("Record removed");

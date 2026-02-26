@@ -10,6 +10,7 @@ import { IconType } from "react-icons/lib";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { Button } from "@/globals/components/shad-cn/button";
 import { capitalize } from "lodash";
+import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 type Props = {
   eventId: string;
@@ -42,6 +43,7 @@ const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
     useCreateRecord(eventId);
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
+  const confirm = useConfirm();
 
   const isLoading = isCreating || isDeleting;
 
@@ -67,6 +69,15 @@ const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
     } else {
       // Absent action = Delete
       if (!recordId) return; // Already absent
+
+      const confirmed = await confirm({
+        title: "Mark as absent?",
+        description:
+          "This removes the student record from this event. This is an irreversable action.",
+      });
+
+      if (!confirmed) return;
+
       try {
         await deleteRecord(recordId);
         toastSuccess("Attendance record removed");
