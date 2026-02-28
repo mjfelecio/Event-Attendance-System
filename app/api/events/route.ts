@@ -115,7 +115,7 @@ export async function POST(req: Request) {
       }
 
       assertEventOwnership(existing, user);
-      assertEventStatus(existing, "DRAFT");
+      assertEventStatus(existing, ["DRAFT", "APPROVED", "REJECTED"]);
 
       const updated = await prisma.event.update({
         where: { id: payload.id },

@@ -270,6 +270,21 @@ body {
     overflow: hidden;
   }
 
+  .calendar-shell .event-calendar .fc-daygrid-event,
+  .calendar-shell .event-calendar .fc-daygrid-dot-event,
+  .calendar-shell .event-calendar .fc-timegrid-event,
+  .calendar-shell .event-calendar .fc-h-event,
+  .calendar-shell .event-calendar .fc-v-event {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .calendar-shell .event-calendar .fc-daygrid-event .fc-event-main,
+  .calendar-shell .event-calendar .fc-timegrid-event .fc-event-main {
+    padding: 0 !important;
+    height: 100%;
+  }
+
   .calendar-shell .event-calendar .fc-simple-week-header {
     display: flex;
     flex-direction: column;
