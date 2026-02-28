@@ -1,34 +1,159 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarClock,
+  CheckCircle2,
+  CircleAlert,
+  Clock3,
+  Plus,
+  ShieldCheck,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 
+import { Button } from "@/globals/components/shad-cn/button";
+import {
+  toastDanger,
+  toastSuccess,
+  toastWarning,
+} from "@/globals/components/shared/toasts";
 import { useAuth } from "@/globals/contexts/AuthContext";
-import useEvents, {
-  useApproveEvent,
-  useRejectEvent,
-} from "@/globals/hooks/useEvents";
-import { Event } from "@/globals/types/events";
 import {
   PendingOrganizer,
   useApproveOrganizer,
   usePendingOrganizers,
   useRejectOrganizer,
 } from "@/globals/hooks/useAdmin";
-import {
-  toastDanger,
-  toastSuccess,
-  toastWarning,
-} from "@/globals/components/shared/toasts";
-import { Button } from "@/globals/components/shad-cn/button";
+import useEvents, {
+  useApproveEvent,
+  useRejectEvent,
+} from "@/globals/hooks/useEvents";
+import { Event } from "@/globals/types/events";
+import { cn } from "@/globals/libs/shad-cn";
+
+const formatDateTime = (dateValue: Date | string) =>
+  new Date(dateValue).toLocaleString();
+
+type MetricTone = "blue" | "emerald" | "amber" | "rose";
+
+type MetricCardProps = {
+  label: string;
+  value: string | number;
+  description: string;
+  icon: LucideIcon;
+  tone: MetricTone;
+};
+
+type StatusSection = {
+  status: Event["status"];
+  title: string;
+  empty: string;
+};
+
+type StatusMeta = {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  chipClass: string;
+  glowClass: string;
+};
+
+const toneMap: Record<
+  MetricTone,
+  { iconWrap: string; valueClass: string; borderClass: string }
+> = {
+  blue: {
+    iconWrap:
+      "bg-[linear-gradient(135deg,#1d4ed8_0%,#2563eb_100%)] text-white shadow-[0_12px_22px_rgba(37,99,235,0.35)]",
+    valueClass: "text-blue-700",
+    borderClass: "border-blue-100",
+  },
+  emerald: {
+    iconWrap:
+      "bg-[linear-gradient(135deg,#047857_0%,#10b981_100%)] text-white shadow-[0_12px_22px_rgba(16,185,129,0.35)]",
+    valueClass: "text-emerald-700",
+    borderClass: "border-emerald-100",
+  },
+  amber: {
+    iconWrap:
+      "bg-[linear-gradient(135deg,#a16207_0%,#f59e0b_100%)] text-white shadow-[0_12px_22px_rgba(245,158,11,0.35)]",
+    valueClass: "text-amber-700",
+    borderClass: "border-amber-100",
+  },
+  rose: {
+    iconWrap:
+      "bg-[linear-gradient(135deg,#be123c_0%,#f43f5e_100%)] text-white shadow-[0_12px_22px_rgba(244,63,94,0.35)]",
+    valueClass: "text-rose-700",
+    borderClass: "border-rose-100",
+  },
+};
+
+const MetricCard = ({
+  label,
+  value,
+  description,
+  icon: Icon,
+  tone,
+}: MetricCardProps) => {
+  const toneStyle = toneMap[tone];
+
+  return (
+    <article
+      className={cn(
+        "rounded-2xl border bg-white p-5 shadow-[0_16px_32px_rgba(15,23,42,0.06)]",
+        toneStyle.borderClass
+      )}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            {label}
+          </p>
+          <p className={cn("mt-3 text-4xl font-bold leading-none", toneStyle.valueClass)}>
+            {value}
+          </p>
+          <p className="mt-2 text-xs text-slate-500">{description}</p>
+        </div>
+        <div
+          className={cn(
+            "flex size-11 items-center justify-center rounded-xl",
+            toneStyle.iconWrap
+          )}
+        >
+          <Icon className="size-5" />
+        </div>
+      </div>
+    </article>
+  );
+};
+
+type SectionCardProps = {
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+};
+
+const SectionCard = ({ title, subtitle, children }: SectionCardProps) => (
+  <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_32px_rgba(15,23,42,0.06)]">
+    <header className="border-b border-slate-100 px-5 py-4 sm:px-6">
+      <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+      <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+    </header>
+    {children}
+  </section>
+);
 
 const DashboardPage = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <main className="flex-1 flex items-center justify-center bg-white text-slate-600">
-        Loading dashboard…
+      <main className="flex min-h-screen flex-1 items-center justify-center bg-white text-slate-600">
+        Loading dashboard...
       </main>
     );
   }
@@ -120,67 +245,78 @@ const AdminDashboard = () => {
     events?.filter((event) => event.status === "PENDING").length ?? 0;
   const pendingEvents = events?.filter((event) => event.status === "PENDING") ?? [];
 
+  const organizerActionStatus = processingAction
+    ? `${processingAction} in progress`
+    : "Idle";
+  const eventActionStatus = processingEventAction
+    ? `${processingEventAction} in progress`
+    : "Idle";
+
   return (
-    <div className="flex-1 bg-slate-50 p-6 space-y-6 overflow-y-auto">
-      <div>
-        <p className="text-sm uppercase tracking-wide text-slate-500">
-          Admin overview
+    <div className="flex-1 space-y-6 overflow-y-auto bg-[radial-gradient(circle_at_top,#eff6ff_0%,#f8fafc_40%,#ffffff_100%)] p-6 md:p-8">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-[linear-gradient(120deg,#0f172a_0%,#1e3a8a_45%,#4f46e5_100%)] p-6 text-white shadow-[0_20px_45px_rgba(30,64,175,0.25)]">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
+          Admin Overview
         </p>
-        <h1 className="text-3xl font-semibold text-slate-900 mt-1">
-          Approval queue
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+          Approval Command Center
         </h1>
-        <p className="text-sm text-slate-600 mt-2">
-          Review new organizer requests to keep the workspace secure.
+        <p className="mt-3 max-w-2xl text-sm text-blue-100/90">
+          Review organizer registrations and event submissions with clear action
+          queues and quick status visibility.
         </p>
+      </section>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Pending Organizers"
+          value={pendingCount}
+          description={
+            pendingCount === 0
+              ? "No organizer requests waiting."
+              : "Approve or reject to unblock access."
+          }
+          icon={UserCheck}
+          tone="blue"
+        />
+        <MetricCard
+          label="Organizer Actions"
+          value={organizerActionStatus}
+          description="Action buttons auto-disable while processing."
+          icon={Clock3}
+          tone="amber"
+        />
+        <MetricCard
+          label="Pending Events"
+          value={isEventsLoading ? "--" : pendingEventsCount}
+          description={
+            pendingEventsCount === 0
+              ? "No event submissions waiting."
+              : "Review in queue order."
+          }
+          icon={CalendarClock}
+          tone="emerald"
+        />
+        <MetricCard
+          label="Event Actions"
+          value={eventActionStatus}
+          description="Each event decision includes optional notes."
+          icon={ShieldCheck}
+          tone="rose"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl bg-white shadow border border-slate-200 p-5">
-          <p className="text-sm text-slate-500">Pending organizers</p>
-          <p className="text-4xl font-bold text-slate-900 mt-2">{pendingCount}</p>
-          <p className="text-xs text-slate-500 mt-1">
-            {pendingCount === 0
-              ? "No pending requests right now."
-              : "Approve or reject to unblock their access."}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-white shadow border border-slate-200 p-5">
-          <p className="text-sm text-slate-500">Last action</p>
-          <p className="text-lg font-semibold text-slate-900 mt-2">
-            {processingAction ? `${processingAction} in progress` : "Idle"}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            Buttons disable while a request is processing.
-          </p>
-        </div>
-        <div className="rounded-2xl bg-white shadow border border-slate-200 p-5">
-          <p className="text-sm text-slate-500">Pending events</p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">
-            {isEventsLoading ? "—" : pendingEventsCount}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            Review submissions in the calendar workspace.
-          </p>
-        </div>
-      </div>
-
-      <section className="rounded-2xl bg-white shadow border border-slate-200">
-        <header className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              Pending organizer requests
-            </h2>
-            <p className="text-sm text-slate-500">
-              {pendingCount === 0
-                ? "All caught up!"
-                : "Review details and take action per request."}
-            </p>
-          </div>
-        </header>
-
+      <SectionCard
+        title="Pending Organizer Requests"
+        subtitle={
+          pendingCount === 0
+            ? "All caught up."
+            : "Review organizer details and decide access."
+        }
+      >
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-6 py-3">Organizer</th>
                 <th className="px-6 py-3">Email</th>
@@ -188,11 +324,11 @@ const AdminDashboard = () => {
                 <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white text-sm text-slate-700">
+            <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
               {isLoading || isError ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
-                    {isLoading ? "Loading requests…" : "Failed to load requests."}
+                    {isLoading ? "Loading requests..." : "Failed to load requests."}
                   </td>
                 </tr>
               ) : pendingCount === 0 ? (
@@ -203,24 +339,22 @@ const AdminDashboard = () => {
                 </tr>
               ) : (
                 data!.map((organizer) => (
-                  <tr key={organizer.id}>
+                  <tr key={organizer.id} className="transition-colors hover:bg-slate-50/70">
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-slate-900">
-                        {organizer.name}
-                      </div>
+                      <div className="font-semibold text-slate-900">{organizer.name}</div>
                       <div className="text-xs text-slate-500">
-                        ID: {organizer.id.slice(0, 6)}…
+                        ID: {organizer.id.slice(0, 6)}...
                       </div>
                     </td>
                     <td className="px-6 py-4 text-slate-600">{organizer.email}</td>
                     <td className="px-6 py-4 text-slate-600">
-                      {new Date(organizer.createdAt).toLocaleString()}
+                      {formatDateTime(organizer.createdAt)}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-3">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => handleApprove(organizer.id)}
                           disabled={
                             approve.isPending ||
@@ -228,13 +362,14 @@ const AdminDashboard = () => {
                             processingId === organizer.id
                           }
                         >
+                          <CheckCircle2 className="size-3.5" />
                           {processingId === organizer.id && processingAction === "APPROVE"
-                            ? "Approving…"
+                            ? "Approving..."
                             : "Approve"}
                         </button>
                         <button
                           type="button"
-                          className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-red-500 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => handleReject(organizer)}
                           disabled={
                             approve.isPending ||
@@ -242,8 +377,9 @@ const AdminDashboard = () => {
                             processingId === organizer.id
                           }
                         >
+                          <UserX className="size-3.5" />
                           {processingId === organizer.id && processingAction === "REJECT"
-                            ? "Rejecting…"
+                            ? "Rejecting..."
                             : "Reject"}
                         </button>
                       </div>
@@ -254,25 +390,19 @@ const AdminDashboard = () => {
             </tbody>
           </table>
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="rounded-2xl bg-white shadow border border-slate-200">
-        <header className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              Pending event requests
-            </h2>
-            <p className="text-sm text-slate-500">
-              {pendingEventsCount === 0
-                ? "No event submissions waiting."
-                : "Approve or reject submitted events."}
-            </p>
-          </div>
-        </header>
-
+      <SectionCard
+        title="Pending Event Requests"
+        subtitle={
+          pendingEventsCount === 0
+            ? "No event submissions waiting."
+            : "Approve or reject submitted events."
+        }
+      >
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-6 py-3">Event</th>
                 <th className="px-6 py-3">Category</th>
@@ -280,7 +410,7 @@ const AdminDashboard = () => {
                 <th className="px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white text-sm text-slate-700">
+            <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
               {isEventsLoading ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
@@ -295,28 +425,28 @@ const AdminDashboard = () => {
                 </tr>
               ) : (
                 pendingEvents.map((event) => (
-                  <tr key={event.id}>
+                  <tr key={event.id} className="transition-colors hover:bg-slate-50/70">
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-slate-900">
-                        {event.title}
-                      </div>
+                      <div className="font-semibold text-slate-900">{event.title}</div>
                       {event.createdById ? (
                         <div className="text-xs text-slate-500">
                           Organizer ID: {event.createdById.slice(0, 6)}...
                         </div>
                       ) : null}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {event.category}
+                    <td className="px-6 py-4">
+                      <span className="inline-flex rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                        {event.category}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
-                      {new Date(event.start).toLocaleString()}
+                      {formatDateTime(event.start)}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex gap-3">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => {
                             setProcessingEventId(event.id);
                             setProcessingEventAction("APPROVE");
@@ -324,10 +454,7 @@ const AdminDashboard = () => {
                               { id: event.id },
                               {
                                 onSuccess: () => {
-                                  toastSuccess(
-                                    "Event approved",
-                                    "The event is now live."
-                                  );
+                                  toastSuccess("Event approved", "The event is now live.");
                                 },
                                 onError: (error) => {
                                   toastDanger(
@@ -348,6 +475,7 @@ const AdminDashboard = () => {
                             processingEventId === event.id
                           }
                         >
+                          <CheckCircle2 className="size-3.5" />
                           {processingEventId === event.id &&
                           processingEventAction === "APPROVE"
                             ? "Approving..."
@@ -355,7 +483,7 @@ const AdminDashboard = () => {
                         </button>
                         <button
                           type="button"
-                          className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-red-500 disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => {
                             const input = window.prompt(
                               `Provide a reason for rejecting "${event.title}":`,
@@ -395,6 +523,7 @@ const AdminDashboard = () => {
                             processingEventId === event.id
                           }
                         >
+                          <CircleAlert className="size-3.5" />
                           {processingEventId === event.id &&
                           processingEventAction === "REJECT"
                             ? "Rejecting..."
@@ -408,7 +537,7 @@ const AdminDashboard = () => {
             </tbody>
           </table>
         </div>
-      </section>
+      </SectionCard>
     </div>
   );
 };
@@ -416,26 +545,34 @@ const AdminDashboard = () => {
 const OrganizerDashboard = () => {
   const { data: events, isLoading, isError } = useEvents();
 
-  const statusMeta: Record<Event["status"], { title: string; description: string; accent: string }> = {
+  const statusMeta: Record<Event["status"], StatusMeta> = {
     DRAFT: {
       title: "Drafts",
       description: "Finish details before submitting",
-      accent: "bg-amber-100 text-amber-700",
+      icon: Clock3,
+      chipClass: "bg-amber-100 text-amber-700",
+      glowClass: "from-amber-500/15 to-transparent",
     },
     PENDING: {
-      title: "Pending review",
+      title: "Pending Review",
       description: "Waiting for admin approval",
-      accent: "bg-sky-100 text-sky-700",
+      icon: CircleAlert,
+      chipClass: "bg-sky-100 text-sky-700",
+      glowClass: "from-sky-500/15 to-transparent",
     },
     APPROVED: {
       title: "Approved",
-      description: "Ready for attendance + stats",
-      accent: "bg-emerald-100 text-emerald-700",
+      description: "Ready for attendance and stats",
+      icon: CheckCircle2,
+      chipClass: "bg-emerald-100 text-emerald-700",
+      glowClass: "from-emerald-500/15 to-transparent",
     },
     REJECTED: {
       title: "Rejected",
       description: "Needs revisions before resubmitting",
-      accent: "bg-rose-100 text-rose-700",
+      icon: UserX,
+      chipClass: "bg-rose-100 text-rose-700",
+      glowClass: "from-rose-500/15 to-transparent",
     },
   };
 
@@ -446,130 +583,210 @@ const OrganizerDashboard = () => {
       APPROVED: [],
       REJECTED: [],
     };
+
     (events ?? []).forEach((event) => {
       base[event.status].push(event);
     });
+
     return base;
   }, [events]);
 
-  const highlightSections: {
-    status: Event["status"];
-    title: string;
-    empty: string;
-  }[] = [
+  const highlightSections: StatusSection[] = [
     {
       status: "DRAFT",
-      title: "Drafts to finish",
-      empty: "No drafts yet. Start planning a new event!",
+      title: "Drafts To Finish",
+      empty: "No drafts yet. Start planning a new event.",
     },
     {
       status: "PENDING",
-      title: "Awaiting approval",
-      empty: "No pending events. Submit one when you're ready.",
+      title: "Awaiting Approval",
+      empty: "No pending events. Submit one when ready.",
     },
     {
       status: "REJECTED",
-      title: "Needs attention",
-      empty: "No rejected events. Great job!",
+      title: "Needs Attention",
+      empty: "No rejected events. Great progress.",
     },
   ];
 
   return (
-    <div className="flex-1 bg-slate-50 p-6 space-y-6 overflow-y-auto">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-wide text-slate-500">
-            Organizer overview
-          </p>
-          <h1 className="text-3xl font-semibold text-slate-900 mt-1">
-            Event workflow status
-          </h1>
-          <p className="text-sm text-slate-600 mt-2">
-            Track drafts, submissions, approvals, and rejections at a glance.
-          </p>
-        </div>
-        <Button asChild className="w-full sm:w-auto">
-          <Link href="/calendar?create=1">Create event</Link>
-        </Button>
-      </div>
-
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-        {Object.entries(grouped).map(([status, items]) => (
-          <div
-            key={status}
-            className="rounded-2xl bg-white shadow border border-slate-200 p-5"
-          >
-            <p className={`text-xs font-semibold uppercase tracking-wide ${statusMeta[status as Event["status"]].accent}`}>
-              {statusMeta[status as Event["status"]].title}
+    <div className="flex-1 space-y-6 overflow-y-auto bg-[radial-gradient(circle_at_top,#eef2ff_0%,#f8fafc_45%,#ffffff_100%)] p-6 md:p-8">
+      <section className="overflow-hidden rounded-3xl border border-indigo-200/60 bg-[linear-gradient(130deg,#1e1b4b_0%,#1d4ed8_50%,#4f46e5_100%)] p-6 text-white shadow-[0_24px_50px_rgba(30,64,175,0.25)]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-100">
+              Organizer Overview
             </p>
-            <p className="text-4xl font-bold text-slate-900 mt-3">
-              {isLoading ? "—" : items.length}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">
-              {statusMeta[status as Event["status"]].description}
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Event Workflow Tracker
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm text-blue-100/90">
+              Monitor every event from draft to approval, then move quickly into
+              attendance operations.
             </p>
           </div>
-        ))}
+          <Button
+            asChild
+            className="h-11 rounded-xl bg-white text-indigo-700 shadow-lg transition hover:bg-indigo-50"
+          >
+            <Link href="/calendar?create=1" className="inline-flex items-center gap-2">
+              <Plus className="size-4" />
+              Create event
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Object.entries(grouped).map(([status, items]) => {
+          const typedStatus = status as Event["status"];
+          const meta = statusMeta[typedStatus];
+          const Icon = meta.icon;
+
+          return (
+            <article
+              key={status}
+              className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_32px_rgba(15,23,42,0.06)]"
+            >
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-0 bg-gradient-to-br",
+                  meta.glowClass
+                )}
+              />
+              <div className="relative">
+                <div className="flex items-start justify-between gap-3">
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
+                      meta.chipClass
+                    )}
+                  >
+                    {meta.title}
+                  </span>
+                  <div className="rounded-xl bg-slate-100 p-2 text-slate-600">
+                    <Icon className="size-4.5" />
+                  </div>
+                </div>
+                <p className="mt-4 text-4xl font-bold text-slate-900">
+                  {isLoading ? "--" : items.length}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">{meta.description}</p>
+              </div>
+            </article>
+          );
+        })}
       </div>
 
-      <section className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {highlightSections.map((section) => {
           const list = grouped[section.status];
+          const meta = statusMeta[section.status];
+
           return (
-            <div
+            <article
               key={section.status}
-              className="rounded-2xl bg-white shadow border border-slate-200 flex flex-col"
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_32px_rgba(15,23,42,0.06)]"
             >
-              <div className="px-5 py-4 border-b border-slate-100">
-                <h2 className="text-lg font-semibold text-slate-900">
-                  {section.title}
-                </h2>
-                <p className="text-sm text-slate-500">
+              <header className="border-b border-slate-100 px-5 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    {section.title}
+                  </h2>
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]",
+                      meta.chipClass
+                    )}
+                  >
+                    {meta.title}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-slate-500">
                   {section.status === "DRAFT"
                     ? "Complete details and submit for approval."
                     : section.status === "PENDING"
                     ? "Admins review events in submission order."
-                    : "Rejections always include a reason. Update the event then resubmit."}
+                    : "Rejected events include reasons for quick revisions."}
                 </p>
-              </div>
-              <div className="flex-1 px-5 py-4 space-y-4">
+              </header>
+
+              <div className="space-y-3 px-5 py-4">
                 {isLoading ? (
-                  <p className="text-sm text-slate-500">Loading events…</p>
+                  <p className="text-sm text-slate-500">Loading events...</p>
                 ) : list.length === 0 ? (
                   <p className="text-sm text-slate-400">{section.empty}</p>
                 ) : (
                   list.slice(0, 5).map((event) => (
                     <article
                       key={event.id}
-                      className="rounded-xl border border-slate-100 bg-slate-50 p-4 shadow-sm"
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-slate-100/70"
                     >
-                      <h3 className="text-base font-semibold text-slate-900">
-                        {event.title}
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        {new Date(event.start).toLocaleString()} • {event.category}
-                      </p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm font-semibold text-slate-900">
+                            {event.title}
+                          </h3>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {formatDateTime(event.start)} | {event.category}
+                          </p>
+                        </div>
+                        <Link
+                          href="/calendar"
+                          className="rounded-lg bg-white p-1.5 text-slate-500 shadow-sm transition hover:text-indigo-600"
+                          aria-label={`Open ${event.title} in calendar`}
+                          title="Open in calendar"
+                        >
+                          <ArrowUpRight className="size-4" />
+                        </Link>
+                      </div>
                       {section.status === "REJECTED" && event.rejectionReason ? (
-                        <p className="mt-2 text-sm text-rose-600">
+                        <p className="mt-2 rounded-lg bg-rose-50 px-2.5 py-2 text-xs text-rose-700">
                           {event.rejectionReason}
                         </p>
                       ) : null}
                     </article>
                   ))
                 )}
+
                 {list.length > 5 ? (
                   <p className="text-xs text-slate-500">
                     + {list.length - 5} more {section.title.toLowerCase()}.
                   </p>
                 ) : null}
               </div>
-            </div>
+            </article>
           );
         })}
       </section>
 
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_32px_rgba(15,23,42,0.06)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="rounded-xl bg-indigo-100 p-2 text-indigo-700">
+              <CalendarClock className="size-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">
+                Next best action
+              </h3>
+              <p className="text-sm text-slate-500">
+                Keep drafts moving and clear rejections quickly to reduce event
+                delays.
+              </p>
+            </div>
+          </div>
+          <Button asChild variant="outline" className="rounded-xl">
+            <Link href="/calendar">
+              Open calendar
+              <ArrowUpRight className="ml-1 size-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
       {isError ? (
-        <p className="text-sm text-rose-600">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           Failed to load events. Please refresh the page.
         </p>
       ) : null}
