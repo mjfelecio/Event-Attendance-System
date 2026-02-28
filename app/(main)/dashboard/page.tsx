@@ -34,6 +34,7 @@ import useEvents, {
 } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 import { cn } from "@/globals/libs/shad-cn";
+import RejectionDialog from "@/globals/components/shared/RejectionDialog";
 
 const formatDateTime = (dateValue: Date | string) =>
   new Date(dateValue).toLocaleString();
@@ -182,6 +183,11 @@ const AdminDashboard = () => {
   const [processingEventId, setProcessingEventId] = useState<string | null>(null);
   const [processingEventAction, setProcessingEventAction] =
     useState<"APPROVE" | "REJECT" | null>(null);
+  const [organizerRejectionTarget, setOrganizerRejectionTarget] =
+    useState<PendingOrganizer | null>(null);
+  const [organizerRejectionReason, setOrganizerRejectionReason] = useState("");
+  const [eventRejectionTarget, setEventRejectionTarget] = useState<Event | null>(null);
+  const [eventRejectionReason, setEventRejectionReason] = useState("");
 
   const handleApprove = (organizerId: string) => {
     setProcessingId(organizerId);
@@ -207,24 +213,30 @@ const AdminDashboard = () => {
   };
 
   const handleReject = (organizer: PendingOrganizer) => {
-    const input = window.prompt(
-      `Provide a reason for rejecting ${organizer.name}:`,
+    setOrganizerRejectionTarget(organizer);
+    setOrganizerRejectionReason(
       organizer.rejectionReason ?? "Incomplete requirements"
     );
+  };
 
-    const reason = input?.trim();
+  const handleConfirmOrganizerReject = () => {
+    if (!organizerRejectionTarget) return;
+
+    const reason = organizerRejectionReason.trim();
     if (!reason) {
       toastWarning("Rejection reason required");
       return;
     }
 
-    setProcessingId(organizer.id);
+    setProcessingId(organizerRejectionTarget.id);
     setProcessingAction("REJECT");
     reject.mutate(
-      { id: organizer.id, reason },
+      { id: organizerRejectionTarget.id, reason },
       {
         onSuccess: () => {
           toastSuccess("Organizer rejected", reason);
+          setOrganizerRejectionTarget(null);
+          setOrganizerRejectionReason("");
         },
         onError: (error) => {
           toastDanger(
@@ -235,6 +247,44 @@ const AdminDashboard = () => {
         onSettled: () => {
           setProcessingId(null);
           setProcessingAction(null);
+        },
+      }
+    );
+  };
+
+  const handleOpenEventReject = (event: Event) => {
+    setEventRejectionTarget(event);
+    setEventRejectionReason(event.rejectionReason ?? "Needs revisions");
+  };
+
+  const handleConfirmEventReject = () => {
+    if (!eventRejectionTarget) return;
+
+    const reason = eventRejectionReason.trim();
+    if (!reason) {
+      toastWarning("Rejection reason required");
+      return;
+    }
+
+    setProcessingEventId(eventRejectionTarget.id);
+    setProcessingEventAction("REJECT");
+    rejectEvent.mutate(
+      { id: eventRejectionTarget.id, reason },
+      {
+        onSuccess: () => {
+          toastSuccess("Event rejected", reason);
+          setEventRejectionTarget(null);
+          setEventRejectionReason("");
+        },
+        onError: (error) => {
+          toastDanger(
+            "Rejection failed",
+            error instanceof Error ? error.message : undefined
+          );
+        },
+        onSettled: () => {
+          setProcessingEventId(null);
+          setProcessingEventAction(null);
         },
       }
     );
@@ -484,39 +534,7 @@ const AdminDashboard = () => {
                         <button
                           type="button"
                           className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
-                          onClick={() => {
-                            const input = window.prompt(
-                              `Provide a reason for rejecting "${event.title}":`,
-                              event.rejectionReason ?? "Needs revisions"
-                            );
-
-                            const reason = input?.trim();
-                            if (!reason) {
-                              toastWarning("Rejection reason required");
-                              return;
-                            }
-
-                            setProcessingEventId(event.id);
-                            setProcessingEventAction("REJECT");
-                            rejectEvent.mutate(
-                              { id: event.id, reason },
-                              {
-                                onSuccess: () => {
-                                  toastSuccess("Event rejected", reason);
-                                },
-                                onError: (error) => {
-                                  toastDanger(
-                                    "Rejection failed",
-                                    error instanceof Error ? error.message : undefined
-                                  );
-                                },
-                                onSettled: () => {
-                                  setProcessingEventId(null);
-                                  setProcessingEventAction(null);
-                                },
-                              }
-                            );
-                          }}
+                          onClick={() => handleOpenEventReject(event)}
                           disabled={
                             approveEvent.isPending ||
                             rejectEvent.isPending ||
@@ -538,6 +556,44 @@ const AdminDashboard = () => {
           </table>
         </div>
       </SectionCard>
+
+      <RejectionDialog
+        isOpen={!!organizerRejectionTarget}
+        title={
+          organizerRejectionTarget
+            ? `Reject ${organizerRejectionTarget.name}?`
+            : "Reject organizer?"
+        }
+        description="Share a clear reason so the organizer knows what needs to be fixed."
+        reason={organizerRejectionReason}
+        onReasonChange={setOrganizerRejectionReason}
+        onCancel={() => {
+          setOrganizerRejectionTarget(null);
+          setOrganizerRejectionReason("");
+        }}
+        onConfirm={handleConfirmOrganizerReject}
+        isSubmitting={reject.isPending}
+        confirmLabel={reject.isPending ? "Rejecting..." : "Reject organizer"}
+        reasonLabel="Rejection message"
+        placeholder="Example: Missing required profile details. Please complete your registration information."
+      />
+
+      <RejectionDialog
+        isOpen={!!eventRejectionTarget}
+        title={eventRejectionTarget ? `Reject "${eventRejectionTarget.title}"?` : "Reject event?"}
+        description="Add a note for the organizer so they can revise and resubmit quickly."
+        reason={eventRejectionReason}
+        onReasonChange={setEventRejectionReason}
+        onCancel={() => {
+          setEventRejectionTarget(null);
+          setEventRejectionReason("");
+        }}
+        onConfirm={handleConfirmEventReject}
+        isSubmitting={rejectEvent.isPending}
+        confirmLabel={rejectEvent.isPending ? "Rejecting..." : "Reject event"}
+        reasonLabel="Rejection message"
+        placeholder="Example: Please update the schedule conflict and include a clearer event description."
+      />
     </div>
   );
 };

@@ -16,6 +16,7 @@ import {
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
+import RejectionDialog from "@/globals/components/shared/RejectionDialog";
 
 type Props = {
   onDrawerOpen: (event: Event | null) => void;
@@ -29,6 +30,8 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
   const { user } = useAuth();
   const approveEvent = useApproveEvent();
   const rejectEvent = useRejectEvent();
+  const [rejectionTarget, setRejectionTarget] = useState<Event | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const { filteredEvents, counts, pendingEvents } = useMemo(() => {
     const events = data ?? [];
@@ -98,22 +101,26 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
   };
 
   const handleReject = (event: Event) => {
-    const input = window.prompt(
-      `Provide a reason for rejecting "${event.title}":`,
-      event.rejectionReason ?? "Needs revisions"
-    );
+    setRejectionTarget(event);
+    setRejectionReason(event.rejectionReason ?? "Needs revisions");
+  };
 
-    const reason = input?.trim();
+  const handleConfirmReject = () => {
+    if (!rejectionTarget) return;
+
+    const reason = rejectionReason.trim();
     if (!reason) {
       toastWarning("Rejection reason required");
       return;
     }
 
     rejectEvent.mutate(
-      { id: event.id, reason },
+      { id: rejectionTarget.id, reason },
       {
         onSuccess: () => {
           toastSuccess("Event rejected", reason);
+          setRejectionTarget(null);
+          setRejectionReason("");
         },
         onError: (error) => {
           toastDanger(
@@ -287,6 +294,26 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
           </div>
         )}
       </div>
+
+      <RejectionDialog
+        isOpen={!!rejectionTarget}
+        title={
+          rejectionTarget ? `Reject "${rejectionTarget.title}"?` : "Reject event?"
+        }
+        description="Add a short note so the organizer knows what to fix before resubmitting."
+        reason={rejectionReason}
+        onReasonChange={setRejectionReason}
+        onCancel={() => {
+          setRejectionTarget(null);
+          setRejectionReason("");
+        }}
+        onConfirm={handleConfirmReject}
+        isSubmitting={rejectEvent.isPending}
+        confirmLabel={rejectEvent.isPending ? "Rejecting..." : "Reject event"}
+        cancelLabel="Cancel"
+        reasonLabel="Rejection message"
+        placeholder="Example: Please update the date range and add complete location details."
+      />
     </section>
   );
 };

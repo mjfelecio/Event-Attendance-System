@@ -15,8 +15,12 @@ import FormInput from "@/globals/components/shared/FormInput";
 import { Textarea } from "@/globals/components/shad-cn/textarea";
 import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
-import { Controller } from "react-hook-form";
-import { formatEventPayload, useEventForm } from "@/features/calendar/hooks/useEventForm";
+import { Controller, type FieldErrors } from "react-hook-form";
+import {
+  type EventForm,
+  formatEventPayload,
+  useEventForm,
+} from "@/features/calendar/hooks/useEventForm";
 import {
   useDeleteEvent,
   useSaveEvent,
@@ -28,11 +32,12 @@ import {
   CATEGORY_GROUPS,
   EVENT_CHOICES,
 } from "@/features/calendar/constants/categoryGroups";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import CheckboxGroup from "@/globals/components/shared/CheckboxGroup";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import { useAuth } from "@/globals/contexts/AuthContext";
+import { ConfirmDialog } from "@/globals/components/shared/ConfirmModal";
 
 type EventDrawerProps = {
   isOpen: boolean;
@@ -66,9 +71,11 @@ const EventDrawer = ({
   const isOrganizer = user?.role === "ORGANIZER";
   const isAdmin = user?.role === "ADMIN";
   const isOwner = initialData?.createdById === user?.id;
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const formScrollRef = useRef<HTMLDivElement | null>(null);
 
   const { mutateAsync: saveEvent, isPending: isSaving } = useSaveEvent();
-  const { mutate: deleteEvent } = useDeleteEvent();
+  const { mutateAsync: deleteEvent, isPending: isDeleting } = useDeleteEvent();
   const { mutateAsync: submitEvent, isPending: isSubmitting } = useSubmitEvent();
   const { mutateAsync: approveEvent, isPending: isApproving } = useApproveEvent();
 
@@ -89,6 +96,7 @@ const EventDrawer = ({
   const {
     control,
     handleSubmitRaw,
+    clearErrors,
     resetForm,
     setValue,
     watch,
@@ -99,90 +107,159 @@ const EventDrawer = ({
   const allDay = watch("allDay");
   const category = watch("category");
   const includedGroups = watch("includedGroups");
+  const startDate = watch("start");
+  const endDate = watch("end");
 
   useEffect(() => {
     if (!category) return;
 
     const categoriesWithoutGroups = ["ALL", "COLLEGE", "SHS"];
     const skipGroups = categoriesWithoutGroups.includes(category);
+    const currentGroups = includedGroups ?? [];
 
     if (skipGroups) {
-      if (includedGroups && includedGroups.length > 0) {
-        setValue("includedGroups", [], { shouldValidate: true });
+      // Only update form state when we actually have values to clear.
+      if (currentGroups.length > 0) {
+        setValue("includedGroups", [], { shouldValidate: false, shouldDirty: false });
       }
+
+      if (errors.includedGroups) {
+        clearErrors("includedGroups");
+      }
+
       return;
     }
 
     const allowedGroupValues = new Set(
       CATEGORY_GROUPS[category].map((choice) => choice.value)
     );
-    const validGroups = (includedGroups ?? []).filter((group) =>
+    const validGroups = currentGroups.filter((group) =>
       allowedGroupValues.has(group)
     );
 
-    if ((includedGroups ?? []).length !== validGroups.length) {
-      setValue("includedGroups", validGroups, { shouldValidate: true });
+    const groupsChanged =
+      currentGroups.length !== validGroups.length ||
+      currentGroups.some((group, index) => group !== validGroups[index]);
+
+    if (groupsChanged) {
+      setValue("includedGroups", validGroups, { shouldValidate: true, shouldDirty: false });
     }
-  }, [category, includedGroups, setValue]);
+  }, [category, includedGroups, clearErrors, errors.includedGroups, setValue]);
+
+  useEffect(() => {
+    if (allDay || !startDate || !endDate) return;
+
+    if (endDate.getTime() >= startDate.getTime()) {
+      if (errors.end) {
+        clearErrors("end");
+      }
+      return;
+    }
+
+    const correctedEnd = new Date(startDate.getTime() + 60 * 60 * 1000);
+    setValue("end", correctedEnd, { shouldValidate: true, shouldDirty: false });
+    clearErrors("end");
+  }, [allDay, startDate, endDate, clearErrors, errors.end, setValue]);
 
   /**
    * Handle drawer close - reset form and close drawer
    */
   const handleDrawerClose = () => {
+    setIsDeleteConfirmOpen(false);
     resetForm();
     onClose();
   };
 
-  const handleSaveDraft = handleSubmitRaw(async (data) => {
-    try {
-      await saveEvent(formatEventPayload(data));
-      toastSuccess("Event saved", "Draft updated successfully.");
-      onClose();
-    } catch (error) {
-      toastDanger(
-        "Save failed",
-        error instanceof Error ? error.message : undefined
-      );
-    }
-  });
+  const handleInvalidSubmit = (fieldErrors: FieldErrors<EventForm>) => {
+    const description =
+      fieldErrors.title?.message?.toString() ||
+      fieldErrors.category?.message?.toString() ||
+      fieldErrors.includedGroups?.message?.toString() ||
+      fieldErrors.start?.message?.toString() ||
+      fieldErrors.end?.message?.toString() ||
+      (Object.keys(fieldErrors).length > 0
+        ? `Please check: ${Object.keys(fieldErrors)[0]}`
+        : "Please review the required fields.");
 
-  const handleSubmitForReview = handleSubmitRaw(async (data) => {
-    try {
-      const saved = await saveEvent(formatEventPayload(data));
-      await submitEvent({ id: saved.id });
-      toastSuccess("Event submitted", "Waiting for admin approval.");
-      onClose();
-    } catch (error) {
-      toastDanger(
-        "Submission failed",
-        error instanceof Error ? error.message : undefined
-      );
-    }
-  });
+    toastDanger("Can't save event yet", description);
+    formScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-  const handleApproveNow = handleSubmitRaw(async (data) => {
-    try {
-      const saved = await saveEvent(formatEventPayload(data));
-      await approveEvent({ id: saved.id });
-      toastSuccess("Event approved", "The event is now live.");
-      onClose();
-    } catch (error) {
-      toastDanger(
-        "Approval failed",
-        error instanceof Error ? error.message : undefined
-      );
-    }
-  });
+  const handleSaveDraft = handleSubmitRaw(
+    async (data) => {
+      try {
+        await saveEvent(formatEventPayload(data));
+        toastSuccess("Event saved", "Draft updated successfully.");
+        onClose();
+      } catch (error) {
+        toastDanger(
+          "Save failed",
+          error instanceof Error ? error.message : undefined
+        );
+      }
+    },
+    handleInvalidSubmit
+  );
+
+  const handleSubmitForReview = handleSubmitRaw(
+    async (data) => {
+      try {
+        const saved = await saveEvent(formatEventPayload(data));
+        await submitEvent({ id: saved.id });
+        toastSuccess("Event submitted", "Waiting for admin approval.");
+        onClose();
+      } catch (error) {
+        toastDanger(
+          "Submission failed",
+          error instanceof Error ? error.message : undefined
+        );
+      }
+    },
+    handleInvalidSubmit
+  );
+
+  const handleApproveNow = handleSubmitRaw(
+    async (data) => {
+      try {
+        const saved = await saveEvent(formatEventPayload(data));
+        await approveEvent({ id: saved.id });
+        toastSuccess("Event approved", "The event is now live.");
+        onClose();
+      } catch (error) {
+        toastDanger(
+          "Approval failed",
+          error instanceof Error ? error.message : undefined
+        );
+      }
+    },
+    handleInvalidSubmit
+  );
 
   /**
    * Handle event deletion with confirmation dialog
    */
   const handleDeleteEvent = () => {
-    const confirmed = confirm("Are you sure you want to delete this event?");
-    if (!confirmed || !initialData?.id) return;
+    setIsDeleteConfirmOpen(true);
+  };
 
-    deleteEvent(initialData.id);
-    onClose();
+  const handleDeleteConfirm = async () => {
+    if (!initialData?.id) {
+      setIsDeleteConfirmOpen(false);
+      return;
+    }
+
+    try {
+      await deleteEvent(initialData.id);
+      toastSuccess("Event deleted", "The event has been removed.");
+      handleDrawerClose();
+    } catch (error) {
+      toastDanger(
+        "Delete failed",
+        error instanceof Error ? error.message : undefined
+      );
+    } finally {
+      setIsDeleteConfirmOpen(false);
+    }
   };
 
   // Only show group selection for categories that require it
@@ -198,7 +275,7 @@ const EventDrawer = ({
     isEdit && isOrganizer && !isOwner && eventStatus === "APPROVED";
   const canSubmit = isOrganizer && eventStatus === "DRAFT";
   const canApprove = isAdmin && (eventStatus === "DRAFT" || eventStatus === "PENDING");
-  const isBusy = isSaving || isSubmitting || isApproving;
+  const isBusy = isSaving || isSubmitting || isApproving || isDeleting;
   const saveLabel = isEdit ? "Save changes" : "Save draft";
 
   return (
@@ -231,7 +308,7 @@ const EventDrawer = ({
             ) : null}
           </DrawerHeader>
 
-          <div className="flex-1 overflow-y-auto">
+          <div ref={formScrollRef} className="flex-1 overflow-y-auto">
             {/* Main form content */}
             <fieldset
               disabled={isReadOnlyApprovedView}
@@ -447,10 +524,10 @@ const EventDrawer = ({
                       variant="outline"
                       className="h-10 rounded-xl border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
                       onClick={handleDeleteEvent}
-                      disabled={isBusy}
+                      disabled={isBusy || !initialData?.id}
                     >
                       <Trash2 className="size-4" />
-                      Delete
+                      {isDeleting ? "Deleting..." : "Delete"}
                     </Button>
                   ) : null}
 
@@ -523,6 +600,17 @@ const EventDrawer = ({
               </div>
             )}
           </DrawerFooter>
+
+          <ConfirmDialog
+            title="Delete this event?"
+            description="This will permanently remove the event. This action cannot be undone."
+            isOpen={isDeleteConfirmOpen}
+            onCancel={() => setIsDeleteConfirmOpen(false)}
+            onConfirm={() => void handleDeleteConfirm()}
+            confirmLabel={isDeleting ? "Deleting..." : "Delete event"}
+            cancelLabel="Keep event"
+            isConfirming={isDeleting}
+          />
         </form>
       </DrawerContent>
     </Drawer>

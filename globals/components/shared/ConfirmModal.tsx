@@ -6,7 +6,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
 } from "@/globals/components/shad-cn/dialog";
 import { Button } from "@/globals/components/shad-cn/button";
 
@@ -16,6 +15,9 @@ interface ConfirmDialogProps {
   isOpen: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  isConfirming?: boolean;
 }
 
 export function ConfirmDialog({
@@ -24,6 +26,9 @@ export function ConfirmDialog({
   isOpen,
   onConfirm,
   onCancel,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  isConfirming = false,
 }: ConfirmDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
@@ -33,10 +38,22 @@ export function ConfirmDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
-            Cancel
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isConfirming}
+          >
+            {cancelLabel}
           </Button>
-          <Button variant={"destructive"} onClick={onConfirm}>Confirm</Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isConfirming}
+          >
+            {confirmLabel}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

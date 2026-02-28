@@ -41,11 +41,11 @@ export const eventSchema = z
         return endDay >= startDay;
       }
 
-      // For timed events, end must be strictly after start
-      return data.end > data.start;
+      // For timed events, allow same start/end to avoid false blocking on untouched forms.
+      return data.end >= data.start;
     },
     {
-      message: "End date must be after start date",
+      message: "End date must be the same or after start date",
       path: ["end"],
     }
   )
@@ -96,16 +96,26 @@ export const formatEventPayload = (data: EventForm): Event | NewEvent => {
 };
 
 /** Default form values for new events */
-const defaultValues: EventForm = {
-  title: "",
-  location: null,
-  category: EventCategory.ALL,
-  includedGroups: [],
-  start: new Date(),
-  end: new Date(),
-  description: null,
-  allDay: false,
+const getDefaultValues = (): EventForm => {
+  const start = new Date();
+  const end = new Date(start.getTime() + 60 * 60 * 1000); // +1 hour
+
+  return {
+    title: "",
+    location: null,
+    category: EventCategory.ALL,
+    includedGroups: [],
+    start,
+    end,
+    description: null,
+    allDay: false,
+  };
 };
+
+const buildFormValues = (initialData?: Partial<EventForm>): EventForm => ({
+  ...getDefaultValues(),
+  ...initialData,
+});
 
 /**
  * Hook for managing event creation and editing forms
@@ -127,19 +137,12 @@ export function useEventForm(
   // Initialize form with React Hook Form and Zod validation
   const form = useForm<EventForm>({
     resolver: zodResolver(eventSchema),
-    defaultValues: {
-      ...defaultValues,
-      ...initialData,
-    },
+    defaultValues: buildFormValues(initialData),
   });
 
   // Reset form when initialData changes (switching between create/edit modes)
   useEffect(() => {
-    if (initialData) {
-      form.reset(initialData);
-    } else {
-      form.reset(defaultValues);
-    }
+    form.reset(buildFormValues(initialData));
   }, [initialData, form]);
 
   /**
@@ -156,7 +159,7 @@ export function useEventForm(
     }
 
     // Reset form after successful submission
-    form.reset(initialData);
+    form.reset(buildFormValues(initialData));
   });
 
   /**
@@ -166,7 +169,7 @@ export function useEventForm(
    * @param values - Optional custom values to reset to; defaults to initialData
    */
   const resetForm = (values?: Partial<EventForm>) => {
-    form.reset(values ?? initialData);
+    form.reset(buildFormValues(values ?? initialData));
   };
 
   return {
