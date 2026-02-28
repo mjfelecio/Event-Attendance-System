@@ -10,10 +10,17 @@ type Props = {
 const EventCard = ({ event, onClick }: Props) => {
   const isPast = new Date(event.end ?? event.start) < new Date();
   const statusStyles: Record<Event["status"], string> = {
-    DRAFT: "bg-amber-100 text-amber-700",
-    PENDING: "bg-sky-100 text-sky-700",
-    APPROVED: "bg-emerald-100 text-emerald-700",
-    REJECTED: "bg-rose-100 text-rose-700",
+    DRAFT: "bg-amber-100 text-amber-800",
+    PENDING: "bg-sky-100 text-sky-800",
+    APPROVED: "bg-emerald-100 text-emerald-800",
+    REJECTED: "bg-rose-100 text-rose-800",
+  };
+
+  const accentStyles: Record<Event["status"], string> = {
+    DRAFT: "bg-amber-500",
+    PENDING: "bg-sky-500",
+    APPROVED: "bg-emerald-500",
+    REJECTED: "bg-rose-500",
   };
 
   const startDate = event.start.toLocaleDateString();
@@ -27,56 +34,51 @@ const EventCard = ({ event, onClick }: Props) => {
     minute: "2-digit",
   });
 
-  // date/time display
   const dateDisplay =
-    event.end && startDate !== endDate
-      ? `${startDate} → ${endDate}`
-      : startDate;
+    event.end && startDate !== endDate ? `${startDate} -> ${endDate}` : startDate;
 
   const timeDisplay = !event.allDay
     ? event.end && startTime !== endTime
-      ? `${startTime} – ${endTime}`
+      ? `${startTime} - ${endTime}`
       : startTime
     : "All day";
 
   return (
     <div
       onClick={onClick}
-      className="flex flex-row min-h-19 cursor-pointer rounded-md border transition-colors overflow-hidden"
+      className="group flex min-h-[88px] cursor-pointer overflow-hidden rounded-xl border border-slate-200/80 bg-white transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
     >
-      <div className="w-2 bg-blue-500 shrink-0"></div>
+      <div className={`w-1.5 shrink-0 ${accentStyles[event.status]}`} />
       <div
-        className={`flex-1 flex flex-col p-2
-        ${
+        className={`flex flex-1 flex-col p-3 ${
           isPast
-            ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
-            : "bg-white hover:bg-gray-50"
-        }
-      `}
+            ? "bg-slate-100/90 text-slate-500 hover:bg-slate-200/70"
+            : "bg-white hover:bg-slate-50/70"
+        }`}
       >
-        <h4 className="font-medium flex-1 text-sm text-gray-900 group-hover:text-gray-700 line-clamp-1 truncate">
+        <h4 className="line-clamp-1 flex-1 truncate text-sm font-semibold text-slate-900 transition-colors group-hover:text-slate-700">
           {event.title}
         </h4>
 
-        <div>
-          <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-500">
+        <div className="mt-1.5 space-y-1">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
             <CalendarIcon className="h-3 w-3 shrink-0" />
             <span>{dateDisplay}</span>
           </div>
 
-          <div className="flex justify-between">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
               <ClockIcon className="h-3 w-3 shrink-0" />
               <span>{timeDisplay}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <span
-                className={`text-[10px] px-2 py-0.5 rounded-full flex items-center justify-center ${statusStyles[event.status]}`}
+                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusStyles[event.status]}`}
               >
                 {event.status}
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center justify-center bg-blue-100 text-blue-600">
+              <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-indigo-700">
                 {upperCase(event.category)}
               </span>
             </div>

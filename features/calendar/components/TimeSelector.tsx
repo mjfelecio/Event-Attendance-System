@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import TimePicker from "@/features/calendar/components/TimePicker";
 
 type Time = {
@@ -21,14 +21,14 @@ const TimeSelector = ({ time, onChange, disabled }: Props) => {
   };
 
   return (
-    <div className="flex relative gap-2 items-center">
+    <div className="flex items-center gap-2 sm:justify-end">
       <TimePicker
         unit="hour"
         value={time.hour}
         onChange={(val) => updateTime("hour", val)}
         disabled={disabled}
       />
-      <span>:</span>
+      <span className="text-sm font-semibold text-slate-400">:</span>
       <TimePicker
         unit="minute"
         value={time.minute}
@@ -38,11 +38,11 @@ const TimeSelector = ({ time, onChange, disabled }: Props) => {
 
       <button
         type="button"
-        className={`ml-2 text-sm border px-2 py-1 rounded-md transition-colors
+        className={`ml-1 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors
           ${
             disabled
-              ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed opacity-50"
-              : "border-black text-black hover:bg-gray-100 cursor-pointer"
+              ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 opacity-70"
+              : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         disabled={disabled}
         onClick={() => updateTime("period", time.period === "AM" ? "PM" : "AM")}

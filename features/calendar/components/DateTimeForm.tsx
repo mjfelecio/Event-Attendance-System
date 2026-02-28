@@ -3,10 +3,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/globals/components/shad-cn/collapsible";
-import { useState } from "react";
+import { cn } from "@/globals/libs/shad-cn";
 import DatePicker from "@/features/calendar/components/DatePicker";
 import TimeSelector from "@/features/calendar/components/TimeSelector";
 import { format } from "date-fns";
+import { CalendarClock, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type Props = {
   label: string;
@@ -48,35 +50,65 @@ function buildDateTime(date: Date, time: Time, allDay: boolean): Date {
   );
 }
 
+function getTimeFromDate(date: Date): Time {
+  return {
+    hour: date.getHours() % 12 || 12,
+    minute: date.getMinutes(),
+    second: date.getSeconds(),
+    period: date.getHours() >= 12 ? "PM" : "AM",
+  };
+}
+
 const DateTimeForm = ({
   label,
-  date: initialDate,
+  date,
   onDateTimeChange,
   allDay,
 }: Props) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
-  const [selectedTime, setSelectedTime] = useState<Time>({
-    hour: initialDate.getHours() % 12 || 12,
-    minute: initialDate.getMinutes(),
-    second: initialDate.getSeconds(),
-    period: initialDate.getHours() >= 12 ? "PM" : "AM",
-  });
+  const [open, setOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(date);
+  const [selectedTime, setSelectedTime] = useState<Time>(getTimeFromDate(date));
+
+  useEffect(() => {
+    setSelectedDate(date);
+    setSelectedTime(getTimeFromDate(date));
+  }, [date]);
 
   const fullDateTime = buildDateTime(selectedDate, selectedTime, allDay);
-  const formattedDateTime = format(fullDateTime, "EEE, MMM d, yyyy h:mm a");
-  const formattedDate = format(fullDateTime, "EEE, MMM d, yyyy");
+  const formattedDateTime = format(
+    fullDateTime,
+    allDay ? "EEE, MMM d, yyyy" : "EEE, MMM d, yyyy h:mm a"
+  );
 
   return (
-    <Collapsible className="border border-black rounded-lg overflow-hidden">
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+    >
       <CollapsibleTrigger asChild>
-        <div className="flex justify-between items-center hover:bg-gray-100 p-2 overflow-hidden">
-          <p>{label}</p>
-          <p>{allDay ? formattedDate : formattedDateTime}</p>
-        </div>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition-colors hover:bg-slate-50"
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <CalendarClock className="size-4 shrink-0 text-slate-500" />
+            <p className="text-sm font-medium text-slate-800">{label}</p>
+          </div>
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="truncate text-sm text-slate-600">{formattedDateTime}</p>
+            <ChevronDown
+              className={cn(
+                "size-4 shrink-0 text-slate-500 transition-transform",
+                open ? "rotate-180" : ""
+              )}
+            />
+          </div>
+        </button>
       </CollapsibleTrigger>
 
       <CollapsibleContent asChild>
-        <div className="border-t border-t-black h-24 py-2 px-6 justify-between items-center flex gap-2">
+        <div className="grid gap-2 border-t border-slate-200 px-3 py-3 sm:grid-cols-[auto_1fr] sm:items-center">
           <DatePicker
             date={fullDateTime}
             onChange={(date) => {
@@ -84,14 +116,20 @@ const DateTimeForm = ({
               onDateTimeChange(buildDateTime(date, selectedTime, allDay));
             }}
           />
-          <TimeSelector
-            time={selectedTime}
-            onChange={(time) => {
-              setSelectedTime(time);
-              onDateTimeChange(buildDateTime(selectedDate, time, allDay));
-            }}
-            disabled={allDay}
-          />
+          {allDay ? (
+            <p className="text-xs text-slate-500 sm:justify-self-end">
+              All-day events use 12:00 AM.
+            </p>
+          ) : (
+            <TimeSelector
+              time={selectedTime}
+              onChange={(time) => {
+                setSelectedTime(time);
+                onDateTimeChange(buildDateTime(selectedDate, time, allDay));
+              }}
+              disabled={false}
+            />
+          )}
         </div>
       </CollapsibleContent>
     </Collapsible>

@@ -11,7 +11,11 @@ import { Loader2 } from "lucide-react";
 import { Event } from "@/globals/types/events";
 import Link from "next/link";
 import { useAuth } from "@/globals/contexts/AuthContext";
-import { toastDanger, toastSuccess, toastWarning } from "@/globals/components/shared/toasts";
+import {
+  toastDanger,
+  toastSuccess,
+  toastWarning,
+} from "@/globals/components/shared/toasts";
 
 type Props = {
   onDrawerOpen: (event: Event | null) => void;
@@ -74,10 +78,7 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
     return { filteredEvents, counts, pendingEvents };
   }, [data, filter]);
 
-  const handleDrawerOpen = useCallback(
-    (event: Event) => onDrawerOpen(event),
-    []
-  );
+  const handleDrawerOpen = useCallback((event: Event) => onDrawerOpen(event), []);
 
   const handleApprove = (eventId: string) => {
     approveEvent.mutate(
@@ -128,24 +129,43 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
   const isProcessing = approveEvent.isPending || rejectEvent.isPending;
 
   return (
-    <section className="rounded-2xl border-2 p-6 w-full flex flex-col gap-6 bg-white">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Events</h1>
+    <section className="w-full rounded-3xl border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_42px_rgba(15,23,42,0.08)] backdrop-blur md:p-7">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-600">
+            Event Queue
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Events
+          </h1>
           <p className="text-sm text-slate-500">
             Filter by status to find what you need fast.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <Button size="lg" onClick={() => onDrawerOpen(null)}>
+        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+          <Button
+            size="lg"
+            className="h-11 rounded-xl bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_50%,#ef4444_100%)] px-6 font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.35)] transition-transform hover:scale-[1.01]"
+            onClick={() => onDrawerOpen(null)}
+          >
             Create event
           </Button>
           {data?.length ? (
-            <Button asChild size="lg" variant="outline">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="h-11 rounded-xl border-slate-300 bg-white px-6 font-semibold text-slate-700 hover:bg-slate-100"
+            >
               <Link href="/attendance">Take attendance</Link>
             </Button>
           ) : (
-            <Button size="lg" variant="outline" disabled>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-11 rounded-xl border-slate-300 bg-white px-6 font-semibold text-slate-500"
+              disabled
+            >
               Take attendance
             </Button>
           )}
@@ -153,7 +173,7 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
       </div>
 
       {isAdmin ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-6 rounded-2xl border border-slate-200/80 bg-[linear-gradient(135deg,#f8fafc_0%,#eef2ff_100%)] p-4 shadow-sm">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-slate-900">
@@ -182,7 +202,7 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
                       {event.title}
                     </p>
                     <p className="text-xs text-slate-500">
-                      {new Date(event.start).toLocaleString()} • {event.category}
+                      {new Date(event.start).toLocaleString()} | {event.category}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -215,7 +235,7 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/70 p-2">
         {(
           [
             { id: "current", label: "Current", count: counts.current },
@@ -230,21 +250,21 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
               key={option.id}
               type="button"
               onClick={() => setFilter(option.id)}
-              className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
+              className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-all ${
                 isActive
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  ? "border-transparent bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_52%,#ef4444_100%)] text-white shadow-[0_8px_16px_rgba(29,78,216,0.28)]"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
-              {option.label} · {option.count}
+              {option.label} - {option.count}
             </button>
           );
         })}
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/40 p-3">
         {isLoading ? (
-          <div className="flex justify-center items-center py-10">
+          <div className="flex items-center justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-gray-600" />
             <span className="ml-2 text-lg">Loading events...</span>
           </div>

@@ -32,13 +32,13 @@ const DatePicker = ({ onChange, date }: Props) => {
         <Button
           variant="outline"
           data-empty={!date}
-          className="w-32 data-[empty=true]:text-muted-foreground justify-start text-left font-normal border-black"
+          className="h-9 w-full justify-start gap-2 border-slate-300 bg-white text-left text-sm font-medium text-slate-700 data-[empty=true]:text-slate-400"
         >
           <CalendarIcon className="h-4 w-4" />
           {date ? format(date, "EEE, MMM d") : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="z-[60] w-auto p-0">
         <Calendar
           mode="single"
           selected={date}
