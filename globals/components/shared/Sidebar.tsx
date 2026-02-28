@@ -9,6 +9,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   LogOut,
+  Menu,
   QrCode,
   Settings,
   Users,
@@ -131,25 +132,15 @@ const Sidebar = () => {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/5">
-                <Image
-                  src="/login/logo.png"
-                  alt="ACLC logo"
-                  width={42}
-                  height={42}
-                  className="size-10 object-contain"
-                  priority
-                />
-              </div>
-
+            <div className="flex items-center justify-center">
               <button
                 type="button"
                 onClick={toggleExpanded}
                 className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
                 aria-label="Expand sidebar"
+                title="Expand sidebar"
               >
-                <ChevronRight className="size-4" />
+                <Menu className="size-5" />
               </button>
             </div>
           )}

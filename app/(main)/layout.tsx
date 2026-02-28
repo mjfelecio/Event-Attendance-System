@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SidebarProvider } from "@/globals/contexts/SidebarContext";
 import Sidebar from "@/globals/components/shared/Sidebar";
-import MainNavbar from "@/globals/components/shared/MainNavbar";
 import { useAuth } from "@/globals/contexts/AuthContext";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
@@ -63,10 +62,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     <SidebarProvider>
       <div className="flex min-h-screen bg-slate-100">
         <Sidebar />
-        <div className="flex min-h-screen flex-1 flex-col">
-          <MainNavbar />
-          <main className="flex-1 overflow-x-hidden">{children}</main>
-        </div>
+        <main className="min-h-screen flex-1 overflow-x-hidden">{children}</main>
       </div>
     </SidebarProvider>
   );
