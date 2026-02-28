@@ -1,3 +1,6 @@
+type EventScope = "visible" | "mine";
+type EventStatus = "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+
 /**
  * Centralized query key factory.
  *
@@ -6,6 +9,8 @@
 export const queryKeys = {
   events: {
     all: () => ["events"] as const,
+    list: (scope: EventScope = "visible", status?: EventStatus) =>
+      ["events", "list", scope, status ?? "ALL"] as const,
     allApproved: () => ["events", "approved"] as const,
     withId: (eventId: string) => ["events", "byId", eventId] as const,
     statsFromEvent: (eventId: string) => ["events", "stats", eventId] as const,

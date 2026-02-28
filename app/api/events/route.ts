@@ -12,6 +12,7 @@ import {
 import { respondWithError } from "@/globals/utils/httpError";
 
 const eventStatusEnum = z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]);
+const eventScopeEnum = z.enum(["visible", "mine"]);
 const eventCategoryEnum = z.enum([
   "ALL",
   "COLLEGE",
@@ -26,6 +27,7 @@ const eventCategoryEnum = z.enum([
 
 const listQuerySchema = z.object({
   status: eventStatusEnum.optional(),
+  scope: eventScopeEnum.optional(),
 });
 
 const eventMutationSchema = z.object({
@@ -50,13 +52,30 @@ export async function GET(req: NextRequest) {
     );
 
     const where: Record<string, unknown> = {};
+    const statusFilter = query.success ? query.data.status : undefined;
+    const scopeFilter = query.success ? query.data.scope : undefined;
 
-    if (user.role !== "ADMIN") {
-      where.createdById = user.id;
-    }
+    if (user.role === "ADMIN") {
+      if (statusFilter) {
+        where.status = statusFilter;
+      }
+    } else {
+      const resolvedScope = scopeFilter ?? "visible";
 
-    if (query.success && query.data.status) {
-      where.status = query.data.status;
+      if (resolvedScope === "mine") {
+        where.createdById = user.id;
+
+        if (statusFilter) {
+          where.status = statusFilter;
+        }
+      } else if (!statusFilter) {
+        where.OR = [{ createdById: user.id }, { status: "APPROVED" }];
+      } else if (statusFilter === "APPROVED") {
+        where.status = "APPROVED";
+      } else {
+        where.createdById = user.id;
+        where.status = statusFilter;
+      }
     }
 
     const events = await prisma.event.findMany({

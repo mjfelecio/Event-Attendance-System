@@ -543,7 +543,7 @@ const AdminDashboard = () => {
 };
 
 const OrganizerDashboard = () => {
-  const { data: events, isLoading, isError } = useEvents();
+  const { data: events, isLoading, isError } = useEvents({ scope: "mine" });
 
   const statusMeta: Record<Event["status"], StatusMeta> = {
     DRAFT: {

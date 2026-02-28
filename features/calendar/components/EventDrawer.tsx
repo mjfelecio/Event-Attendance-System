@@ -64,6 +64,7 @@ const EventDrawer = ({
   const { user } = useAuth();
   const isOrganizer = user?.role === "ORGANIZER";
   const isAdmin = user?.role === "ADMIN";
+  const isOwner = initialData?.createdById === user?.id;
 
   const { mutateAsync: saveEvent, isPending: isSaving } = useSaveEvent();
   const { mutate: deleteEvent } = useDeleteEvent();
@@ -168,6 +169,8 @@ const EventDrawer = ({
   );
 
   const eventStatus = initialData?.status ?? "DRAFT";
+  const isReadOnlyApprovedView =
+    isEdit && isOrganizer && !isOwner && eventStatus === "APPROVED";
   const canSubmit = isOrganizer && eventStatus === "DRAFT";
   const canApprove = isAdmin && (eventStatus === "DRAFT" || eventStatus === "PENDING");
   const isBusy = isSaving || isSubmitting || isApproving;
@@ -180,17 +183,35 @@ const EventDrawer = ({
     >
       <DrawerContent>
         <form
-          onSubmit={handleSaveDraft}
+          onSubmit={(event) => {
+            if (isReadOnlyApprovedView) {
+              event.preventDefault();
+              return;
+            }
+
+            void handleSaveDraft(event);
+          }}
           className="h-full w-full overflow-y-auto bg-white"
         >
           <DrawerHeader>
             <DrawerTitle className="text-center text-2xl">
               {isEdit ? "Edit Event" : "Create Event"}
             </DrawerTitle>
+            {isReadOnlyApprovedView ? (
+              <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-center text-sm text-indigo-700">
+                Approved event (view only). Only the event creator or an admin
+                can edit this event.
+              </p>
+            ) : null}
           </DrawerHeader>
 
           {/* Main form content */}
-          <div className="px-4 flex flex-col gap-3 pb-24">
+          <fieldset
+            disabled={isReadOnlyApprovedView}
+            className={`px-4 flex flex-col gap-3 pb-24 ${
+              isReadOnlyApprovedView ? "opacity-80" : ""
+            }`}
+          >
             {/* Event Title Field */}
             <div>
               <Controller
@@ -352,60 +373,73 @@ const EventDrawer = ({
                 )}
               />
             </div>
-          </div>
+          </fieldset>
 
           {/* Action Buttons Footer */}
           <DrawerFooter className="absolute w-full bottom-0 flex flex-row justify-between items-center bg-white">
-            {/* Delete button in edit mode, empty placeholder in create mode */}
-            {isEdit ? (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDeleteEvent}
-                disabled={isBusy}
-              >
-                Delete
-              </Button>
+            {isReadOnlyApprovedView ? (
+              <div className="flex w-full items-center justify-between gap-3">
+                <p className="text-sm text-slate-500">View-only event details.</p>
+                <DrawerClose asChild>
+                  <Button type="button" variant="destructive" onClick={handleDrawerClose}>
+                    Close
+                  </Button>
+                </DrawerClose>
+              </div>
             ) : (
-              <div></div>
-            )}
+              <>
+                {/* Delete button in edit mode, empty placeholder in create mode */}
+                {isEdit ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDeleteEvent}
+                    disabled={isBusy}
+                  >
+                    Delete
+                  </Button>
+                ) : (
+                  <div></div>
+                )}
 
-            {/* Close and Save buttons */}
-            <div className="h-8 flex items-center gap-4">
-              <DrawerClose asChild>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDrawerClose}
-                  disabled={isBusy}
-                >
-                  Close
-                </Button>
-              </DrawerClose>
-              {canSubmit ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleSubmitForReview}
-                  disabled={isBusy}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit for review"}
-                </Button>
-              ) : null}
-              {canApprove ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleApproveNow}
-                  disabled={isBusy}
-                >
-                  {isApproving ? "Approving..." : "Approve now"}
-                </Button>
-              ) : null}
-              <Button type="submit" variant="default" disabled={isBusy}>
-                {isSaving ? "Saving..." : "Save"}
-              </Button>
-            </div>
+                {/* Close and Save buttons */}
+                <div className="h-8 flex items-center gap-4">
+                  <DrawerClose asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleDrawerClose}
+                      disabled={isBusy}
+                    >
+                      Close
+                    </Button>
+                  </DrawerClose>
+                  {canSubmit ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleSubmitForReview}
+                      disabled={isBusy}
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit for review"}
+                    </Button>
+                  ) : null}
+                  {canApprove ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleApproveNow}
+                      disabled={isBusy}
+                    >
+                      {isApproving ? "Approving..." : "Approve now"}
+                    </Button>
+                  ) : null}
+                  <Button type="submit" variant="default" disabled={isBusy}>
+                    {isSaving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </>
+            )}
           </DrawerFooter>
         </form>
       </DrawerContent>

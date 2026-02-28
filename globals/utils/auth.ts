@@ -110,14 +110,17 @@ export function assertEventOwnership(
 }
 
 export function assertEventVisibility(
-  event: { createdById: string | null },
+  event: { createdById: string | null; status: EventStatus },
   user: AuthSession
 ) {
   if (user.role === "ADMIN") {
     return;
   }
 
-  if (!event.createdById || event.createdById !== user.id) {
+  const isOwner = !!event.createdById && event.createdById === user.id;
+  const isSharedApproved = event.status === "APPROVED";
+
+  if (!isOwner && !isSharedApproved) {
     throw new AuthError("Forbidden", 403, "FORBIDDEN");
   }
 }
