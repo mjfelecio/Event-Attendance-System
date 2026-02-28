@@ -85,7 +85,7 @@ const StudentManageToolbar = ({
           <button
             type="button"
             onClick={onAddStudent}
-            className="inline-flex items-center gap-2 rounded-full border border-emerald-500 bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-emerald-600"
+            className="inline-flex items-center gap-2 rounded-full border border-blue-500 bg-blue-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-blue-600"
           >
             <Plus className="size-4" strokeWidth={1.6} />
             Add

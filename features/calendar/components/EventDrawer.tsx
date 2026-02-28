@@ -16,8 +16,13 @@ import { Textarea } from "@/globals/components/shad-cn/textarea";
 import { Switch } from "@/globals/components/shad-cn/switch";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
 import { Controller } from "react-hook-form";
-import { useEventForm } from "@/features/calendar/hooks/useEventForm";
-import { useDeleteEvent, useSaveEvent } from "@/globals/hooks/useEvents";
+import { formatEventPayload, useEventForm } from "@/features/calendar/hooks/useEventForm";
+import {
+  useDeleteEvent,
+  useSaveEvent,
+  useApproveEvent,
+  useSubmitEvent,
+} from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 import {
   CATEGORY_GROUPS,
@@ -25,6 +30,8 @@ import {
 } from "@/features/calendar/constants/categoryGroups";
 import { useMemo } from "react";
 import CheckboxGroup from "@/globals/components/shared/CheckboxGroup";
+import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 type EventDrawerProps = {
   isOpen: boolean;
@@ -54,9 +61,14 @@ const EventDrawer = ({
   mode,
 }: EventDrawerProps) => {
   const isEdit = mode === "edit";
+  const { user } = useAuth();
+  const isOrganizer = user?.role === "ORGANIZER";
+  const isAdmin = user?.role === "ADMIN";
 
-  const { mutate: saveEvent } = useSaveEvent();
+  const { mutateAsync: saveEvent, isPending: isSaving } = useSaveEvent();
   const { mutate: deleteEvent } = useDeleteEvent();
+  const { mutateAsync: submitEvent, isPending: isSubmitting } = useSubmitEvent();
+  const { mutateAsync: approveEvent, isPending: isApproving } = useApproveEvent();
 
   // Parse includedGroups from JSON string to array for form population
   const initData = useMemo(
@@ -74,14 +86,11 @@ const EventDrawer = ({
 
   const {
     control,
-    handleSubmit,
+    handleSubmitRaw,
     resetForm,
     watch,
     formState: { errors },
-  } = useEventForm((data) => {
-    saveEvent(data);
-    onClose();
-  }, initData);
+  } = useEventForm(undefined, initData);
 
   // Watch form field changes to conditionally render sections
   const allDay = watch("allDay");
@@ -97,6 +106,47 @@ const EventDrawer = ({
     resetForm();
     onClose();
   };
+
+  const handleSaveDraft = handleSubmitRaw(async (data) => {
+    try {
+      await saveEvent(formatEventPayload(data));
+      toastSuccess("Event saved", "Draft updated successfully.");
+      onClose();
+    } catch (error) {
+      toastDanger(
+        "Save failed",
+        error instanceof Error ? error.message : undefined
+      );
+    }
+  });
+
+  const handleSubmitForReview = handleSubmitRaw(async (data) => {
+    try {
+      const saved = await saveEvent(formatEventPayload(data));
+      await submitEvent({ id: saved.id });
+      toastSuccess("Event submitted", "Waiting for admin approval.");
+      onClose();
+    } catch (error) {
+      toastDanger(
+        "Submission failed",
+        error instanceof Error ? error.message : undefined
+      );
+    }
+  });
+
+  const handleApproveNow = handleSubmitRaw(async (data) => {
+    try {
+      const saved = await saveEvent(formatEventPayload(data));
+      await approveEvent({ id: saved.id });
+      toastSuccess("Event approved", "The event is now live.");
+      onClose();
+    } catch (error) {
+      toastDanger(
+        "Approval failed",
+        error instanceof Error ? error.message : undefined
+      );
+    }
+  });
 
   /**
    * Handle event deletion with confirmation dialog
@@ -117,6 +167,11 @@ const EventDrawer = ({
     category === "SHS"
   );
 
+  const eventStatus = initialData?.status ?? "DRAFT";
+  const canSubmit = isOrganizer && eventStatus === "DRAFT";
+  const canApprove = isAdmin && (eventStatus === "DRAFT" || eventStatus === "PENDING");
+  const isBusy = isSaving || isSubmitting || isApproving;
+
   return (
     <Drawer
       open={isOpen}
@@ -125,7 +180,7 @@ const EventDrawer = ({
     >
       <DrawerContent>
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSaveDraft}
           className="h-full w-full overflow-y-auto bg-white"
         >
           <DrawerHeader>
@@ -307,6 +362,7 @@ const EventDrawer = ({
                 type="button"
                 variant="destructive"
                 onClick={handleDeleteEvent}
+                disabled={isBusy}
               >
                 Delete
               </Button>
@@ -321,12 +377,33 @@ const EventDrawer = ({
                   type="button"
                   variant="destructive"
                   onClick={handleDrawerClose}
+                  disabled={isBusy}
                 >
                   Close
                 </Button>
               </DrawerClose>
-              <Button type="submit" variant="default">
-                Save
+              {canSubmit ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleSubmitForReview}
+                  disabled={isBusy}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit for review"}
+                </Button>
+              ) : null}
+              {canApprove ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleApproveNow}
+                  disabled={isBusy}
+                >
+                  {isApproving ? "Approving..." : "Approve now"}
+                </Button>
+              ) : null}
+              <Button type="submit" variant="default" disabled={isBusy}>
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </DrawerFooter>

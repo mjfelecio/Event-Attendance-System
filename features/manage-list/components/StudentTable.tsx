@@ -126,7 +126,7 @@ const StudentTable = ({ rows, onEditStudent, onDeleteStudent }: StudentTableProp
                 type="button"
                 className={`flex size-8 items-center justify-center rounded-full border text-sm transition ${
                   isActive
-                    ? "border-neutral-600 bg-neutral-700 text-white"
+                    ? "border-blue-600 bg-blue-700 text-white"
                     : "border-neutral-300 bg-white text-neutral-600 hover:border-neutral-400"
                 }`}
               >

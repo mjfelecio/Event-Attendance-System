@@ -52,7 +52,7 @@ const Calendar = ({
   );
 
   return (
-    <div className="rounded-2xl border-2 p-4 md:p-6 overflow-hidden w-full md:basis-[70%]">
+    <div className="rounded-2xl border-2 p-4 md:p-6 overflow-hidden w-full h-full">
       <FullCalendar
         ref={calendarRef}
         height="100%"

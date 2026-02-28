@@ -1,9 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 import { useAuth } from "@/globals/contexts/AuthContext";
-import useEvents from "@/globals/hooks/useEvents";
+import useEvents, {
+  useApproveEvent,
+  useRejectEvent,
+} from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 import {
   PendingOrganizer,
@@ -16,6 +20,7 @@ import {
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
+import { Button } from "@/globals/components/shad-cn/button";
 
 const DashboardPage = () => {
   const { user, isLoading } = useAuth();
@@ -41,10 +46,16 @@ const DashboardPage = () => {
 
 const AdminDashboard = () => {
   const { data, isLoading, isError } = usePendingOrganizers();
+  const { data: events, isLoading: isEventsLoading } = useEvents();
+  const approveEvent = useApproveEvent();
+  const rejectEvent = useRejectEvent();
   const approve = useApproveOrganizer();
   const reject = useRejectOrganizer();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [processingAction, setProcessingAction] =
+    useState<"APPROVE" | "REJECT" | null>(null);
+  const [processingEventId, setProcessingEventId] = useState<string | null>(null);
+  const [processingEventAction, setProcessingEventAction] =
     useState<"APPROVE" | "REJECT" | null>(null);
 
   const handleApprove = (organizerId: string) => {
@@ -105,6 +116,9 @@ const AdminDashboard = () => {
   };
 
   const pendingCount = data?.length ?? 0;
+  const pendingEventsCount =
+    events?.filter((event) => event.status === "PENDING").length ?? 0;
+  const pendingEvents = events?.filter((event) => event.status === "PENDING") ?? [];
 
   return (
     <div className="flex-1 bg-slate-50 p-6 space-y-6 overflow-y-auto">
@@ -140,10 +154,12 @@ const AdminDashboard = () => {
           </p>
         </div>
         <div className="rounded-2xl bg-white shadow border border-slate-200 p-5">
-          <p className="text-sm text-slate-500">Instructions</p>
-          <p className="text-sm text-slate-700 mt-2">
-            Approving grants dashboard + event access. Rejection sends your
-            note to the organizer.
+          <p className="text-sm text-slate-500">Pending events</p>
+          <p className="text-3xl font-bold text-slate-900 mt-2">
+            {isEventsLoading ? "—" : pendingEventsCount}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            Review submissions in the calendar workspace.
           </p>
         </div>
       </div>
@@ -239,6 +255,160 @@ const AdminDashboard = () => {
           </table>
         </div>
       </section>
+
+      <section className="rounded-2xl bg-white shadow border border-slate-200">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Pending event requests
+            </h2>
+            <p className="text-sm text-slate-500">
+              {pendingEventsCount === 0
+                ? "No event submissions waiting."
+                : "Approve or reject submitted events."}
+            </p>
+          </div>
+        </header>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-100">
+            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+              <tr>
+                <th className="px-6 py-3">Event</th>
+                <th className="px-6 py-3">Category</th>
+                <th className="px-6 py-3">Scheduled</th>
+                <th className="px-6 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white text-sm text-slate-700">
+              {isEventsLoading ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
+                    Loading events...
+                  </td>
+                </tr>
+              ) : pendingEventsCount === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
+                    No pending events right now.
+                  </td>
+                </tr>
+              ) : (
+                pendingEvents.map((event) => (
+                  <tr key={event.id}>
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-slate-900">
+                        {event.title}
+                      </div>
+                      {event.createdById ? (
+                        <div className="text-xs text-slate-500">
+                          Organizer ID: {event.createdById.slice(0, 6)}...
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {event.category}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {new Date(event.start).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-50"
+                          onClick={() => {
+                            setProcessingEventId(event.id);
+                            setProcessingEventAction("APPROVE");
+                            approveEvent.mutate(
+                              { id: event.id },
+                              {
+                                onSuccess: () => {
+                                  toastSuccess(
+                                    "Event approved",
+                                    "The event is now live."
+                                  );
+                                },
+                                onError: (error) => {
+                                  toastDanger(
+                                    "Approval failed",
+                                    error instanceof Error ? error.message : undefined
+                                  );
+                                },
+                                onSettled: () => {
+                                  setProcessingEventId(null);
+                                  setProcessingEventAction(null);
+                                },
+                              }
+                            );
+                          }}
+                          disabled={
+                            approveEvent.isPending ||
+                            rejectEvent.isPending ||
+                            processingEventId === event.id
+                          }
+                        >
+                          {processingEventId === event.id &&
+                          processingEventAction === "APPROVE"
+                            ? "Approving..."
+                            : "Approve"}
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-red-500 disabled:opacity-50"
+                          onClick={() => {
+                            const input = window.prompt(
+                              `Provide a reason for rejecting "${event.title}":`,
+                              event.rejectionReason ?? "Needs revisions"
+                            );
+
+                            const reason = input?.trim();
+                            if (!reason) {
+                              toastWarning("Rejection reason required");
+                              return;
+                            }
+
+                            setProcessingEventId(event.id);
+                            setProcessingEventAction("REJECT");
+                            rejectEvent.mutate(
+                              { id: event.id, reason },
+                              {
+                                onSuccess: () => {
+                                  toastSuccess("Event rejected", reason);
+                                },
+                                onError: (error) => {
+                                  toastDanger(
+                                    "Rejection failed",
+                                    error instanceof Error ? error.message : undefined
+                                  );
+                                },
+                                onSettled: () => {
+                                  setProcessingEventId(null);
+                                  setProcessingEventAction(null);
+                                },
+                              }
+                            );
+                          }}
+                          disabled={
+                            approveEvent.isPending ||
+                            rejectEvent.isPending ||
+                            processingEventId === event.id
+                          }
+                        >
+                          {processingEventId === event.id &&
+                          processingEventAction === "REJECT"
+                            ? "Rejecting..."
+                            : "Reject"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 };
@@ -306,16 +476,21 @@ const OrganizerDashboard = () => {
 
   return (
     <div className="flex-1 bg-slate-50 p-6 space-y-6 overflow-y-auto">
-      <div>
-        <p className="text-sm uppercase tracking-wide text-slate-500">
-          Organizer overview
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-900 mt-1">
-          Event workflow status
-        </h1>
-        <p className="text-sm text-slate-600 mt-2">
-          Track drafts, submissions, approvals, and rejections at a glance.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-slate-500">
+            Organizer overview
+          </p>
+          <h1 className="text-3xl font-semibold text-slate-900 mt-1">
+            Event workflow status
+          </h1>
+          <p className="text-sm text-slate-600 mt-2">
+            Track drafts, submissions, approvals, and rejections at a glance.
+          </p>
+        </div>
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/calendar?create=1">Create event</Link>
+        </Button>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">

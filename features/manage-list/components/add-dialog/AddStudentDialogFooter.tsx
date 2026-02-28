@@ -16,7 +16,7 @@ const AddStudentDialogFooter = ({ isSubmitting, submitText, onClose }: AddStuden
     </button>
     <button
       type="submit"
-      className="rounded-full border border-neutral-800 bg-neutral-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-70"
+      className="rounded-full border border-blue-800 bg-blue-900 px-6 py-2 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
       disabled={isSubmitting}
     >
       {isSubmitting ? "Saving..." : submitText}

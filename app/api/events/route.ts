@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       return NextResponse.json(ok(updated), { status: 200 });
     }
 
-    requireRole(user, "ORGANIZER");
+    requireRole(user, ["ORGANIZER", "ADMIN"]);
 
     const created = await prisma.event.create({
       data: {

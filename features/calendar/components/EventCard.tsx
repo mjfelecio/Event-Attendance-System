@@ -1,6 +1,6 @@
 import { CalendarIcon, ClockIcon } from "lucide-react";
 import { Event } from "@/globals/types/events";
-import { capitalize, upperCase } from "lodash";
+import { upperCase } from "lodash";
 
 type Props = {
   event: Event;
@@ -9,6 +9,12 @@ type Props = {
 
 const EventCard = ({ event, onClick }: Props) => {
   const isPast = new Date(event.end ?? event.start) < new Date();
+  const statusStyles: Record<Event["status"], string> = {
+    DRAFT: "bg-amber-100 text-amber-700",
+    PENDING: "bg-sky-100 text-sky-700",
+    APPROVED: "bg-emerald-100 text-emerald-700",
+    REJECTED: "bg-rose-100 text-rose-700",
+  };
 
   const startDate = event.start.toLocaleDateString();
   const endDate = event.end?.toLocaleDateString();
@@ -64,9 +70,16 @@ const EventCard = ({ event, onClick }: Props) => {
               <span>{timeDisplay}</span>
             </div>
 
-            <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center justify-center bg-blue-100 text-blue-600">
-              {upperCase(event.category)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full flex items-center justify-center ${statusStyles[event.status]}`}
+              >
+                {event.status}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full flex items-center justify-center bg-blue-100 text-blue-600">
+                {upperCase(event.category)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

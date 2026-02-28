@@ -73,6 +73,28 @@ export const eventSchema = z
 /** Inferred type from eventSchema for type-safe form usage */
 export type EventForm = z.infer<typeof eventSchema>;
 
+const normalizeAllDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+export const formatEventPayload = (data: EventForm): Event | NewEvent => {
+  const start = data.allDay ? normalizeAllDay(data.start) : data.start;
+  const end = data.allDay ? normalizeAllDay(data.end) : data.end;
+
+  return {
+    id: data.id,
+    title: data.title,
+    location: data.location,
+    category: data.category,
+    includedGroups: data.includedGroups
+      ? JSON.stringify(data.includedGroups)
+      : null,
+    description: data.description,
+    start,
+    end,
+    allDay: data.allDay,
+  } as Event | NewEvent;
+};
+
 /** Default form values for new events */
 const defaultValues: EventForm = {
   title: "",
@@ -128,38 +150,9 @@ export function useEventForm(
    * - Resets form to initial state
    */
   const handleSubmit = form.handleSubmit((data) => {
-    // Normalize all-day events by removing time component
-    if (data.allDay) {
-      const startDay = new Date(
-        data.start.getFullYear(),
-        data.start.getMonth(),
-        data.start.getDate()
-      );
-      const endDay = new Date(
-        data.end.getFullYear(),
-        data.end.getMonth(),
-        data.end.getDate()
-      );
-      data.start = startDay;
-      data.end = endDay;
-    }
-
     // Execute callback with properly formatted data
     if (onSuccess) {
-      onSuccess({
-        id: data.id,
-        title: data.title,
-        location: data.location,
-        category: data.category,
-        // Convert array to JSON string for database storage
-        includedGroups: data.includedGroups
-          ? JSON.stringify(data.includedGroups)
-          : null,
-        description: data.description,
-        start: data.start,
-        end: data.end,
-        allDay: data.allDay,
-      } as Event | NewEvent);
+      onSuccess(formatEventPayload(data));
     }
 
     // Reset form after successful submission
@@ -179,6 +172,7 @@ export function useEventForm(
   return {
     ...form,
     handleSubmit,
+    handleSubmitRaw: form.handleSubmit,
     resetForm,
   };
 }

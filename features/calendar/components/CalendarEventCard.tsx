@@ -13,13 +13,48 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
   const isPast = arg.isPast;
 
   /** Shared styles */
-  const colors = {
-    bg: "bg-blue-500",
-    bar: "bg-blue-700",
-    accent: "bg-blue-600",
-    textMain: "text-white",
-    textSub: "text-slate-100",
+  const status =
+    arg.event.id === "draft"
+      ? "DRAFT"
+      : (arg.event.extendedProps?.status as string | undefined) ?? "APPROVED";
+  const statusColors: Record<string, {
+    bg: string;
+    bar: string;
+    accent: string;
+    textMain: string;
+    textSub: string;
+  }> = {
+    DRAFT: {
+      bg: "bg-orange-500",
+      bar: "bg-orange-700",
+      accent: "bg-orange-600",
+      textMain: "text-white",
+      textSub: "text-orange-100",
+    },
+    PENDING: {
+      bg: "bg-sky-500",
+      bar: "bg-sky-700",
+      accent: "bg-sky-600",
+      textMain: "text-white",
+      textSub: "text-sky-100",
+    },
+    APPROVED: {
+      bg: "bg-emerald-500",
+      bar: "bg-emerald-700",
+      accent: "bg-emerald-600",
+      textMain: "text-white",
+      textSub: "text-emerald-100",
+    },
+    REJECTED: {
+      bg: "bg-rose-500",
+      bar: "bg-rose-700",
+      accent: "bg-rose-600",
+      textMain: "text-white",
+      textSub: "text-rose-100",
+    },
   };
+
+  const colors = statusColors[status] ?? statusColors.APPROVED;
 
   /** All-day events */
   if (isAllDay) {
