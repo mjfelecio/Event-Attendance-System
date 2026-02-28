@@ -66,7 +66,7 @@ const SidebarButton = ({
         : "bg-black text-gray-300 hover:bg-gray-700"
       : active
       ? "bg-blue-100 text-blue-700 font-medium"
-      : "bg-white text-gray-800 hover:bg-slate-200 border border-transparent";
+      : "bg-neutral text-gray-800 hover:bg-slate-200 border border-transparent";
 
   return (
     <button
@@ -128,7 +128,7 @@ const Sidebar = () => {
   const sidebarBase =
     theme === "dark"
       ? "bg-black text-white"
-      : "bg-gray-100 text-black border-r border-gray-300";
+      : "bg-neutral-100 text-black border-r border-gray-300";
 
   const handleLogout = () => {
     logout();
