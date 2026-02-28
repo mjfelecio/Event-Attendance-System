@@ -1,180 +1,209 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { GiHamburgerMenu } from "react-icons/gi";
-import { IconType } from "react-icons/lib";
-import { RxDashboard } from "react-icons/rx";
-import { LuCalendar, LuLogOut, LuSunMedium, LuMoon } from "react-icons/lu";
-import { FiUsers } from "react-icons/fi";
-import { IoSettingsOutline } from "react-icons/io5";
-import { useSidebar } from "@/globals/contexts/SidebarContext";
-import { LuQrCode } from "react-icons/lu";
-import { Database } from "lucide-react";
-import { useAuth } from "@/globals/contexts/AuthContext";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  BarChart3,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  LayoutDashboard,
+  LogOut,
+  QrCode,
+  Settings,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
-/**
- * Represents a single navigation item in the sidebar.
- */
+import { useAuth } from "@/globals/contexts/AuthContext";
+import { useSidebar } from "@/globals/contexts/SidebarContext";
+import { cn } from "@/globals/libs/shad-cn";
+
 type NavigationItem = {
   text: string;
-  icon: IconType;
+  icon: LucideIcon;
   route: string;
 };
 
-type SidebarButtonProps = {
-  text: string;
-  icon: IconType;
+type NavigationButtonProps = {
+  item: NavigationItem;
   isExpanded: boolean;
+  active: boolean;
   onClick: () => void;
-  active?: boolean;
-  theme: "light" | "dark";
-};
-
-type LogoutButtonProps = {
-  isExpanded: boolean;
-  onClick: () => void;
-};
-
-type ThemeSwitchProps = {
-  theme: "light" | "dark";
-  setTheme: (theme: "light" | "dark") => void;
 };
 
 const navigationItems: NavigationItem[] = [
-  { text: "Dashboard", route: "/dashboard", icon: RxDashboard },
-  { text: "Calendar", route: "/calendar", icon: LuCalendar },
-  { text: "Manage List", route: "/manage-list", icon: FiUsers },
-  { text: "Attendance", route: "/attendance", icon: LuQrCode },
-  { text: "Reports", route: "/reports", icon: Database },
-  { text: "Settings", route: "/settings", icon: IoSettingsOutline },
+  { text: "Dashboard", route: "/dashboard", icon: LayoutDashboard },
+  { text: "Calendar", route: "/calendar", icon: CalendarDays },
+  { text: "Manage List", route: "/manage-list", icon: Users },
+  { text: "Attendance", route: "/attendance", icon: QrCode },
+  { text: "Reports", route: "/reports", icon: BarChart3 },
+  { text: "Settings", route: "/settings", icon: Settings },
 ];
 
-const SidebarButton = ({
-  text,
-  icon: Icon,
-  onClick,
+const NavigationButton = ({
+  item,
   isExpanded,
-  active = false,
-  theme,
-}: SidebarButtonProps) => {
-  const conditionalStyles = isExpanded ? "hover:translate-x-1" : "";
-  const baseColors =
-    theme === "dark"
-      ? active
-        ? "bg-gray-700 text-blue-400"
-        : "bg-black text-gray-300 hover:bg-gray-700"
-      : active
-      ? "bg-blue-100 text-blue-700 font-medium"
-      : "bg-neutral text-gray-800 hover:bg-slate-200 border border-transparent";
+  active,
+  onClick,
+}: NavigationButtonProps) => {
+  const Icon = item.icon;
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`rounded-md p-2 flex items-center gap-3 transition-all hover:cursor-grab duration-300 ${conditionalStyles} ${baseColors}`}
-    >
-      <div className="size-8 flex items-center justify-center ">
-        <Icon size={24} />
-      </div>
-      {isExpanded && (
-        <p className="font-medium text-md overflow-hidden whitespace-nowrap transition-opacity duration-300 opacity-100">
-          {text}
-        </p>
+      className={cn(
+        "group flex w-full items-center rounded-xl px-3 py-2.5 transition-all duration-200",
+        isExpanded ? "gap-3" : "justify-center",
+        active
+          ? "bg-[linear-gradient(90deg,rgba(11,77,255,0.36)_0%,rgba(109,40,217,0.34)_55%,rgba(239,68,68,0.3)_100%)] text-white shadow-[0_10px_24px_rgba(79,70,229,0.32)]"
+          : "text-slate-300 hover:bg-white/10 hover:text-white"
       )}
-    </button>
-  );
-};
-
-const LogoutButton = ({ isExpanded, onClick }: LogoutButtonProps) => (
-  <button
-    onClick={onClick}
-    className={`rounded-md p-2 flex items-center gap-3 transition-all duration-300 hover:translate-x-1
-      bg-red-600 text-white hover:bg-red-700 hover:cursor-grab`}
-  >
-    <div className="size-8 flex items-center justify-center shrink-0">
-      <LuLogOut size={24} />
-    </div>
-    {isExpanded && (
-      <p className="font-medium text-md overflow-hidden whitespace-nowrap transition-opacity duration-300 opacity-100">
-        Logout
-      </p>
-    )}
-  </button>
-);
-
-const ThemeSwitch = ({ theme, setTheme }: ThemeSwitchProps) => {
-  return (
-    <div
-      className={`rounded-lg size-10 flex justify-center items-center hover:cursor-pointer ${
-        theme === "light" ? "hover:bg-gray-300" : "hover:bg-gray-600"
-      }`}
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      aria-label={item.text}
+      title={item.text}
     >
-      {theme === "dark" ? <LuSunMedium size={22} /> : <LuMoon size={22} />}
-    </div>
+      <Icon className="size-5 shrink-0" />
+      {isExpanded ? (
+        <span className="truncate text-sm font-medium">{item.text}</span>
+      ) : null}
+    </button>
   );
 };
 
 const Sidebar = () => {
   const { toggleExpanded, isExpanded } = useSidebar();
-  const { logout } = useAuth();
-
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { logout, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
-  const conditionalSidebarStyles = isExpanded ? "w-64" : "w-16";
+  const sidebarWidth = isExpanded ? "w-72" : "w-20";
+  const isRouteActive = (route: string) =>
+    pathname === route || pathname.startsWith(`${route}/`);
 
-  const sidebarBase =
-    theme === "dark"
-      ? "bg-black text-white"
-      : "bg-neutral-100 text-black border-r border-gray-300";
-
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.replace("/login");
   };
 
+  const initials = (user?.name ?? "Organizer")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
   return (
-    <div className={`${conditionalSidebarStyles}`}>
-      <div
-        className={`min-h-screen fixed print:hidden flex flex-col justify-between p-2 transition-all duration-300 ${conditionalSidebarStyles} ${sidebarBase}`}
+    <div className={cn("shrink-0 transition-all duration-300", sidebarWidth)}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r border-white/10 bg-slate-950/95 p-3 text-slate-100 shadow-[0_20px_60px_rgba(2,6,23,0.5)] backdrop-blur-xl print:hidden transition-all duration-300",
+          sidebarWidth
+        )}
       >
-        <div>
-          {/* Sidebar Header */}
-          <div
-            className="mb-6 rounded-lg size-10 m-1 flex justify-center items-center hover:cursor-grab"
-            onClick={() => toggleExpanded()}
-          >
-            <GiHamburgerMenu size={22} />
-          </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-2">
+          {isExpanded ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <Image
+                  src="/login/logo.png"
+                  alt="ACLC logo"
+                  width={38}
+                  height={38}
+                  className="size-[38px] object-contain"
+                  priority
+                />
+                <div className="leading-tight">
+                  <p className="text-xs font-semibold tracking-[0.18em] text-white/90">
+                    ACLC
+                  </p>
+                  <p className="text-[11px] text-slate-300">Attendance</p>
+                </div>
+              </div>
 
-          {/* Sidebar Navigations */}
-          <div className="flex flex-col gap-1">
-            {navigationItems.map((item, index) => (
-              <SidebarButton
-                key={index}
-                text={item.text}
-                icon={item.icon}
-                isExpanded={isExpanded}
-                onClick={() =>
-                  item.route !== pathname && router.push(item.route)
+              <button
+                type="button"
+                onClick={toggleExpanded}
+                className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Collapse sidebar"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+                <Image
+                  src="/login/logo.png"
+                  alt="ACLC logo"
+                  width={42}
+                  height={42}
+                  className="size-10 object-contain"
+                  priority
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleExpanded}
+                className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Expand sidebar"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        <nav className="mt-4 flex-1 space-y-1.5">
+          {navigationItems.map((item) => (
+            <NavigationButton
+              key={item.route}
+              item={item}
+              isExpanded={isExpanded}
+              active={isRouteActive(item.route)}
+              onClick={() => {
+                if (!isRouteActive(item.route)) {
+                  router.push(item.route);
                 }
-                active={pathname === item.route}
-                theme={theme}
-              />
-            ))}
-          </div>
-        </div>
+              }}
+            />
+          ))}
+        </nav>
 
-        {/* Logout Button pinned at bottom */}
-        <div className="mb-2 flex flex-row justify-between items-center">
-          <LogoutButton isExpanded={isExpanded} onClick={handleLogout} />
-          {/* {expanded && (
-          <ThemeSwitch theme={theme} setTheme={(theme) => setTheme(theme)} />
-        )} */}
+        <div className="space-y-2 border-t border-white/10 pt-3">
+          {isExpanded ? (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+              <p className="truncate text-sm font-semibold text-white">
+                {user?.name ?? "Organizer"}
+              </p>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-300">
+                {user?.role ?? "ORGANIZER"}
+              </p>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_55%,#ef4444_100%)] text-xs font-semibold text-white">
+                {initials || "O"}
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className={cn(
+              "flex w-full items-center rounded-xl bg-red-600 px-3 py-2.5 text-white transition-colors hover:bg-red-700",
+              isExpanded ? "gap-3" : "justify-center"
+            )}
+            aria-label="Logout"
+            title="Logout"
+          >
+            <LogOut className="size-5 shrink-0" />
+            {isExpanded ? <span className="text-sm font-medium">Logout</span> : null}
+          </button>
         </div>
-      </div>
+      </aside>
     </div>
   );
 };
