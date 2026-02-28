@@ -86,8 +86,8 @@ const CalendarPage = () => {
   }, [searchParams, handleDrawerOpen]);
 
   return (
-      <div className="flex flex-col flex-1 bg-white p-4 md:p-8">
-      <section className="min-h-[calc(100vh-2.5rem)] md:min-h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col flex-1 bg-white p-4 md:p-8">
+      <section className="h-[calc(100vh-2.5rem)] md:h-[calc(100vh-3.5rem)]">
         {/* Calendar Component - displays events and allows date selection */}
         <Calendar
           isDrawerOpen={isDrawerOpen}
