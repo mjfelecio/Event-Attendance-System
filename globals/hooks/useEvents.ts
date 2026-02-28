@@ -71,10 +71,8 @@ export const useDeleteEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => {
-      return fetchApi("/api/events", {
+      return fetchApi<null>(`/api/events/${id}`, {
         method: "DELETE",
-        body: JSON.stringify({ id }),
-        headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () =>
