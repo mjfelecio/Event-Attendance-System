@@ -1,5 +1,5 @@
-import { AttendanceStatus } from "@prisma/client";
-import { ATTENDANCE_STATUS_ICONS } from "../constants/attendanceStatus";
+import { AttendanceStatus } from "@/globals/types/records";
+import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { capitalize } from "lodash";
 
 type Props = {
@@ -7,24 +7,18 @@ type Props = {
 };
 
 const statusStyles: Record<AttendanceStatus, string> = {
-  PRESENT: "bg-emerald-50 border-emerald-100",
-  LATE: "bg-amber-50 border-amber-100",
-  EXCUSED: "bg-sky-50 border-sky-100",
-  ABSENT: "bg-rose-50 border-rose-100",
+  present: "bg-emerald-50 border-emerald-100",
+  absent: "bg-rose-50 border-rose-100",
 };
 
 const iconContainerStyles: Record<AttendanceStatus, string> = {
-  PRESENT: "border-emerald-400 text-emerald-600",
-  LATE: "border-amber-400 text-amber-600",
-  EXCUSED: "border-sky-400 text-sky-600",
-  ABSENT: "border-rose-400 text-rose-600",
+  present: "border-emerald-400 text-emerald-600",
+  absent: "border-rose-400 text-rose-600",
 };
 
 const iconStyles: Record<AttendanceStatus, string> = {
-  PRESENT: "translate-x-0.5",
-  LATE: "translate-x-0.5",
-  EXCUSED: "",
-  ABSENT: "translate-x-0.5",
+  present: "translate-x-0.5",
+  absent: "translate-x-0.5",
 };
 
 const AttendanceStatusCard = ({ status }: Props) => {
@@ -32,7 +26,7 @@ const AttendanceStatusCard = ({ status }: Props) => {
   const containerStyle = statusStyles[status];
   const iconContainerStyle = iconContainerStyles[status];
   const iconStyle = iconStyles[status];
-  const statusText = capitalize(status); // Capitalize
+  const statusText = capitalize(status);
 
   return (
     <div

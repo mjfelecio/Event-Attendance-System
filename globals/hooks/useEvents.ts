@@ -77,6 +77,23 @@ export const useDeleteEvent = () => {
 };
 
 /**
+ * Sets the event to start recording timeout instead of timein 
+ */
+export const useStartTimeoutMode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => {
+      return fetchApi(`/api/events/${id}/timeout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: (_, id) =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.withId(id) }),
+  });
+};
+
+/**
  * Fetches stats from the event
  *
  * @returns EventStats
@@ -101,6 +118,19 @@ const useEvents = () => {
     queryKey: queryKeys.events.all(),
     queryFn: async () => {
       const events = await fetchApi<EventAPI[]>("/api/events");
+      return events.map(transformEvent);
+    },
+  });
+};
+
+/**
+ * Fetches all events
+ */
+export const useFetchApprovedEvents = () => {
+  return useQuery({
+    queryKey: queryKeys.events.allApproved(),
+    queryFn: async () => {
+      const events = await fetchApi<EventAPI[]>("/api/events?status=APPROVED");
       return events.map(transformEvent);
     },
   });

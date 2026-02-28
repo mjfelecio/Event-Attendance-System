@@ -5,13 +5,15 @@ import { PiExport } from "react-icons/pi";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { FaUserGroup } from "react-icons/fa6";
 import { VscPercentage } from "react-icons/vsc";
-
 import ButtonWithIcon from "@/globals/components/shared/ButtonWithIcon";
 import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import DataCard from "@/features/attendance/components/DataCard";
-
-import useEvents, { useStatsOfEvent } from "@/globals/hooks/useEvents";
+import {
+  useFetchApprovedEvents,
+  useStatsOfEvent,
+} from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
+import TurnOnTimeoutMode from "@/features/attendance/components/TurnOnTimeoutMode";
 
 type Props = {
   selectedEvent: Event | null;
@@ -22,7 +24,7 @@ const AttendancePageHeader: React.FC<Props> = ({
   selectedEvent,
   onChangeEvent,
 }) => {
-  const { data: events, isLoading: isEventsLoading } = useEvents();
+  const { data: events, isLoading: isEventsLoading } = useFetchApprovedEvents();
   const {
     data: eventStats,
     isLoading: isStatsLoading,
@@ -77,13 +79,21 @@ const AttendancePageHeader: React.FC<Props> = ({
           )}
         </div>
 
-        {/* Export Button */}
-        <ButtonWithIcon
-          icon={PiExport}
-          onClick={() => alert("Exporting attendance records...")}
-        >
-          Export
-        </ButtonWithIcon>
+        <div className="flex flex-row gap-4 items-center">
+          <TurnOnTimeoutMode
+            key={selectedEvent?.id}
+            eventId={selectedEvent?.id}
+            isTimeout={selectedEvent?.isTimeout ?? false}
+          />
+
+          {/* Export Button */}
+          <ButtonWithIcon
+            icon={PiExport}
+            onClick={() => alert("Exporting attendance records...")}
+          >
+            Export
+          </ButtonWithIcon>
+        </div>
       </div>
 
       {/* === Header Bottom === */}

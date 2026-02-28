@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Record, NewRecord } from "@/globals/types/records";
 import { StudentAttendanceRecord } from "@/globals/types/students";
-import { AttendanceStatus } from "@prisma/client";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
 
@@ -37,10 +36,12 @@ export const useCreateRecord = (eventId: string) => {
       // Apply optimistic update
       if (previousRecords) {
         const optimisticRecord: Record = {
-          ...(newRecord as Record),
+          ...newRecord,
           id: `temp-${Date.now()}`, // Temporary client-only ID
           createdAt: new Date(),
           updatedAt: new Date(),
+          timein: new Date(),
+          timeout: null,
         };
 
         queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
@@ -59,9 +60,14 @@ export const useCreateRecord = (eventId: string) => {
     },
 
     /** Re-sync server state after success */
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEvent(eventId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
         exact: true,
       });
     },
@@ -69,59 +75,64 @@ export const useCreateRecord = (eventId: string) => {
 };
 
 /**
- * Updates the attendance status of a single record.
+ * Updates an attendance record.
  *
- * Uses optimistic updates so the UI feels instant.
+ * Uses optimistic updates to immediately reflect the new record in the UI
+ * before the server confirms the change.
  */
-export const useUpdateRecordStatus = (eventId: string) => {
+export const useUpdateAttendanceRecord = (eventId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      recordId,
-      status,
-    }: {
-      recordId: string;
-      status: AttendanceStatus;
-    }) => {
-      return fetchApi<Record>(`/api/records/${recordId}/${status}`, {
+    mutationFn: (recordId: string) => {
+      return fetchApi<Record>(`/api/records/${recordId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
       });
     },
 
-    onMutate: async ({ recordId, status }) => {
+    /** Runs before the mutation request is sent */
+    onMutate: async (recordId) => {
       const key = queryKeys.records.fromEvent(eventId);
 
+      // Cancel outgoing refetches to prevent overwriting optimistic state
       await queryClient.cancelQueries({ queryKey: key });
 
-      // Snapshot current cache
-      const previousRecords =
-        queryClient.getQueryData<StudentAttendanceRecord[]>(key);
+      // Snapshot current cache state so we can rollback if needed
+      const previousRecords = queryClient.getQueryData<Record[]>(key);
 
-      // Optimistic in-place update
-      if (previousRecords) {
-        queryClient.setQueryData(
-          key,
-          previousRecords.map((record) =>
-            record.id === recordId ? { ...record, status } : record
-          )
-        );
+      const existingRecord = previousRecords?.find((r) => r.id === recordId);
+
+      // Apply optimistic update
+      if (previousRecords && existingRecord) {
+        const optimisticRecord: Record = {
+          ...existingRecord,
+          timeout: new Date(),
+        };
+
+        queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
       }
 
+      // Return context for rollback in onError
       return { previousRecords };
     },
 
-    onError: (_err, _vars, context) => {
+    /** Rollback optimistic update if server request fails */
+    onError: (_err, _variables, context) => {
       const key = queryKeys.records.fromEvent(eventId);
       if (context?.previousRecords) {
         queryClient.setQueryData(key, context.previousRecords);
       }
     },
 
-    onSuccess: () => {
+    /** Re-sync server state after success */
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEvent(eventId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
         exact: true,
       });
     },
@@ -156,7 +167,7 @@ export const useDeleteRecord = (eventId: string) => {
       if (previousRecords) {
         queryClient.setQueryData(
           key,
-          previousRecords.filter((record) => record.id !== recordId)
+          previousRecords.filter((record) => record.id !== recordId),
         );
       }
 
@@ -170,9 +181,14 @@ export const useDeleteRecord = (eventId: string) => {
       }
     },
 
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEvent(eventId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
         exact: true,
       });
     },
@@ -190,7 +206,7 @@ export const useAllRecordsFromEvent = (eventId?: string) => {
       if (!eventId) return null;
 
       return fetchApi<StudentAttendanceRecord[]>(
-        `/api/events/${eventId}/records`
+        `/api/events/${eventId}/records`,
       );
     },
   });
@@ -201,7 +217,10 @@ export const useAllRecordsFromEvent = (eventId?: string) => {
  *
  * Returns null when no record exists.
  */
-export const useRecordOfStudentInEvent = (eventId?: string, studentId?: string) => {
+export const useRecordOfStudentInEvent = (
+  eventId?: string,
+  studentId?: string,
+) => {
   return useQuery({
     queryKey: queryKeys.records.fromEventForStudent(eventId!, studentId!),
     enabled: !!eventId && !!studentId,
@@ -209,7 +228,7 @@ export const useRecordOfStudentInEvent = (eventId?: string, studentId?: string) 
       if (!eventId || !studentId) return null;
 
       return fetchApi<Record>(
-        `/api/records?eventId=${eventId}&studentId=${studentId}`
+        `/api/records?eventId=${eventId}&studentId=${studentId}`,
       );
     },
   });

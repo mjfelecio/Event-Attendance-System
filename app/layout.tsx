@@ -4,6 +4,7 @@ import "./globals.css";
 import QueryProvider from "@/globals/providers/QueryProvider";
 import { Toaster } from "@/globals/components/shad-cn/sonner";
 import { AuthProvider } from "@/globals/contexts/AuthContext";
+import { ConfirmProvider } from "@/globals/contexts/ConfirmModalContext";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,9 +30,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <QueryProvider>{children}</QueryProvider>
-        </AuthProvider>
+        <ConfirmProvider>
+          <AuthProvider>
+            <QueryProvider>{children}</QueryProvider>
+          </AuthProvider>
+        </ConfirmProvider>
         <Toaster />
       </body>
     </html>
