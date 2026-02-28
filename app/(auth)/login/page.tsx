@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/globals/contexts/AuthContext";
-import { loginSchema } from "@/features/auth/schema/loginSchema";
 import { ZodError } from "zod";
+
+import AuthSplitLayout from "@/features/auth/components/AuthSplitLayout";
+import { loginSchema } from "@/features/auth/schema/loginSchema";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 const LoginPage = () => {
   const { login, isLoading, user } = useAuth();
@@ -87,8 +89,8 @@ const LoginPage = () => {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-100 text-slate-600">
-        Preparing sign in…
+      <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_50%,#ef4444_100%)] text-white/90">
+        Preparing sign in...
       </main>
     );
   }
@@ -96,107 +98,74 @@ const LoginPage = () => {
   if (user) return null;
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center bg-[url('/login/bg.png')] bg-cover bg-center">
-      {/* Glass Card */}
-      <div
-        className="
-          relative overflow-hidden
-          w-full max-w-sm rounded-2xl p-8
-          bg-gradient-to-br from-white/70 via-white/45 to-white/30
-          backdrop-blur-2xl
-          border border-white/50
-          shadow-[0_10px_40px_rgba(15,23,42,0.18)]
-        "
-      >
-        {/* Glass highlight */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/60 via-white/10 to-transparent opacity-60" />
-
-        <div className="relative">
-          <h1 className="text-2xl font-semibold text-slate-900 text-center">
-            Event Attendance
-          </h1>
-
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Email
-                <input
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="
-                  mt-1 w-full rounded-lg
-                  bg-white/50 border border-white/60
-                  px-3 py-2 text-sm
-                  placeholder:text-slate-400
-                  focus:border-white focus:ring-2 focus:ring-white/60 focus:outline-none
-                "
-                />
-              </label>
-              {fieldErrors?.email && (
-                <p className="text-sm text-red-600" role="alert">
-                  * {fieldErrors.email}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Password
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="
-                  mt-1 w-full rounded-lg
-                  bg-white/50 border border-white/60
-                  px-3 py-2 text-sm
-                  placeholder:text-slate-400
-                  focus:border-white focus:ring-2 focus:ring-white/60 focus:outline-none
-                "
-                />
-              </label>
-              {fieldErrors?.password && (
-                <p className="text-sm text-red-600" role="alert">
-                  * {fieldErrors.password}
-                </p>
-              )}
-            </div>
-
-            {loginError && (
-              <p className="text-sm text-red-600" role="alert">
-                * {loginError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={isSubmitting || isLoading}
-              className="
-                w-full rounded-lg
-                bg-slate-900 py-2 text-sm font-semibold text-white
-                transition hover:bg-slate-800
-                disabled:cursor-not-allowed disabled:opacity-70
-              "
-            >
-              {isSubmitting ? "Signing in..." : "Sign in"}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-slate-600">
-            New organizer?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-slate-900 underline-offset-2 hover:underline"
-            >
-              Request access
-            </Link>
-          </p>
+    <AuthSplitLayout
+      mode="login"
+      title="Sign In"
+      subtitle="Enter your organizer credentials to continue."
+      footer={
+        <p>
+          New organizer?{" "}
+          <Link
+            href="/signup"
+            className="font-semibold text-slate-900 underline-offset-2 hover:underline"
+          >
+            Request access
+          </Link>
+        </p>
+      }
+    >
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Email
+            <input
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+          </label>
+          {fieldErrors?.email && (
+            <p className="mt-1 text-sm text-red-600" role="alert">
+              * {fieldErrors.email}
+            </p>
+          )}
         </div>
-      </div>
-    </main>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Password
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            />
+          </label>
+          {fieldErrors?.password && (
+            <p className="mt-1 text-sm text-red-600" role="alert">
+              * {fieldErrors.password}
+            </p>
+          )}
+        </div>
+
+        {loginError && (
+          <p className="text-sm text-red-600" role="alert">
+            * {loginError}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={isSubmitting || isLoading}
+          className="w-full rounded-xl bg-[linear-gradient(90deg,#0b4dff_0%,#6d28d9_50%,#ef4444_100%)] py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(109,40,217,0.35)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting ? "Signing in..." : "Sign in"}
+        </button>
+      </form>
+    </AuthSplitLayout>
   );
 };
 
