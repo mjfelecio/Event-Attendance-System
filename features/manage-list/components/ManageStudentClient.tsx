@@ -54,6 +54,11 @@ const ManageStudentClient = ({
     visibleRows,
   } = useStudentTableControls({ rows: studentRows });
 
+  const totalRows = studentRows.length;
+  const visibleRowsCount = visibleRows.length;
+  const activeFilterCount = Object.values(filters).filter((value) => value !== "all").length;
+  const isSearching = searchValue.trim().length > 0;
+
   const normalizeFormData = (data: StudentFormData) => ({
     id: data.id,
     lastName: data.lastName.trim(),
@@ -177,7 +182,7 @@ const ManageStudentClient = ({
   return (
     <div className="flex w-full flex-col gap-6">
       {submitError && (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="mx-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm md:mx-12">
           {submitError}
         </div>
       )}
@@ -206,10 +211,17 @@ const ManageStudentClient = ({
         setIsFilterOpen={setIsFilterOpen}
         onAddStudent={() => setIsAddDialogOpen(true)}
         onImportStudents={handleImportStudents}
+        totalRows={totalRows}
+        visibleRowsCount={visibleRowsCount}
+        activeFilterCount={activeFilterCount}
+        isSearching={isSearching}
       />
 
       <StudentTable
         rows={visibleRows}
+        totalRows={totalRows}
+        activeFilterCount={activeFilterCount}
+        isSearching={isSearching}
         onEditStudent={handleEditStudent}
         onDeleteStudent={handleDeleteStudent}
       />

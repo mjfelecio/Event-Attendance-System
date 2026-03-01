@@ -4,15 +4,23 @@ import { SHS_STRANDS } from "@/features/manage-list/constants/categories";
 
 const ShsSelectionBoard = () => {
   return (
-    <div className="flex w-full flex-col items-center gap-8 text-center">
-      <h1 className="text-2xl font-semibold tracking-[0.35em] text-neutral-800 md:text-3xl">
-        WHICH STRAND?
-      </h1>
+    <div className="flex w-full flex-col gap-6 text-center">
+      <header>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
+          SHS Selection
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+          Which Strand?
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Choose a strand to view and manage students.
+        </p>
+      </header>
 
       <SelectionBoardFrame>
-        <div className="grid gap-10 md:grid-cols-2">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-500">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Academics
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -27,7 +35,7 @@ const ShsSelectionBoard = () => {
                       label: strand.title,
                     },
                   }}
-                  className="rounded-[1.25rem] border border-neutral-300 px-6 py-4 text-sm font-semibold uppercase tracking-widest text-neutral-700 transition hover:-translate-y-1 hover:border-neutral-400 hover:text-neutral-900"
+                  className="group rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/60 hover:text-indigo-700 hover:shadow-[0_10px_20px_rgba(37,99,235,0.16)]"
                 >
                   {strand.title}
                 </Link>
@@ -35,8 +43,8 @@ const ShsSelectionBoard = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-500">
+          <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Technical Vocational Livelihood
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -51,7 +59,7 @@ const ShsSelectionBoard = () => {
                       label: strand.title,
                     },
                   }}
-                  className="rounded-[1.25rem] border border-neutral-300 px-6 py-4 text-sm font-semibold uppercase tracking-widest text-neutral-700 transition hover:-translate-y-1 hover:border-neutral-400 hover:text-neutral-900"
+                  className="group rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/60 hover:text-indigo-700 hover:shadow-[0_10px_20px_rgba(37,99,235,0.16)]"
                 >
                   {strand.title}
                 </Link>

@@ -5,13 +5,21 @@ import { HOUSES } from "@/features/manage-list/constants/categories";
 
 const HouseSelectionBoard = () => {
   return (
-    <div className="flex w-full flex-col items-center gap-8 text-center">
-      <h1 className="text-2xl font-semibold tracking-[0.35em] text-neutral-800 md:text-3xl">
-        WHICH HOUSE?
-      </h1>
+    <div className="flex w-full flex-col gap-6 text-center">
+      <header>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">
+          House Selection
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+          Which House?
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Pick a house to view its members.
+        </p>
+      </header>
 
       <SelectionBoardFrame>
-        <div className="flex w-full flex-wrap justify-center gap-4 md:flex-nowrap">
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {HOUSES.map((house) => (
             <Link
               key={house.slug}
@@ -23,20 +31,21 @@ const HouseSelectionBoard = () => {
                   label: house.name,
                 },
               }}
-              className="group flex h-[260px] w-[220px] flex-shrink-0 flex-col items-center justify-center gap-6 rounded-[2.25rem] border border-neutral-300 bg-white px-8 py-6 text-center shadow-sm transition-all hover:-translate-y-3 hover:border-neutral-400 hover:shadow-md md:w-[240px]"
+              className="group relative flex min-h-[250px] flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-6 text-center shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-2 hover:border-indigo-200 hover:shadow-[0_18px_34px_rgba(37,99,235,0.16)]"
             >
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_58%)] opacity-60 transition group-hover:opacity-100" />
               <div className="flex items-center justify-center">
-                <div className="relative h-48 w-48">
+                <div className="relative h-40 w-40">
                   <Image
                     src={house.logo}
                     alt={`${house.name} logo`}
                     fill
-                    sizes="14rem"
+                    sizes="10rem"
                     className="object-contain"
                   />
                 </div>
               </div>
-              <p className="text-lg font-semibold uppercase tracking-wider text-neutral-700">
+              <p className="relative text-2xl font-semibold uppercase tracking-[0.12em] text-slate-800">
                 {house.name}
               </p>
             </Link>
