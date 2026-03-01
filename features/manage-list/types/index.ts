@@ -8,7 +8,7 @@ export type StudentStat = {
   icon?: LucideIcon;
   logo?: string;
   align: "left" | "right";
-  value: number;
+  value?: number | null;
   category: ManageListCategory;
 };
 
