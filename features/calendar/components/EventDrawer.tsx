@@ -100,7 +100,7 @@ const EventDrawer = ({
     resetForm,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useEventForm(undefined, initData);
 
   // Watch form field changes to conditionally render sections
@@ -221,8 +221,18 @@ const EventDrawer = ({
   const handleApproveNow = handleSubmitRaw(
     async (data) => {
       try {
-        const saved = await saveEvent(formatEventPayload(data));
-        await approveEvent({ id: saved.id });
+        const existingId = initialData?.id;
+        const isDirectApprovalOnExistingEvent =
+          isEdit &&
+          !!existingId &&
+          !isDirty &&
+          (eventStatus === "PENDING" || eventStatus === "REJECTED");
+
+        const eventId = isDirectApprovalOnExistingEvent
+          ? existingId
+          : (await saveEvent(formatEventPayload(data))).id;
+
+        await approveEvent({ id: eventId });
         toastSuccess("Event approved", "The event is now live.");
         onClose();
       } catch (error) {
@@ -273,8 +283,15 @@ const EventDrawer = ({
   const eventStatus = initialData?.status ?? "DRAFT";
   const isReadOnlyApprovedView =
     isEdit && isOrganizer && !isOwner && eventStatus === "APPROVED";
+  const isReadOnlyPendingView =
+    isEdit && isOrganizer && eventStatus === "PENDING";
+  const isReadOnlyView = isReadOnlyApprovedView || isReadOnlyPendingView;
   const canSubmit = isOrganizer && eventStatus === "DRAFT";
-  const canApprove = isAdmin && (eventStatus === "DRAFT" || eventStatus === "PENDING");
+  const canApprove =
+    isAdmin &&
+    (eventStatus === "DRAFT" ||
+      eventStatus === "PENDING" ||
+      eventStatus === "REJECTED");
   const isBusy = isSaving || isSubmitting || isApproving || isDeleting;
   const saveLabel = isEdit ? "Save changes" : "Save draft";
 
@@ -287,7 +304,7 @@ const EventDrawer = ({
       <DrawerContent className="border-l border-slate-200/80 bg-white shadow-[-18px_0_42px_rgba(15,23,42,0.18)] data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:max-w-[480px]">
         <form
           onSubmit={(event) => {
-            if (isReadOnlyApprovedView) {
+            if (isReadOnlyView) {
               event.preventDefault();
               return;
             }
@@ -305,15 +322,19 @@ const EventDrawer = ({
                 Approved event (view only). Only the event creator or an admin
                 can edit this event.
               </p>
+            ) : isReadOnlyPendingView ? (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-700">
+                This event is pending admin review. Editing is temporarily locked.
+              </p>
             ) : null}
           </DrawerHeader>
 
           <div ref={formScrollRef} className="flex-1 overflow-y-auto">
             {/* Main form content */}
             <fieldset
-              disabled={isReadOnlyApprovedView}
+              disabled={isReadOnlyView}
               className={`flex flex-col gap-4 px-5 pb-6 pt-4 ${
-                isReadOnlyApprovedView ? "opacity-80" : ""
+                isReadOnlyView ? "opacity-80" : ""
               }`}
             >
               {/* Event Title Field */}
@@ -493,9 +514,13 @@ const EventDrawer = ({
 
           {/* Action Buttons Footer */}
           <DrawerFooter className="w-full border-t border-slate-200/80 bg-white/95 backdrop-blur">
-            {isReadOnlyApprovedView ? (
+            {isReadOnlyView ? (
               <div className="flex w-full items-center justify-between gap-3">
-                <p className="text-sm text-slate-500">View-only event details.</p>
+                <p className="text-sm text-slate-500">
+                  {isReadOnlyPendingView
+                    ? "Pending events are view-only until reviewed by an admin."
+                    : "View-only event details."}
+                </p>
                 <DrawerClose asChild>
                   <Button
                     type="button"

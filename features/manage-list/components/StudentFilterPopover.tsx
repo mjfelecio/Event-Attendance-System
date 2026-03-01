@@ -138,48 +138,52 @@ const StudentFilterPopover = ({
       id={popoverId}
       role="dialog"
       aria-label="Filter students"
-      className="absolute right-0 top-full z-20 mt-2 w-80 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_40px_RGBA(15,23,42,0.12)]"
+      className="absolute right-0 top-full z-20 mt-2 w-[min(20rem,calc(100vw-2rem))] max-h-[calc(100vh-6rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_40px_RGBA(15,23,42,0.12)]"
       ref={containerRef}
     >
-      <header className="mb-4">
-        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Filter Students By
-        </p>
-      </header>
+      <div className="flex h-full max-h-[calc(100vh-8rem)] flex-col">
+        <header className="mb-4 shrink-0">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Filter Students By
+          </p>
+        </header>
 
-      <div className="flex flex-col gap-5 text-sm text-slate-700">
-        {renderSelect('Department', filters.department, (next) => updateFilter('department', next), departments, 'department')}
-        {renderSelect(
-          'Program / Strand',
-          filters.program,
-          (next) => updateFilter('program', next),
-          programs,
-          'program',
-        )}
-        {renderSelect('House', filters.house, (next) => updateFilter('house', next), houses, 'house')}
-        {renderSelect('Section', filters.section, (next) => updateFilter('section', next), sections, 'section')}
-        {renderSelect('Year Level', filters.level, (next) => updateFilter('level', next), levels, 'level')}
-      </div>
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto pr-1 text-sm text-slate-700">
+          {renderSelect('Department', filters.department, (next) => updateFilter('department', next), departments, 'department')}
+          {renderSelect(
+            'Program / Strand',
+            filters.program,
+            (next) => updateFilter('program', next),
+            programs,
+            'program',
+          )}
+          {renderSelect('House', filters.house, (next) => updateFilter('house', next), houses, 'house')}
+          {renderSelect('Section', filters.section, (next) => updateFilter('section', next), sections, 'section')}
+          {renderSelect('Year Level', filters.level, (next) => updateFilter('level', next), levels, 'level')}
+        </div>
 
-      <hr className="my-5 border-slate-200" />
+        <hr className="my-5 border-slate-200" />
 
-      <div className="flex items-center justify-center gap-2">
-        <button
-          type="button"
-          onClick={clearFilters}
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3.5 py-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
-        >
-          <Eraser className="h-3.5 w-3.5" strokeWidth={1.6} />
-          Reset
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex items-center gap-1.5 rounded-full border border-indigo-600 bg-indigo-600 px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-white transition hover:bg-indigo-500"
-        >
-          <Check className="h-3.5 w-3.5" strokeWidth={1.6} />
-          Done
-        </button>
+        <div className="shrink-0">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3.5 py-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
+            >
+              <Eraser className="h-3.5 w-3.5" strokeWidth={1.6} />
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 rounded-full border border-indigo-600 bg-indigo-600 px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-white transition hover:bg-indigo-500"
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={1.6} />
+              Done
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

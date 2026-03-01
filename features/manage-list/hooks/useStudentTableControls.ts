@@ -34,17 +34,6 @@ const uniqueSorted = (values: Array<string | undefined>) =>
   Array.from(new Set(values.filter((value): value is string => Boolean(value))))
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
-const COLLEGE_DEPARTMENTS: Record<string, string[]> = {
-  CS: ["BSCS", "BSIT"],
-  HM: ["BSHM", "HRT"],
-  BA: ["BSBA"],
-};
-
-const SHS_STRANDS: Record<string, string[]> = {
-  Academic: ["STEM", "HUMSS", "ABM", "GAS"],
-  TVL: ["Programming", "Animation", "CSS", "Home Economics"],
-};
-
 const defaultFilters: FilterState = {
   department: "all",
   program: "all",
@@ -61,6 +50,7 @@ const SORT_OPTIONS: { value: SortField; label: string }[] = [
 
 interface UseStudentTableControlsArgs {
   rows: StudentRow[];
+  resetKey?: string;
 }
 
 interface UseStudentTableControlsResult {
@@ -88,6 +78,7 @@ interface UseStudentTableControlsResult {
 
 export const useStudentTableControls = ({
   rows,
+  resetKey,
 }: UseStudentTableControlsArgs): UseStudentTableControlsResult => {
   const [searchValue, setSearchValue] = useState("");
   const [sortField, setSortField] = useState<SortField>("updatedAt");
@@ -95,110 +86,62 @@ export const useStudentTableControls = ({
   const [filters, setFilters] = useState<FilterState>({ ...defaultFilters });
 
   useEffect(() => {
+    setSearchValue("");
+    setSortField("updatedAt");
+    setSortDirection("desc");
     setFilters({ ...defaultFilters });
-  }, [rows]);
+  }, [resetKey]);
 
   const filterOptions = useMemo(() => {
-    const departments = new Set<string>();
-    const programMap = new Map<string, Set<string>>();
-
-    rows.forEach((student) => {
-      if (student.department) {
-        departments.add(student.department);
-        if (!programMap.has(student.department)) {
-          programMap.set(student.department, new Set());
-        }
-        if (student.program) {
-          programMap.get(student.department)!.add(student.program);
-        }
-      }
-    });
-
-    Object.entries(COLLEGE_DEPARTMENTS).forEach(([dept, programs]) => {
-      departments.add(dept);
-      if (!programMap.has(dept)) {
-        programMap.set(dept, new Set());
-      }
-      programs.forEach((program) => programMap.get(dept)!.add(program));
-    });
-
-    Object.entries(SHS_STRANDS).forEach(([group, strands]) => {
-      departments.add(group);
-      if (!programMap.has(group)) {
-        programMap.set(group, new Set());
-      }
-      strands.forEach((strand) => programMap.get(group)!.add(strand));
-    });
-
+    const departments = uniqueSorted(rows.map((student) => student.department));
     const programsByDepartment: Record<string, string[]> = {};
-    programMap.forEach((set, dept) => {
-      programsByDepartment[dept] = uniqueSorted(Array.from(set));
+    departments.forEach((department) => {
+      programsByDepartment[department] = uniqueSorted(
+        rows
+          .filter((student) => student.department === department)
+          .map((student) => student.program)
+      );
     });
 
     return {
-      departments: uniqueSorted(Array.from(departments)),
+      departments,
       programsByDepartment,
     };
   }, [rows]);
 
   const availablePrograms = useMemo(() => {
+    const subset =
+      filters.department === "all"
+        ? rows
+        : rows.filter((student) => student.department === filters.department);
+
     if (filters.department === "all") {
-      return uniqueSorted(
-        Object.values(filterOptions.programsByDepartment).flatMap((arr) => arr)
-      );
+      return uniqueSorted(subset.map((student) => student.program));
     }
 
-    return filterOptions.programsByDepartment[filters.department] ?? [];
-  }, [filterOptions.programsByDepartment, filters.department]);
+    return uniqueSorted(subset.map((student) => student.program));
+  }, [filters.department, rows]);
 
   const availableSections = useMemo(() => {
-    if (filters.program !== "all") {
-      return uniqueSorted(
-        rows.filter((student) => student.program === filters.program).map((student) => student.section)
-      );
-    }
+    const subset = rows.filter((student) => {
+      if (filters.department !== "all" && student.department !== filters.department) {
+        return false;
+      }
 
-    if (filters.department !== "all") {
-      const relatedPrograms = filterOptions.programsByDepartment[filters.department] ?? [];
-      const shsGroups = Object.keys(SHS_STRANDS);
+      if (filters.program !== "all" && student.program !== filters.program) {
+        return false;
+      }
 
-      const pool = rows.filter((student) => {
-        if (student.schoolLevel === "COLLEGE") {
-          return student.department === filters.department;
-        }
+      return true;
+    });
 
-        if (shsGroups.includes(filters.department)) {
-          return relatedPrograms.includes(student.program ?? "");
-        }
-
-        return student.department === filters.department;
-      });
-
-      return uniqueSorted(pool.map((student) => student.section));
-    }
-
-    return uniqueSorted(rows.map((student) => student.section));
-  }, [filterOptions.programsByDepartment, filters.department, filters.program, rows]);
+    return uniqueSorted(subset.map((student) => student.section));
+  }, [filters.department, filters.program, rows]);
 
   const availableLevels = useMemo(() => {
-    const shsGroups = Object.keys(SHS_STRANDS);
-
     const subset = rows.filter((student) => {
-      if (filters.department !== "all") {
-        if (student.schoolLevel === "COLLEGE") {
-          if (student.department !== filters.department) {
-            return false;
-          }
-        } else {
-          if (shsGroups.includes(filters.department)) {
-            const allowedStrands = SHS_STRANDS[filters.department];
-            if (!allowedStrands.includes(student.program ?? "")) {
-              return false;
-            }
-          } else if (student.department !== filters.department) {
-            return false;
-          }
-        }
+      if (filters.department !== "all" && student.department !== filters.department) {
+        return false;
       }
 
       if (filters.program !== "all" && student.program !== filters.program) {
@@ -275,21 +218,8 @@ export const useStudentTableControls = ({
 
     const filtered = rows.filter((student) => {
       if (filters.department !== "all") {
-        const shsGroups = Object.keys(SHS_STRANDS);
-
-        if (student.schoolLevel === "COLLEGE") {
-          if (student.department !== filters.department) {
-            return false;
-          }
-        } else {
-          if (shsGroups.includes(filters.department)) {
-            const allowedStrands = SHS_STRANDS[filters.department];
-            if (!allowedStrands.includes(student.program ?? "")) {
-              return false;
-            }
-          } else if (student.department !== filters.department) {
-            return false;
-          }
+        if (student.department !== filters.department) {
+          return false;
         }
       }
 
@@ -386,4 +316,4 @@ export const useStudentTableControls = ({
 };
 
 export type { FilterState, SortDirection, SortField };
-export { SORT_OPTIONS, COLLEGE_DEPARTMENTS, SHS_STRANDS };
+export { SORT_OPTIONS };

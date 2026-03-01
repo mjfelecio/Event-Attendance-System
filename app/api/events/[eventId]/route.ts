@@ -91,7 +91,7 @@ export async function PATCH(
       requireRole(user, "ADMIN");
 
       if (action === "APPROVE") {
-        assertEventStatus(event, ["PENDING", "DRAFT"]);
+        assertEventStatus(event, ["PENDING", "DRAFT", "REJECTED", "APPROVED"]);
         const approved = await prisma.event.update({
           where: { id: eventId },
           data: {

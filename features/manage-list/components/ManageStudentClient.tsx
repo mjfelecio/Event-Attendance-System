@@ -17,7 +17,7 @@ interface ManageStudentClientProps {
 }
 
 const ManageStudentClient = ({
-  category: _category,
+  category,
   label,
   item,
   categoryHeading,
@@ -52,7 +52,10 @@ const ManageStudentClient = ({
     availableLevels,
     availableHouses,
     visibleRows,
-  } = useStudentTableControls({ rows: studentRows });
+  } = useStudentTableControls({
+    rows: studentRows,
+    resetKey: `${category}:${item ?? ""}:${label ?? ""}`,
+  });
 
   const totalRows = studentRows.length;
   const visibleRowsCount = visibleRows.length;

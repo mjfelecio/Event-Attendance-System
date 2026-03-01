@@ -115,7 +115,13 @@ export async function POST(req: Request) {
       }
 
       assertEventOwnership(existing, user);
-      assertEventStatus(existing, ["DRAFT", "APPROVED", "REJECTED"]);
+      const editableStatuses: Array<
+        "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"
+      > =
+        user.role === "ADMIN"
+          ? ["DRAFT", "PENDING", "APPROVED", "REJECTED"]
+          : ["DRAFT", "APPROVED", "REJECTED"];
+      assertEventStatus(existing, editableStatuses);
 
       const updated = await prisma.event.update({
         where: { id: payload.id },

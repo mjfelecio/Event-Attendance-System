@@ -10,6 +10,15 @@ import { z } from "zod";
 import { err, ok } from "@/globals/utils/api";
 import { studentCreateSchema } from "@/features/manage-list/utils/studentSchemas";
 
+const isCollegeYearLevel = (yearLevel: YearLevel) =>
+  yearLevel === YearLevel.YEAR_1 ||
+  yearLevel === YearLevel.YEAR_2 ||
+  yearLevel === YearLevel.YEAR_3 ||
+  yearLevel === YearLevel.YEAR_4;
+
+const isShsYearLevel = (yearLevel: YearLevel) =>
+  yearLevel === YearLevel.GRADE_11 || yearLevel === YearLevel.GRADE_12;
+
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
@@ -40,25 +49,14 @@ export async function POST(request: Request) {
       });
     }
 
-    if (
-      isCollege &&
-      ![
-        YearLevel.YEAR_1,
-        YearLevel.YEAR_2,
-        YearLevel.YEAR_3,
-        YearLevel.YEAR_4,
-      ].includes(data.yearLevel)
-    ) {
+    if (isCollege && !isCollegeYearLevel(data.yearLevel)) {
       return NextResponse.json(
         err("College students must be from 1st to 4th year."),
         { status: 400 }
       );
     }
 
-    if (
-      isShs &&
-      ![YearLevel.GRADE_11, YearLevel.GRADE_12].includes(data.yearLevel)
-    ) {
+    if (isShs && !isShsYearLevel(data.yearLevel)) {
       return NextResponse.json(
         err("SHS students must be Grade 11 or Grade 12."),
         { status: 400 }

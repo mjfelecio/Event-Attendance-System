@@ -11,7 +11,7 @@ const StudentStatCard = ({ stat, isLoading = false }: StudentStatCardProps) => {
   const { icon: Icon, logo, title, align, category, value } = stat;
   const formattedValue = isLoading
     ? "..."
-    : typeof value === "number" && value > 0
+    : typeof value === "number"
     ? new Intl.NumberFormat().format(value)
     : "N/A";
   const href =
