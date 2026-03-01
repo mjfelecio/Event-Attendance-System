@@ -20,23 +20,40 @@ const filterByContext = (
   category: ManageStudentContext["category"],
   item?: string
 ) => {
+  const isCollegeYear = (yearLevel: StudentRow["yearLevel"]) =>
+    yearLevel === "YEAR_1" ||
+    yearLevel === "YEAR_2" ||
+    yearLevel === "YEAR_3" ||
+    yearLevel === "YEAR_4";
+
+  const isShsYear = (yearLevel: StudentRow["yearLevel"]) =>
+    yearLevel === "GRADE_11" || yearLevel === "GRADE_12";
+
   return rows.filter((student) => {
     if (category === "all") {
       return true;
     }
 
     if (category === "college") {
+      if (student.schoolLevel !== "COLLEGE" || !isCollegeYear(student.yearLevel)) {
+        return false;
+      }
+
       if (item) {
         return student.departmentSlug === item;
       }
-      return student.schoolLevel === "COLLEGE";
+      return true;
     }
 
     if (category === "shs") {
+      if (student.schoolLevel !== "SHS" || !isShsYear(student.yearLevel)) {
+        return false;
+      }
+
       if (item) {
         return student.programSlug === item;
       }
-      return student.schoolLevel === "SHS";
+      return true;
     }
 
     if (category === "house") {

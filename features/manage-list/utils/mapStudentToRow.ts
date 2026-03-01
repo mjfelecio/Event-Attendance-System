@@ -71,6 +71,10 @@ export const mapStudentToRow = (student: StudentRowSource): StudentRow => {
   const isCollege = student.schoolLevel === "COLLEGE";
   const program = isCollege ? student.collegeProgram : student.shsStrand;
   const programSlug = slugify(program);
+  const department = isCollege ? student.department ?? undefined : undefined;
+  const departmentSlug = isCollege
+    ? student.departmentSlug ?? slugify(student.department)
+    : undefined;
 
   const fallbackName = student.name?.trim() ?? "";
   const fallbackPieces = fallbackName ? fallbackName.split(" ") : [];
@@ -96,8 +100,8 @@ export const mapStudentToRow = (student: StudentRowSource): StudentRow => {
     programSlug,
     collegeProgram: student.collegeProgram ?? undefined,
     shsStrand: student.shsStrand ?? undefined,
-    department: student.department ?? undefined,
-    departmentSlug: student.departmentSlug ?? slugify(student.department),
+    department,
+    departmentSlug,
     house: student.house ?? undefined,
     houseSlug: student.houseSlug ?? slugify(student.house),
     section: student.section,

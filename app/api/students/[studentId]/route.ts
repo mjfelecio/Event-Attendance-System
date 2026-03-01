@@ -8,6 +8,7 @@ import {
 import { Prisma } from "@prisma/client";
 import { studentUpdateSchema } from "@/features/manage-list/utils/studentSchemas";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
+import { z } from "zod";
 
 const createSlugPayload = (data: { department?: string; house?: string }) => {
   const departmentSlug = data.department
@@ -70,7 +71,15 @@ export async function PATCH(
     const payload = await request.json();
     const data = studentUpdateSchema.parse({ ...payload, id: studentId });
 
-    const { departmentSlug, houseSlug } = createSlugPayload(data);
+    const isCollege = data.schoolLevel === "COLLEGE";
+    const normalizedDepartment = isCollege ? data.department ?? null : null;
+    const normalizedShsStrand =
+      data.schoolLevel === "SHS" ? data.shsStrand ?? null : null;
+    const normalizedCollegeProgram = isCollege ? data.collegeProgram ?? null : null;
+    const { departmentSlug, houseSlug } = createSlugPayload({
+      department: normalizedDepartment ?? undefined,
+      house: data.house ?? undefined,
+    });
 
     const student = await prisma.student.update({
       where: { id: studentId },
@@ -79,14 +88,13 @@ export async function PATCH(
         firstName: data.firstName,
         middleName: data.middleName,
         schoolLevel: data.schoolLevel,
-        shsStrand: data.schoolLevel === "SHS" ? data.shsStrand : null,
-        collegeProgram:
-          data.schoolLevel === "COLLEGE" ? data.collegeProgram : null,
+        shsStrand: normalizedShsStrand,
+        collegeProgram: normalizedCollegeProgram,
         section: data.section,
         yearLevel: data.yearLevel,
         status: data.status,
         contactNumber: data.contactNumber,
-        department: data.department,
+        department: normalizedDepartment,
         departmentSlug,
         house: data.house,
         houseSlug,
@@ -102,6 +110,20 @@ export async function PATCH(
 
     return NextResponse.json({ student: studentRow });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      return NextResponse.json(
+        { message: "Invalid student update payload." },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Invalid student data." },
+        { status: 400 }
+      );
+    }
+
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2025") {
         return NextResponse.json(

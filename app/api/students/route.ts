@@ -8,43 +8,69 @@ import {
 import { Prisma, SchoolLevel, StudentStatus, YearLevel } from "@prisma/client";
 import { z } from "zod";
 import { err, ok } from "@/globals/utils/api";
-
-const createStudentSchema = z.object({
-  id: z.string().length(11).regex(/^\d+$/),
-  lastName: z.string().min(1),
-  firstName: z.string().min(1),
-  middleName: z.string().optional().nullable(),
-  schoolLevel: z.nativeEnum(SchoolLevel),
-  shsStrand: z.string().optional().nullable(),
-  collegeProgram: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-  house: z.string().optional().nullable(),
-  section: z.string().min(1),
-  yearLevel: z.nativeEnum(YearLevel),
-  status: z.nativeEnum(StudentStatus).optional(),
-  contactNumber: z.string().optional().nullable(),
-});
+import { studentCreateSchema } from "@/features/manage-list/utils/studentSchemas";
 
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
-    const data = createStudentSchema.parse(payload);
+    const data = studentCreateSchema.parse({
+      ...payload,
+      status: payload?.status ?? StudentStatus.ACTIVE,
+    });
 
-    if (data.schoolLevel === SchoolLevel.SHS && !data.shsStrand) {
+    const isCollege = data.schoolLevel === SchoolLevel.COLLEGE;
+    const isShs = data.schoolLevel === SchoolLevel.SHS;
+
+    if (isShs && !data.shsStrand) {
       return NextResponse.json(err("SHS students require an SHS strand."), {
         status: 400,
       });
     }
 
-    if (data.schoolLevel === SchoolLevel.COLLEGE && !data.collegeProgram) {
+    if (isCollege && !data.collegeProgram) {
       return NextResponse.json(
         err("College students require a college program."),
         { status: 400 }
       );
     }
 
-    const departmentSlug = data.department
-      ? slugify(data.department) ?? null
+    if (isCollege && !data.department) {
+      return NextResponse.json(err("College students require a department."), {
+        status: 400,
+      });
+    }
+
+    if (
+      isCollege &&
+      ![
+        YearLevel.YEAR_1,
+        YearLevel.YEAR_2,
+        YearLevel.YEAR_3,
+        YearLevel.YEAR_4,
+      ].includes(data.yearLevel)
+    ) {
+      return NextResponse.json(
+        err("College students must be from 1st to 4th year."),
+        { status: 400 }
+      );
+    }
+
+    if (
+      isShs &&
+      ![YearLevel.GRADE_11, YearLevel.GRADE_12].includes(data.yearLevel)
+    ) {
+      return NextResponse.json(
+        err("SHS students must be Grade 11 or Grade 12."),
+        { status: 400 }
+      );
+    }
+
+    const normalizedDepartment = isCollege ? data.department ?? null : null;
+    const normalizedShsStrand = isShs ? data.shsStrand ?? null : null;
+    const normalizedCollegeProgram = isCollege ? data.collegeProgram ?? null : null;
+
+    const departmentSlug = normalizedDepartment
+      ? slugify(normalizedDepartment) ?? null
       : null;
     const houseSlug = data.house ? slugify(data.house) ?? null : null;
 
@@ -55,17 +81,13 @@ export async function POST(request: Request) {
         firstName: data.firstName,
         middleName: data.middleName ?? null,
         schoolLevel: data.schoolLevel,
-        shsStrand:
-          data.schoolLevel === SchoolLevel.SHS ? data.shsStrand ?? null : null,
-        collegeProgram:
-          data.schoolLevel === SchoolLevel.COLLEGE
-            ? data.collegeProgram ?? null
-            : null,
+        shsStrand: normalizedShsStrand,
+        collegeProgram: normalizedCollegeProgram,
         section: data.section,
         yearLevel: data.yearLevel,
         status: data.status ?? StudentStatus.ACTIVE,
         contactNumber: data.contactNumber ?? null,
-        department: data.department ?? null,
+        department: normalizedDepartment,
         departmentSlug,
         house: data.house ?? null,
         houseSlug,

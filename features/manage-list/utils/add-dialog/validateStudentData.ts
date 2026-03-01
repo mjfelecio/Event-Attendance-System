@@ -5,6 +5,13 @@ export const validateStudentData = (
   requireMiddleName: boolean
 ): StudentFormErrors => {
   const errors: StudentFormErrors = {};
+  const isCollegeYear =
+    data.yearLevel === "YEAR_1" ||
+    data.yearLevel === "YEAR_2" ||
+    data.yearLevel === "YEAR_3" ||
+    data.yearLevel === "YEAR_4";
+  const isShsYear =
+    data.yearLevel === "GRADE_11" || data.yearLevel === "GRADE_12";
 
   if (!/^\d{11}$/.test(data.id)) {
     errors.id = "Student ID must be exactly 11 digits";
@@ -34,8 +41,20 @@ export const validateStudentData = (
     errors.collegeProgram = "Program is required";
   }
 
-  if (!data.department.trim()) {
+  if (data.schoolLevel === "COLLEGE" && !data.department.trim()) {
     errors.department = "Department is required";
+  }
+
+  if (data.schoolLevel === "SHS" && data.department.trim()) {
+    errors.department = "SHS students should not have a department";
+  }
+
+  if (data.schoolLevel === "COLLEGE" && !isCollegeYear) {
+    errors.yearLevel = "College students must be from 1st to 4th year";
+  }
+
+  if (data.schoolLevel === "SHS" && !isShsYear) {
+    errors.yearLevel = "SHS students must be Grade 11 or Grade 12";
   }
 
   if (!data.house.trim()) {
@@ -62,7 +81,7 @@ export const prepareStudentSubmitPayload = (
     data.schoolLevel === "SHS" ? data.shsStrand.trim() : "N/A",
   collegeProgram:
     data.schoolLevel === "COLLEGE" ? data.collegeProgram.trim() : "N/A",
-  department: data.department.trim(),
+  department: data.schoolLevel === "COLLEGE" ? data.department.trim() : "",
   house: data.house.trim(),
   section: data.section.trim(),
   contactNumber: data.contactNumber.trim(),

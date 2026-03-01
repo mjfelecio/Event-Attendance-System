@@ -77,8 +77,11 @@ const ManageStudentClient = ({
           ? data.collegeProgram.trim()
           : null
         : null,
-    department: data.department.trim(),
-    house: data.house.trim(),
+    department:
+      data.schoolLevel === "COLLEGE" && data.department.trim()
+        ? data.department.trim()
+        : null,
+    house: data.house.trim() ? data.house.trim() : null,
     section: data.section.trim(),
     yearLevel: data.yearLevel,
     status: data.status,

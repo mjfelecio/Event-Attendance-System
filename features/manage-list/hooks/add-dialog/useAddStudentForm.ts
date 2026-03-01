@@ -80,6 +80,7 @@ export const useAddStudentForm = ({
           if (value === "SHS") {
             next.yearLevel = "GRADE_11";
             next.collegeProgram = "";
+            next.department = "";
           } else {
             next.yearLevel = "YEAR_1";
             next.shsStrand = "";
