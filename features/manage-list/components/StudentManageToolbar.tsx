@@ -74,7 +74,7 @@ const StudentManageToolbar = ({
 }: StudentManageToolbarProps) => {
   return (
     <div className="px-6 md:px-12">
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+      <div className="relative rounded-3xl border border-slate-200 bg-white/95 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.14),transparent_58%)]" />
         <div className="relative flex flex-col gap-5 p-5 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
