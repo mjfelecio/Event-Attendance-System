@@ -19,11 +19,11 @@ const ManageWhichPage = async ({ searchParams }: ManageWhichPageProps) => {
     if (type === "house") return <HouseSelectionBoard />;
 
     return (
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-[0.35em] text-neutral-800 md:text-3xl">
+      <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-[0_16px_32px_rgba(15,23,42,0.08)]">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
           ALL STUDENTS
         </h1>
-        <p className="mt-3 text-sm text-neutral-500">
+        <p className="mt-3 text-sm text-slate-500">
           Coming soon: list all students across college, senior high, and houses.
         </p>
       </div>
@@ -31,8 +31,8 @@ const ManageWhichPage = async ({ searchParams }: ManageWhichPageProps) => {
   };
 
   return (
-    <section className="flex min-h-[calc(100vh-4rem)] flex-1 items-center justify-center bg-neutral-100 px-6 py-12 text-neutral-900 md:px-10">
-      {renderContent()}
+    <section className="flex flex-1 justify-center overflow-y-auto bg-[radial-gradient(circle_at_top,#eef2ff_0%,#f8fafc_45%,#ffffff_100%)] p-6 text-slate-900 md:p-8">
+      <div className="w-full max-w-6xl">{renderContent()}</div>
     </section>
   );
 };

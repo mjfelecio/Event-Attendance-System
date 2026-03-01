@@ -53,6 +53,10 @@ const filterByContext = (
 const ManageStudentPage = async ({ searchParams }: ManageStudentPageProps) => {
   const params = await Promise.resolve(searchParams ?? {});
   const { category = "all", label, item } = params;
+  const backHref =
+    category === "all"
+      ? "/manage-list"
+      : `/manage-list/manage-which?type=${category}`;
 
   const students = await prisma.student.findMany({
     orderBy: {
@@ -64,14 +68,14 @@ const ManageStudentPage = async ({ searchParams }: ManageStudentPageProps) => {
   const baseRows = filterByContext(studentRows, category, item);
 
   return (
-    <section className="flex min-h-[calc(100vh-4rem)] flex-1 justify-center bg-neutral-100 px-0 py-12 text-neutral-900 md:px-0">
-      <div className="flex w-full flex-col gap-8">
+    <section className="flex flex-1 justify-center overflow-y-auto bg-[radial-gradient(circle_at_top,#eef2ff_0%,#f8fafc_45%,#ffffff_100%)] p-6 text-slate-900 md:p-8">
+      <div className="flex w-full max-w-[1600px] flex-col gap-6">
         <div className="px-6 md:px-12">
           <Link
-            href="/manage-list/manage-which"
-            className="text-sm font-medium text-neutral-500 transition hover:text-neutral-700"
+            href={backHref}
+            className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-700"
           >
-            ← Back to selection
+            {"<"} Back to selection
           </Link>
         </div>
 
