@@ -31,7 +31,7 @@ const ManageWhichPage = async ({ searchParams }: ManageWhichPageProps) => {
   };
 
   return (
-    <section className="flex flex-1 justify-center overflow-y-auto bg-[radial-gradient(circle_at_top,#eef2ff_0%,#f8fafc_45%,#ffffff_100%)] p-6 text-slate-900 md:p-8">
+    <section className="flex min-h-[calc(100vh-4rem)] flex-1 items-center justify-center overflow-y-auto bg-[radial-gradient(circle_at_top,#eef2ff_0%,#f8fafc_45%,#ffffff_100%)] p-6 text-slate-900 md:p-8">
       <div className="w-full max-w-6xl">{renderContent()}</div>
     </section>
   );
