@@ -32,5 +32,4 @@ export const DEFAULT_FORM_STATE: StudentFormData = {
   section: "",
   yearLevel: "YEAR_1",
   status: "ACTIVE",
-  contactNumber: "",
 };

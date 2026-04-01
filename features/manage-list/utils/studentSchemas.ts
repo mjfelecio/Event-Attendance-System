@@ -15,7 +15,6 @@ const baseStudentSchema = z
     section: z.string().min(1),
     yearLevel: z.nativeEnum(YearLevel),
     status: z.nativeEnum(StudentStatus),
-    contactNumber: z.string().min(1),
   })
   .superRefine((data, ctx) => {
     const hasDepartment = Boolean(data.department && data.department.trim());

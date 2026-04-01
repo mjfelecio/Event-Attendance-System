@@ -23,7 +23,6 @@ const studentSchema = z.object({
   department: z.string().optional().nullable(),
   house: z.string().optional().nullable(),
   status: z.nativeEnum(StudentStatus).default(StudentStatus.ACTIVE),
-  contactNumber: z.string().optional().nullable(),
 });
 
 const bulkSchema = z.array(studentSchema);
@@ -67,7 +66,6 @@ export async function POST(request: Request) {
             section: data.section,
             yearLevel: data.yearLevel,
             status: data.status,
-            contactNumber: data.contactNumber,
             department: normalizedDepartment,
             departmentSlug,
             house: data.house,
@@ -84,7 +82,6 @@ export async function POST(request: Request) {
             section: data.section,
             yearLevel: data.yearLevel,
             status: data.status,
-            contactNumber: data.contactNumber,
             department: normalizedDepartment,
             departmentSlug,
             house: data.house,

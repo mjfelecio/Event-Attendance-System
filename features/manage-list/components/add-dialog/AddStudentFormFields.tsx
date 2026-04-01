@@ -254,24 +254,6 @@ const AddStudentFormFields = ({
           </select>
         </div>
       )}
-
-      <div className={`flex flex-col gap-1.5 ${isEditMode ? "" : "md:col-span-2"}`}>
-        <label htmlFor="contact-number" className="text-sm font-semibold text-neutral-700">
-          Contact Number <span className="text-rose-500">*</span>
-        </label>
-        <input
-          id="contact-number"
-          type="tel"
-          value={formData.contactNumber}
-          onChange={handleInputChange("contactNumber")}
-          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
-          disabled={isSubmitting}
-          placeholder="e.g., 09171234567"
-        />
-        {errors.contactNumber && (
-          <span className="text-xs text-rose-600">{errors.contactNumber}</span>
-        )}
-      </div>
     </div>
   );
 };

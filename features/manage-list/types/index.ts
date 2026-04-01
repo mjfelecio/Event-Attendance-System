@@ -37,6 +37,5 @@ export type StudentRow = {
   yearLevel: YearLevel;
   schoolLevel: "COLLEGE" | "SHS";
   status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "DROPPED";
-  contactNumber?: string;
   updatedAt: string;
 };

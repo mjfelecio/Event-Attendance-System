@@ -236,7 +236,6 @@ function generateStudent(index: number): Prisma.StudentCreateInput {
     yearLevel,
     schoolLevel,
     status,
-    contactNumber: `09${faker.string.numeric(9)}`,
     department,
     departmentSlug: slugify(department),
     house,

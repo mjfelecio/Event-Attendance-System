@@ -61,10 +61,6 @@ export const validateStudentData = (
     errors.house = "House is required";
   }
 
-  if (!data.contactNumber.trim()) {
-    errors.contactNumber = "Contact number is required";
-  }
-
   return errors;
 };
 
@@ -84,5 +80,4 @@ export const prepareStudentSubmitPayload = (
   department: data.schoolLevel === "COLLEGE" ? data.department.trim() : "",
   house: data.house.trim(),
   section: data.section.trim(),
-  contactNumber: data.contactNumber.trim(),
 });

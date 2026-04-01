@@ -93,7 +93,6 @@ export async function PATCH(
         section: data.section,
         yearLevel: data.yearLevel,
         status: data.status,
-        contactNumber: data.contactNumber,
         department: normalizedDepartment,
         departmentSlug,
         house: data.house,

@@ -88,7 +88,6 @@ const ManageStudentClient = ({
     section: data.section.trim(),
     yearLevel: data.yearLevel,
     status: data.status,
-    contactNumber: data.contactNumber.trim(),
   });
 
   const handleAddStudent = async (data: StudentFormData) => {
@@ -254,7 +253,6 @@ const ManageStudentClient = ({
                 section: editingStudent.section,
                 yearLevel: editingStudent.yearLevel,
                 status: editingStudent.status,
-                contactNumber: editingStudent.contactNumber ?? "",
               }
             : undefined
         }

@@ -45,7 +45,6 @@ model Student {
   yearLevel      YearLevel
   schoolLevel    SchoolLevel
   status         StudentStatus @default(ACTIVE)
-  contactNumber  String?
   department     String?
   departmentSlug String?
   house          String?
