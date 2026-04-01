@@ -180,11 +180,6 @@ const ManageStudentClient = ({
     }
   };
 
-  const handleImportStudents = () => {
-    console.log('Import students clicked');
-    // TODO: Implement import functionality
-  };
-
   return (
     <div className="flex w-full flex-col gap-6">
       {submitError && (
@@ -216,7 +211,6 @@ const ManageStudentClient = ({
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
         onAddStudent={() => setIsAddDialogOpen(true)}
-        onImportStudents={handleImportStudents}
         totalRows={totalRows}
         visibleRowsCount={visibleRowsCount}
         activeFilterCount={activeFilterCount}
