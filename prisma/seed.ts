@@ -1,59 +1,12 @@
 import {
-  AttendanceMethod,
-  Event,
   EventCategory,
-  Prisma,
   PrismaClient,
   SchoolLevel,
-  StudentStatus,
   YearLevel,
+  Group,
 } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import {
-  isStudentInEvent,
-} from "@/globals/utils/buildEventStudentFilter";
-
-type ComboBoxValue = {
-  value: string;
-  label: string;
-};
-
-export const CATEGORY_GROUPS: Record<EventCategory, ComboBoxValue[]> = {
-  ALL: [],
-  COLLEGE: [],
-  SHS: [],
-  DEPARTMENT: [
-    { value: "CS", label: "Computer Studies" },
-    { value: "HM", label: "Hotel Management" },
-    { value: "BA", label: "Business Administration" },
-  ],
-  HOUSE: [
-    { value: "AZUL", label: "Azul" },
-    { value: "ROXXO", label: "Roxxo" },
-    { value: "CAHEL", label: "Cahel" },
-    { value: "GIALLIO", label: "Giallio" },
-    { value: "VIERRDY", label: "Vierrdy" },
-  ],
-  PROGRAM: [
-    { value: "BSCS", label: "BSCS" },
-    { value: "BSIT", label: "BSIT" },
-    { value: "BSHM", label: "BSHM" },
-    { value: "WAD", label: "WAD" },
-  ],
-  YEAR: Object.keys(YearLevel).map((l) => ({
-    value: l,
-    label: l,
-  })),
-  SECTION: [
-    { value: "BSCS-2A", label: "BSCS-2A" },
-    { value: "BSIT-2B", label: "BSIT-2B" },
-  ],
-  STRAND: [
-    { value: "ANIMATION", label: "Animation" },
-    { value: "PROGRAMMING", label: "Programming" },
-  ],
-};
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || ":memory:",
@@ -64,222 +17,68 @@ const prisma = new PrismaClient({ adapter });
 const randomChoice = <T>(arr: T[]): T =>
   arr[Math.floor(Math.random() * arr.length)];
 
-const slugify = (value: string | null | undefined): string | undefined =>
+const slugify = (value: string): string =>
   value
-    ?.toLowerCase()
+    .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 
-// Constants
-const SHS_STRANDS = ["STEM", "ABM", "HUMSS", "GAS"];
-const COLLEGE_PROGRAMS = ["BSCS", "BSIT", "BSHM", "BSBA"];
-const SECTIONS = ["A", "B", "C", "D", "E"];
-const DEPARTMENTS = [
-  "Computer Studies",
-  "Hotel Management",
-  "Business Administration",
-];
-const HOUSES = ["Cahel", "Roxxo", "Giallio", "Azul", "Vierdy"];
-const EVENT_CATEGORIES: EventCategory[] = [
-  "ALL",
-  "COLLEGE",
-  "SHS",
-  "DEPARTMENT",
-  "STRAND",
-  "HOUSE",
-  "PROGRAM",
-  "SECTION",
-  "YEAR",
-];
-
-const EVENT_TITLES: Record<EventCategory, string[]> = {
-  ALL: [
-    "General Assembly",
-    "Whole School Gathering",
-    "All Hands Meeting",
-    "Campus-Wide Event",
-    "Open Forum",
-  ],
-  COLLEGE: [
-    "College Convocation",
-    "College Seminar",
-    "College Workshop",
-    "College Sports Day",
-    "College Awards Night",
-  ],
-  SHS: [
-    "Senior High Assembly",
-    "SHS Orientation",
-    "SHS Competition",
-    "SHS Cultural Night",
-    "SHS Academic Forum",
-  ],
+const GROUP_DATA: Record<
+  Exclude<EventCategory, "ALL" | "COLLEGE" | "SHS">,
+  string[]
+> = {
   DEPARTMENT: [
-    "Department Meeting",
-    "Department Workshop",
-    "Department Seminar",
-    "Department Awards",
-    "Department Gathering",
+    "Computer Studies",
+    "Hotel Management",
+    "Business Administration",
   ],
-  STRAND: [
-    "Strand-Specific Training",
-    "Strand Workshop",
-    "Strand Competition",
-    "Strand Meeting",
-    "Strand Project Showcase",
-  ],
-  HOUSE: [
-    "House Assembly",
-    "House Competition",
-    "House Building Activity",
-    "House Meeting",
-    "House Awards Ceremony",
-  ],
-  PROGRAM: [
-    "Program Orientation",
-    "Program Workshop",
-    "Program Competition",
-    "Program Meeting",
-    "Program Showcase",
-  ],
-  SECTION: [
-    "Section Meeting",
-    "Section Activity",
-    "Section Gathering",
-    "Section Workshop",
-    "Section Event",
-  ],
-  YEAR: [
-    "Year Level Assembly",
-    "Year Level Workshop",
-    "Year Level Competition",
-    "Year Level Meeting",
-    "Year Level Activity",
-  ],
+  HOUSE: ["Cahel", "Roxxo", "Giallio", "Azul", "Vierdy"],
+  PROGRAM: ["BSCS", "BSIT", "BSHM", "BSBA"],
+  YEAR: Object.values(YearLevel),
+  SECTION: ["BSCS-2A", "BSIT-2B", "STEM-11A", "STEM-12B"],
+  STRAND: ["STEM", "ABM", "HUMSS", "GAS"],
 };
 
-const LOCATIONS = [
-  "Room 204, CS Building",
-  "Innovation Lab",
-  "Auditorium",
-  "Tech Hub",
-  "Main Campus Grounds",
-  "Conference Room A",
-  "Gymnasium",
-  "Open Field",
-  "Student Center",
-  "Lecture Hall 101",
-];
-
-// Data generation functions
-function generateEvent(
-  organizerId: string,
-  baseDate: Date,
-  index: number,
-): Prisma.EventCreateManyInput {
-  const eventType = randomChoice(EVENT_CATEGORIES);
-  const isAllDay = Math.random() < 0.3;
-
-  const startDate = new Date(baseDate);
-  startDate.setDate(startDate.getDate() + index * 2);
-  startDate.setHours(randomChoice([8, 9, 10, 13, 14, 15]), 0, 0, 0);
-
-  const endDate = new Date(startDate);
-  if (isAllDay) {
-    endDate.setHours(23, 59, 59, 999);
-  } else {
-    endDate.setHours(startDate.getHours() + randomChoice([1, 2, 3, 4]));
-  }
-
-  const title = randomChoice(EVENT_TITLES[eventType]);
-  const includedGroups = CATEGORY_GROUPS[eventType] || [];
-
-  return {
-    title,
-    location: randomChoice(LOCATIONS),
-    description: faker.lorem.sentence(),
-    category: eventType,
-    includedGroups: JSON.stringify(includedGroups.map((g) => g.value)),
-    start: startDate,
-    end: endDate,
-    allDay: isAllDay,
-    createdById: organizerId,
-    isTimeout: randomChoice([true, false]),
-  };
-}
-
-function generateStudent(index: number): Prisma.StudentCreateInput {
-  const schoolLevel = randomChoice([SchoolLevel.SHS, SchoolLevel.COLLEGE]);
-  const yearLevel =
-    schoolLevel === SchoolLevel.SHS
-      ? randomChoice([YearLevel.GRADE_11, YearLevel.GRADE_12])
-      : randomChoice([
-          YearLevel.YEAR_1,
-          YearLevel.YEAR_2,
-          YearLevel.YEAR_3,
-          YearLevel.YEAR_4,
-        ]);
-
-  const section = randomChoice(SECTIONS);
-  const department = randomChoice(DEPARTMENTS);
-  const house = randomChoice(HOUSES);
-  const status =
-    Math.random() < 0.9 ? StudentStatus.ACTIVE : StudentStatus.INACTIVE;
-
-  const baseData = {
-    id: String(20250000001 + index),
-    lastName: faker.person.lastName(),
-    firstName: faker.person.firstName(),
-    middleName: Math.random() < 0.7 ? faker.person.firstName() : undefined,
-    section,
-    yearLevel,
-    schoolLevel,
-    status,
-    department,
-    departmentSlug: slugify(department),
-    house,
-    houseSlug: slugify(house),
-  };
-
-  if (schoolLevel === SchoolLevel.SHS) {
-    return {
-      ...baseData,
-      shsStrand: randomChoice(SHS_STRANDS),
-    };
-  } else {
-    return {
-      ...baseData,
-      collegeProgram: randomChoice(COLLEGE_PROGRAMS),
-    };
-  }
-}
-
-// Main seeding function
 async function main() {
-  console.log("Starting database seed...");
+  console.log("Seeding database...");
 
-  // Clear existing data
-  console.log("Clearing existing data...");
   await prisma.record.deleteMany();
   await prisma.event.deleteMany();
   await prisma.student.deleteMany();
+  await prisma.group.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create users with deterministic credentials for testing
+  // Groups
+  const allGroups: Group[] = [];
+  for (const [category, names] of Object.entries(GROUP_DATA)) {
+    for (const name of names) {
+      const group = await prisma.group.create({
+        data: {
+          name,
+          slug: slugify(name),
+          category: category as EventCategory,
+        },
+      });
+      allGroups.push(group);
+    }
+  }
+  console.log(`Created ${allGroups.length} groups.`);
+
+  // Users
   const admin = await prisma.user.create({
     data: {
-      name: "System Administrator",
+      name: "Admin",
       email: "admin@gmail.com",
-      password: "adminama123",
+      password: "password",
       role: "ADMIN",
       status: "ACTIVE",
     },
   });
 
-  const primaryOrganizer = await prisma.user.create({
+  const organizer = await prisma.user.create({
     data: {
-      name: "Campus Organizer",
+      name: "Organizer",
       email: "organizer@example.com",
       password: "password",
       role: "ORGANIZER",
@@ -287,7 +86,7 @@ async function main() {
     },
   });
 
-  const secondaryOrganizer = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: faker.person.fullName(),
       email: faker.internet.email(),
@@ -318,108 +117,76 @@ async function main() {
     },
   });
 
-  console.log("Created admin and sample organizers (active/pending/rejected)");
+  // Students
+  console.log("Creating students...");
+  for (let i = 0; i < 100; i++) {
+    const schoolLevel = randomChoice([SchoolLevel.SHS, SchoolLevel.COLLEGE]);
 
-  // Create events
-  const baseDate = new Date("2025-01-01T00:00:00Z");
-  const statusCycle: Array<"DRAFT" | "PENDING" | "APPROVED" | "REJECTED"> = [
-    "DRAFT",
-    "DRAFT",
-    "PENDING",
-    "APPROVED",
-    "APPROVED",
-    "REJECTED",
-  ];
+    // Pick relevant groups for this student
+    const studentGroups = [
+      randomChoice(allGroups.filter((g) => g.category === "HOUSE")),
+      randomChoice(allGroups.filter((g) => g.category === "SECTION")),
+      randomChoice(allGroups.filter((g) => g.category === "DEPARTMENT")),
+    ];
 
-  const createdEvents: Event[] = [];
-
-  for (let i = 0; i < 18; i++) {
-    const baseData = generateEvent(primaryOrganizer.id, baseDate, i);
-    const status = statusCycle[i % statusCycle.length];
-
-    let reviewedById: string | null = null;
-    let reviewedAt: Date | null = null;
-    let rejectionReason: string | null = null;
-
-    if (status === "APPROVED" || status === "REJECTED") {
-      reviewedById = admin.id;
-      reviewedAt = new Date(baseData.start ?? new Date());
-      rejectionReason = status === "REJECTED" ? "Insufficient details." : null;
+    if (schoolLevel === SchoolLevel.SHS) {
+      studentGroups.push(
+        randomChoice(allGroups.filter((g) => g.category === "STRAND")),
+      );
+    } else {
+      studentGroups.push(
+        randomChoice(allGroups.filter((g) => g.category === "PROGRAM")),
+      );
     }
 
-    const event = await prisma.event.create({
+    await prisma.student.create({
       data: {
-        ...baseData,
-        status,
-        reviewedById,
-        reviewedAt,
-        rejectionReason,
+        id: String(202500001 + i),
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        schoolLevel,
+        yearLevel: randomChoice(Object.values(YearLevel)),
+        section: "A",
+        groups: {
+          connect: studentGroups.map((g) => ({ id: g.id })),
+        },
       },
     });
-
-    createdEvents.push(event);
   }
 
-  console.log(`Created ${createdEvents.length} events`);
+  // Events (Linking to groups)
+  console.log("Creating events...");
+  for (let i = 0; i < 10; i++) {
+    const category = randomChoice(Object.values(EventCategory));
 
-  // Create students
-  const studentsData = Array.from({ length: 100 }, (_, i) =>
-    generateStudent(i),
-  );
+    // Pick 1-2 random groups that match the category (if not ALL/COLLEGE/SHS)
+    const targetGroups = allGroups
+      .filter((g) => g.category === category)
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 1);
 
-  for (const student of studentsData) {
-    await prisma.student.upsert({
-      where: { id: student.id },
-      update: student,
-      create: student,
+    await prisma.event.create({
+      data: {
+        title: `${category} Event ${i + 1}`,
+        category,
+        start: new Date(),
+        end: new Date(Date.now() + 3600000),
+        status: "APPROVED",
+        createdById: organizer.id,
+        reviewedById: admin.id,
+        includedGroups: {
+          connect: targetGroups.map((g) => ({ id: g.id })),
+        },
+      },
     });
   }
-  console.log(`Created ${studentsData.length} students`);
 
-  // Create attendance records
-  const approvedEvents = createdEvents.filter((e) => e.status === "APPROVED");
-  const allStudents = await prisma.student.findMany();
-  const methods: AttendanceMethod[] = ["MANUAL", "SCANNED"];
-
-  const recordsData: Prisma.RecordCreateManyInput[] = [];
-
-  for (const event of approvedEvents) {
-    const studentsInEvent = allStudents.filter((s) => isStudentInEvent(s, event));
-    
-    // Each approved event has 40-80% of students attending
-    const attendanceRate = 0.4 + Math.random() * 0.4;
-    const attendingCount = Math.floor(studentsInEvent.length * attendanceRate);
-    const shuffledStudents = [...studentsInEvent].sort(() => Math.random() - 0.5);
-    const attendingStudents = shuffledStudents.slice(0, attendingCount);
-
-    for (const student of attendingStudents) {
-      const recordDate = new Date(baseDate);
-      recordDate.setDate(recordDate.getDate() + Math.random() * 2);
-      recordDate.setHours(randomChoice([8, 9, 10, 13, 14, 15]), 0, 0, 0);
-
-      recordsData.push({
-        eventId: event.id,
-        studentId: student.id,
-        method: randomChoice(methods),
-        timein: recordDate,
-        timeout: event.isTimeout ? randomChoice([recordDate, null]) : null,
-      });
-    }
-  }
-
-  await prisma.record.createMany({ data: recordsData });
-  console.log(
-    `Created ${recordsData.length} attendance records for approved events`,
-  );
-
-  console.log("Database seed completed successfully");
+  console.log("Seed finished successfully.");
 }
 
 main()
   .catch((e) => {
-    console.error("Seed failed:", e);
+    console.error(e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .finally(async () => await prisma.$disconnect());
