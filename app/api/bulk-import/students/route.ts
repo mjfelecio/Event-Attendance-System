@@ -92,7 +92,6 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json(ok({
-      success: true,
       message: `Successfully processed ${results.length} records.`,
       count: results.length
     }), { status: 200 });

@@ -18,6 +18,7 @@ import {
   AlertTitle,
 } from "@/globals/components/shad-cn/alert";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
+import { fetchApi } from "@/globals/utils/api";
 
 type Props = {
   onImportSuccess: (count: number) => void;
@@ -33,15 +34,13 @@ export default function StudentImporter({ onImportSuccess }: Props) {
 
     setIsProcessing(true);
     try {
-      const response = await fetch("/api/bulk-import/students", {
+      const data = await fetchApi<any>("/api/bulk-import/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsedData),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.count) {
         toastSuccess(data.message);
         onImportSuccess(data.count);
         setParsedData(null);
