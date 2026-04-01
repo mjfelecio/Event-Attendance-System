@@ -45,9 +45,19 @@ const ImportStudentPage = () => {
             Bulk upload student informations
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Download className="w-4 h-4" />
-          CSV Template
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          asChild
+        >
+          <a
+            href="/templates/student-format.xlsx"
+            download="student_import_template.xlsx"
+          >
+            <Download className="w-4 h-4" />
+            Excel Template
+          </a>
         </Button>
       </div>
 
