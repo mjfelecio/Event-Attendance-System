@@ -59,7 +59,6 @@ export default function StudentImporter({ onImportSuccess }: Props) {
     <CSVReader
       config={{
         header: true,
-        dynamicTyping: true,
         skipEmptyLines: true,
       }}
       onUploadAccepted={(results: any) => {
