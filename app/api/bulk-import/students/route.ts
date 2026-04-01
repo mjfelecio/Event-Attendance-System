@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import { 
-  StudentStatus, 
-  SchoolLevel, 
-  YearLevel, 
-  Prisma 
-} from "@prisma/client";
+import { StudentStatus, SchoolLevel, YearLevel, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/globals/libs/prisma";
 import { slugify } from "@/features/manage-list/utils/mapStudentToRow";
@@ -34,11 +29,12 @@ export async function POST(request: Request) {
 
     if (!parseResult.success) {
       return NextResponse.json(
-        { 
-          message: "Invalid bulk data format.", 
-          issues: z.treeifyError(parseResult.error) 
+        {
+          success: false,
+          message: "Invalid bulk data format. See the logs for more details.",
+          issues: z.treeifyError(parseResult.error),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,14 +45,17 @@ export async function POST(request: Request) {
         const isCollege = data.schoolLevel === SchoolLevel.COLLEGE;
         const isShs = data.schoolLevel === SchoolLevel.SHS;
 
-        const normalizedDepartment = isCollege ? data.department ?? null : null;
-        const departmentSlug = normalizedDepartment ? slugify(normalizedDepartment) : null;
+        const normalizedDepartment = isCollege
+          ? (data.department ?? null)
+          : null;
+        const departmentSlug = normalizedDepartment
+          ? slugify(normalizedDepartment)
+          : null;
         const houseSlug = data.house ? slugify(data.house) : null;
 
         return prisma.student.upsert({
           where: { id: data.id },
           update: {
-            id: String(data.id),
             lastName: data.lastName,
             firstName: data.firstName,
             middleName: data.middleName,
@@ -88,21 +87,29 @@ export async function POST(request: Request) {
             houseSlug,
           },
         });
-      })
+      }),
     );
 
-    return NextResponse.json(ok({
-      message: `Successfully processed ${results.length} records.`,
-      count: results.length
-    }), { status: 200 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Successfully processed ${results.length} records.`,
+        count: results.length,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("BULK_IMPORT_ERROR", error);
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return NextResponse.json(err(`Database error: ${error.message}`, error.code), { status: 500 });
+      return NextResponse.json(
+        err(`Database error: ${error.message}`, error.code),
+        { status: 500 },
+      );
     }
 
-    return NextResponse.json(err("Internal server error during bulk import."), { status: 500 });
+    return NextResponse.json(err("Internal server error during bulk import."), {
+      status: 500,
+    });
   }
 }

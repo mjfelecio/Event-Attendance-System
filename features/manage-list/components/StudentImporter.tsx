@@ -18,7 +18,7 @@ import {
   AlertTitle,
 } from "@/globals/components/shad-cn/alert";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
-import { fetchApi } from "@/globals/utils/api";
+import { ApiError, fetchApi } from "@/globals/utils/api";
 
 type Props = {
   onImportSuccess: (count: number) => void;
@@ -34,18 +34,23 @@ export default function StudentImporter({ onImportSuccess }: Props) {
 
     setIsProcessing(true);
     try {
-      const data = await fetchApi<any>("/api/bulk-import/students", {
+      const response = await fetch("/api/bulk-import/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsedData),
       });
 
-      if (data.count) {
+      const data = await response.json();
+      if (data.success) {
         toastSuccess(data.message);
         onImportSuccess(data.count);
         setParsedData(null);
       } else {
         toastDanger(data.message || "Bulk import failed.");
+        console.error(
+          "Parse error: ",
+          JSON.stringify(data.issues, null, 2),
+        );
       }
     } catch (error) {
       toastDanger("Network error during bulk import.");
