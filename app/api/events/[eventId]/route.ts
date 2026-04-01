@@ -2,7 +2,7 @@ import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/globals/libs/prisma";
-import { ok } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
 import {
   assertEventOwnership,
   assertEventStatus,
@@ -91,7 +91,7 @@ export async function PATCH(
       requireRole(user, "ADMIN");
 
       if (action === "APPROVE") {
-        assertEventStatus(event, ["PENDING", "DRAFT"]);
+        assertEventStatus(event, ["PENDING", "DRAFT", "REJECTED", "APPROVED"]);
         const approved = await prisma.event.update({
           where: { id: eventId },
           data: {
@@ -153,7 +153,20 @@ export async function DELETE(
     }
 
     assertEventOwnership(existing, user);
-    assertEventStatus(existing, "DRAFT");
+
+    const attendanceCount = await prisma.record.count({
+      where: { eventId: existing.id },
+    });
+
+    if (attendanceCount > 0) {
+      return NextResponse.json(
+        err(
+          "Cannot delete this event because attendance has already been recorded.",
+          "EVENT_HAS_RECORDS"
+        ),
+        { status: 409 }
+      );
+    }
 
     await prisma.event.delete({ where: { id: eventId } });
 

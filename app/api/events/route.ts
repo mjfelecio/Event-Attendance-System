@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/globals/libs/prisma";
-import { ok } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
 import {
   assertEventOwnership,
   assertEventStatus,
@@ -12,6 +12,7 @@ import {
 import { respondWithError } from "@/globals/utils/httpError";
 
 const eventStatusEnum = z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]);
+const eventScopeEnum = z.enum(["visible", "mine"]);
 const eventCategoryEnum = z.enum([
   "ALL",
   "COLLEGE",
@@ -26,6 +27,7 @@ const eventCategoryEnum = z.enum([
 
 const listQuerySchema = z.object({
   status: eventStatusEnum.optional(),
+  scope: eventScopeEnum.optional(),
 });
 
 const eventMutationSchema = z.object({
@@ -50,13 +52,30 @@ export async function GET(req: NextRequest) {
     );
 
     const where: Record<string, unknown> = {};
+    const statusFilter = query.success ? query.data.status : undefined;
+    const scopeFilter = query.success ? query.data.scope : undefined;
 
-    if (user.role !== "ADMIN") {
-      where.createdById = user.id;
-    }
+    if (user.role === "ADMIN") {
+      if (statusFilter) {
+        where.status = statusFilter;
+      }
+    } else {
+      const resolvedScope = scopeFilter ?? "visible";
 
-    if (query.success && query.data.status) {
-      where.status = query.data.status;
+      if (resolvedScope === "mine") {
+        where.createdById = user.id;
+
+        if (statusFilter) {
+          where.status = statusFilter;
+        }
+      } else if (!statusFilter) {
+        where.OR = [{ createdById: user.id }, { status: "APPROVED" }];
+      } else if (statusFilter === "APPROVED") {
+        where.status = "APPROVED";
+      } else {
+        where.createdById = user.id;
+        where.status = statusFilter;
+      }
     }
 
     const events = await prisma.event.findMany({
@@ -96,7 +115,13 @@ export async function POST(req: Request) {
       }
 
       assertEventOwnership(existing, user);
-      assertEventStatus(existing, "DRAFT");
+      const editableStatuses: Array<
+        "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"
+      > =
+        user.role === "ADMIN"
+          ? ["DRAFT", "PENDING", "APPROVED", "REJECTED"]
+          : ["DRAFT", "APPROVED", "REJECTED"];
+      assertEventStatus(existing, editableStatuses);
 
       const updated = await prisma.event.update({
         where: { id: payload.id },
@@ -133,7 +158,20 @@ export async function DELETE(req: Request) {
     }
 
     assertEventOwnership(existing, user);
-    assertEventStatus(existing, "DRAFT");
+
+    const attendanceCount = await prisma.record.count({
+      where: { eventId: existing.id },
+    });
+
+    if (attendanceCount > 0) {
+      return NextResponse.json(
+        err(
+          "Cannot delete this event because attendance has already been recorded.",
+          "EVENT_HAS_RECORDS"
+        ),
+        { status: 409 }
+      );
+    }
 
     await prisma.event.delete({ where: { id } });
 

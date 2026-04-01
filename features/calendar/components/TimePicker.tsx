@@ -27,17 +27,17 @@ const TimePicker = ({ unit, value, onChange, disabled }: Props) => {
 
   return (
     <div
-      className={`flex flex-col border border-black rounded-2xl overflow-hidden w-6 ${
-        disabled && "border-gray-300"
+      className={`flex w-10 flex-col overflow-hidden rounded-lg border ${
+        disabled ? "border-slate-200 bg-slate-100" : "border-slate-300 bg-white"
       }`}
     >
       <button
         type="button"
-        className={`text-sm p-0.5 transition-colors
+        className={`px-1 py-0.5 text-xs leading-none transition-colors
           ${
             disabled
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
-              : "text-black hover:bg-gray-100 cursor-pointer"
+              ? "cursor-not-allowed text-slate-400 opacity-70"
+              : "text-slate-700 hover:bg-slate-50"
           }`}
         disabled={disabled}
         onClick={() => handleTimeChange("increase")}
@@ -45,22 +45,22 @@ const TimePicker = ({ unit, value, onChange, disabled }: Props) => {
         +
       </button>
       <p
-        className={`p-0.5 flex justify-center items-center font-mono text-sm 
+        className={`flex items-center justify-center px-1 py-1 font-mono text-xs 
         ${
           disabled
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
-            : "text-black hover:bg-gray-100 cursor-pointer"
+            ? "text-slate-400 opacity-70"
+            : "text-slate-700"
         }`}
       >
         {value.toString().padStart(2, "0")}
       </p>
       <button
         type="button"
-        className={`text-sm p-0.5 transition-colors
+        className={`px-1 py-0.5 text-xs leading-none transition-colors
           ${
             disabled
-              ? "bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed opacity-50"
-              : "text-black hover:bg-gray-100 cursor-pointer"
+              ? "cursor-not-allowed text-slate-400 opacity-70"
+              : "text-slate-700 hover:bg-slate-50"
           }`}
         disabled={disabled}
         onClick={() => handleTimeChange("decrease")}

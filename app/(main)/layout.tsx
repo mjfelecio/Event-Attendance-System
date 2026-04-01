@@ -60,9 +60,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SidebarProvider>
-      <div className="flex">
+      <div className="flex min-h-screen bg-slate-100">
         <Sidebar />
-        {children}
+        <main className="min-h-screen flex-1 overflow-x-hidden">{children}</main>
       </div>
     </SidebarProvider>
   );

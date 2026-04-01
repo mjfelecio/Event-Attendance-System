@@ -3,6 +3,12 @@ import { Event, EventAPI, EventStats, NewEvent } from "@/globals/types/events";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
 
+type EventScope = "visible" | "mine";
+type UseEventsOptions = {
+  scope?: EventScope;
+  status?: Event["status"];
+};
+
 // Transform function to make sure that the dates are actually a Date object
 const transformEvent = (e: EventAPI): Event => ({
   ...e,
@@ -21,7 +27,7 @@ export const useSaveEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (event: Event | NewEvent) => {
-      return fetchApi("/api/events", {
+      return fetchApi<Event>("/api/events", {
         method: "POST",
         body: JSON.stringify(event),
         headers: { "Content-Type": "application/json" },
@@ -65,10 +71,8 @@ export const useDeleteEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => {
-      return fetchApi("/api/events", {
+      return fetchApi<null>(`/api/events/${id}`, {
         method: "DELETE",
-        body: JSON.stringify({ id }),
-        headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () =>
@@ -113,11 +117,26 @@ export const useStatsOfEvent = (eventId?: string) => {
 /**
  * Fetches all events
  */
-const useEvents = () => {
+const useEvents = (options: UseEventsOptions = {}) => {
+  const { scope = "visible", status } = options;
+
   return useQuery({
-    queryKey: queryKeys.events.all(),
+    queryKey: queryKeys.events.list(scope, status),
     queryFn: async () => {
-      const events = await fetchApi<EventAPI[]>("/api/events");
+      const params = new URLSearchParams();
+
+      if (scope) {
+        params.set("scope", scope);
+      }
+
+      if (status) {
+        params.set("status", status);
+      }
+
+      const query = params.toString();
+      const endpoint = query ? `/api/events?${query}` : "/api/events";
+
+      const events = await fetchApi<EventAPI[]>(endpoint);
       return events.map(transformEvent);
     },
   });

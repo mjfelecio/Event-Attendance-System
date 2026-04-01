@@ -6,8 +6,9 @@ interface SelectionBoardFrameProps {
 
 const SelectionBoardFrame = ({ children }: SelectionBoardFrameProps) => {
   return (
-    <div className="w-full rounded-[2.5rem] border border-neutral-300 bg-white px-6 py-8 shadow-[0_20px_50px_rgba(15,23,42,0.08)] md:px-14 md:py-12">
-      {children}
+    <div className="relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur md:p-8">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_58%)]" />
+      <div className="relative">{children}</div>
     </div>
   );
 };

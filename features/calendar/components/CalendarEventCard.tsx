@@ -23,6 +23,10 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
     accent: string;
     textMain: string;
     textSub: string;
+    monthBg: string;
+    monthBorder: string;
+    monthText: string;
+    monthTime: string;
   }> = {
     DRAFT: {
       bg: "bg-orange-500",
@@ -30,6 +34,10 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
       accent: "bg-orange-600",
       textMain: "text-white",
       textSub: "text-orange-100",
+      monthBg: "bg-orange-50",
+      monthBorder: "border-orange-200",
+      monthText: "text-orange-900",
+      monthTime: "text-orange-700",
     },
     PENDING: {
       bg: "bg-sky-500",
@@ -37,6 +45,10 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
       accent: "bg-sky-600",
       textMain: "text-white",
       textSub: "text-sky-100",
+      monthBg: "bg-sky-50",
+      monthBorder: "border-sky-200",
+      monthText: "text-sky-900",
+      monthTime: "text-sky-700",
     },
     APPROVED: {
       bg: "bg-emerald-500",
@@ -44,6 +56,10 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
       accent: "bg-emerald-600",
       textMain: "text-white",
       textSub: "text-emerald-100",
+      monthBg: "bg-emerald-50",
+      monthBorder: "border-emerald-200",
+      monthText: "text-emerald-900",
+      monthTime: "text-emerald-700",
     },
     REJECTED: {
       bg: "bg-rose-500",
@@ -51,6 +67,10 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
       accent: "bg-rose-600",
       textMain: "text-white",
       textSub: "text-rose-100",
+      monthBg: "bg-rose-50",
+      monthBorder: "border-rose-200",
+      monthText: "text-rose-900",
+      monthTime: "text-rose-700",
     },
   };
 
@@ -86,7 +106,9 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
   if (arg.view.type === "dayGridMonth") {
     return (
       <div
-        className={`flex flex-1 flex-row gap-1 px-1 py-0.5 items-center rounded-md transition-colors overflow-hidden ${
+        className={`flex w-full flex-1 flex-row items-center gap-1 overflow-hidden rounded-md border px-1.5 py-0.5 transition-colors ${
+          colors.monthBg
+        } ${colors.monthBorder} ${
           isPast ? "opacity-50" : ""
         }`}
       >
@@ -97,8 +119,8 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
         <div className="flex-1 flex flex-row gap-1 items-center min-w-0">
           {cleanTimeText && (
             <p
-              className={`text-xs whitespace-nowrap ${fadeIfPast(
-                "text-gray-500",
+              className={`text-[11px] whitespace-nowrap font-semibold ${fadeIfPast(
+                colors.monthTime,
                 isPast,
                 40
               )}`}
@@ -107,8 +129,8 @@ const CalendarEventCard = ({ arg }: { arg: EventContentArg }) => {
             </p>
           )}
           <p
-            className={`font-medium text-xs truncate ${fadeIfPast(
-              "text-gray-700",
+            className={`truncate text-[11px] font-semibold ${fadeIfPast(
+              colors.monthText,
               isPast,
               50
             )}`}
