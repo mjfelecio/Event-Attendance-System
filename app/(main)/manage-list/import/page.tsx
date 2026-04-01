@@ -20,11 +20,11 @@ const ImportStudentPage = () => {
         </div>
         <Button variant="outline" size="sm" className="gap-2" asChild>
           <a
-            href="/templates/student-format.xlsx"
+            href="/templates/students.csv"
             download="student_import_template.xlsx"
           >
             <Download className="w-4 h-4" />
-            Excel Template
+            CSV Template
           </a>
         </Button>
       </div>
