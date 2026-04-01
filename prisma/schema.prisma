@@ -7,25 +7,27 @@ datasource db {
 }
 
 model Event {
-  id              String        @id @default(cuid())
-  title           String
-  location        String?
-  description     String?
-  category        EventCategory
-  isTimeout       Boolean       @default(false)
-  start           DateTime
-  end             DateTime
-  allDay          Boolean       @default(false)
-  includedGroups  String?
-  status          EventStatus   @default(DRAFT)
+  id          String        @id @default(cuid())
+  title       String
+  location    String?
+  description String?
+  category    EventCategory
+  isTimeout   Boolean       @default(false)
+  start       DateTime
+  end         DateTime
+  allDay      Boolean       @default(false)
+  status      EventStatus   @default(DRAFT)
+
+  // Relations
+  includedGroups Group[]  @relation("EventGroups")
+  Record         Record[]
+
   createdById     String?
+  createdBy       User?     @relation("EventCreator", fields: [createdById], references: [id])
   reviewedById    String?
+  reviewedBy      User?     @relation("EventReviewer", fields: [reviewedById], references: [id])
   reviewedAt      DateTime?
   rejectionReason String?
-
-  Record     Record[]
-  createdBy  User?    @relation("EventCreator", fields: [createdById], references: [id])
-  reviewedBy User?    @relation("EventReviewer", fields: [reviewedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -35,21 +37,17 @@ model Event {
 }
 
 model Student {
-  id             String        @id
-  lastName       String
-  firstName      String
-  middleName     String?
-  shsStrand      String? // required if schoolLevel = SHS
-  collegeProgram String? // required if schoolLevel = COLLEGE
-  section        String
-  yearLevel      YearLevel
-  schoolLevel    SchoolLevel
-  status         StudentStatus @default(ACTIVE)
-  department     String?
-  departmentSlug String?
-  house          String?
-  houseSlug      String?
-  Record         Record[]
+  id          String      @id
+  lastName    String
+  firstName   String
+  middleName  String?
+  section     String
+  yearLevel   YearLevel
+  schoolLevel SchoolLevel
+
+  // Relations: Students can belong to multiple groups (House, Strand, etc.)
+  groups Group[]
+  Record Record[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,6 +82,22 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Group {
+  id       String        @id @default(cuid())
+  name     String
+  slug     String        @unique
+  category EventCategory
+
+  // Relations
+  students Student[]
+  events   Event[]   @relation("EventGroups")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
 }
 
 enum UserRole {
@@ -121,13 +135,6 @@ enum YearLevel {
 enum SchoolLevel {
   SHS
   COLLEGE
-}
-
-enum StudentStatus {
-  ACTIVE
-  INACTIVE
-  GRADUATED
-  DROPPED
 }
 
 enum EventCategory {
