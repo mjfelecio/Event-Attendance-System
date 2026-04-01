@@ -10,6 +10,7 @@ import {
 import StudentFilterPopover from "@/features/manage-list/components/StudentFilterPopover";
 import StudentSearchInput from "@/features/manage-list/components/StudentSearchInput";
 import StudentSortPopover from "@/features/manage-list/components/StudentSortPopover";
+import Link from "next/link";
 
 interface StudentManageToolbarProps {
   categoryHeading: string;
@@ -39,7 +40,6 @@ interface StudentManageToolbarProps {
   isFilterOpen: boolean;
   setIsFilterOpen: Dispatch<SetStateAction<boolean>>;
   onAddStudent: () => void;
-  onImportStudents: () => void;
 }
 
 const StudentManageToolbar = ({
@@ -70,7 +70,6 @@ const StudentManageToolbar = ({
   isFilterOpen,
   setIsFilterOpen,
   onAddStudent,
-  onImportStudents,
 }: StudentManageToolbarProps) => {
   return (
     <div className="px-6 md:px-12">
@@ -123,14 +122,15 @@ const StudentManageToolbar = ({
                 Add
               </button>
 
-              <button
-                type="button"
-                onClick={onImportStudents}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-800"
-              >
-                <Upload className="size-4" strokeWidth={1.6} />
-                Import
-              </button>
+              <Link href={"/manage-list/import"}>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-800"
+                >
+                  <Upload className="size-4" strokeWidth={1.6} />
+                  Import
+                </button>
+              </Link>
 
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -192,7 +192,10 @@ const StudentManageToolbar = ({
               </div>
             </div>
 
-            <StudentSearchInput value={searchValue} onChange={(value) => setSearchValue(value)} />
+            <StudentSearchInput
+              value={searchValue}
+              onChange={(value) => setSearchValue(value)}
+            />
           </div>
         </div>
       </div>

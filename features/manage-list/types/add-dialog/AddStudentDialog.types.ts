@@ -13,7 +13,6 @@ export type StudentFormData = {
   section: string;
   yearLevel: string;
   status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "DROPPED";
-  contactNumber: string;
 };
 
 export type StudentFormErrors = Partial<Record<keyof StudentFormData, string>>;

@@ -84,7 +84,6 @@ export async function POST(request: Request) {
         section: data.section,
         yearLevel: data.yearLevel,
         status: data.status ?? StudentStatus.ACTIVE,
-        contactNumber: data.contactNumber ?? null,
         department: normalizedDepartment,
         departmentSlug,
         house: data.house ?? null,

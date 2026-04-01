@@ -30,7 +30,6 @@ export type StudentRowSource = {
   yearLevel: YearLevel;
   schoolLevel: SchoolLevel;
   status: StudentStatus;
-  contactNumber?: string | null;
   department?: string | null;
   departmentSlug?: string | null;
   house?: string | null;
@@ -56,7 +55,6 @@ export const mapStudentToSource = (student: Student | StudentRowSource): Student
     yearLevel: candidate.yearLevel,
     schoolLevel: candidate.schoolLevel,
     status: candidate.status,
-    contactNumber: candidate.contactNumber ?? null,
     department: candidate.department ?? null,
     departmentSlug: candidate.departmentSlug ?? slugify(candidate.department) ?? undefined,
     house: candidate.house ?? null,
@@ -109,7 +107,6 @@ export const mapStudentToRow = (student: StudentRowSource): StudentRow => {
     yearLevel: student.yearLevel,
     schoolLevel: student.schoolLevel,
     status: student.status,
-    contactNumber: student.contactNumber ?? undefined,
     updatedAt: updatedAt.toISOString(),
   };
 };

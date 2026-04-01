@@ -88,7 +88,6 @@ const ManageStudentClient = ({
     section: data.section.trim(),
     yearLevel: data.yearLevel,
     status: data.status,
-    contactNumber: data.contactNumber.trim(),
   });
 
   const handleAddStudent = async (data: StudentFormData) => {
@@ -180,11 +179,6 @@ const ManageStudentClient = ({
     }
   };
 
-  const handleImportStudents = () => {
-    console.log('Import students clicked');
-    // TODO: Implement import functionality
-  };
-
   return (
     <div className="flex w-full flex-col gap-6">
       {submitError && (
@@ -216,7 +210,6 @@ const ManageStudentClient = ({
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
         onAddStudent={() => setIsAddDialogOpen(true)}
-        onImportStudents={handleImportStudents}
         totalRows={totalRows}
         visibleRowsCount={visibleRowsCount}
         activeFilterCount={activeFilterCount}
@@ -260,7 +253,6 @@ const ManageStudentClient = ({
                 section: editingStudent.section,
                 yearLevel: editingStudent.yearLevel,
                 status: editingStudent.status,
-                contactNumber: editingStudent.contactNumber ?? "",
               }
             : undefined
         }
