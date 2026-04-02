@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
+import { EventCategory } from "@prisma/client";
 
 // Transform function to make sure that the dates are actually a Date object
 const transformStudent = (e: StudentAPI): Student => ({
@@ -99,6 +100,18 @@ export const useStudentFromEvent = ({
         `/api/events/${eventId}/students/${studentId}`
       );
       return transformStudent(student);
+    },
+  });
+};
+
+/**
+ * Fetches a student through studentId
+ */
+export const useStudentsStats = () => {
+  return useQuery({
+    queryKey: ['stats', 'students'],
+    queryFn: async () => {
+      return fetchApi<Record<EventCategory, number>>(`/api/stats/student-counts`);
     },
   });
 };

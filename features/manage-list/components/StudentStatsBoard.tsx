@@ -3,28 +3,22 @@
 import { useMemo } from "react";
 import StudentStatCard from "@/features/manage-list/components/StudentStatCard";
 import { STUDENT_STATS } from "@/features/manage-list/constants/stats";
-import useStudents from "@/globals/hooks/useStudents";
-import { useFetchGroupsForStudent } from "@/globals/hooks/useGroups";
+import useStudents, { useStudentsStats } from "@/globals/hooks/useStudents";
 
 const StudentStatsBoard = () => {
   const { data: students, isLoading: isLoadingStudents } = useStudents();
-  const { data: groups, isLoading: isLoadingGroups } = useFetchGroupsForStudent();
+  const {data: studentStats} = useStudentsStats();
 
   const countsByCategory = useMemo(() => {
-    if (!students) return null;
-    if (!groups) {
-      house: students.filter((student) => Boolean(student.house?.trim())).length,
-      console.warn(JSON.stringify(groups, null, 2));
-      return null;
-    }
+    if (!students || !studentStats) return null;
 
     return {
-      all: students.length,
-      college: groups.COLLEGE.length,
-      shs: groups.SHS.length,
-      house: groups.HOUSE.length,
+      all: studentStats.ALL,
+      college: studentStats.COLLEGE,
+      shs: studentStats.SHS,
+      house: studentStats.HOUSE,
     };
-  }, [students]);
+  }, [students, studentStats]);
 
   const stats = useMemo(
     () =>
