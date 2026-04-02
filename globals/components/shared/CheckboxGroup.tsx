@@ -2,10 +2,7 @@
 
 import { ChevronsUpDown } from "lucide-react";
 import { Button } from "@/globals/components/shad-cn/button";
-import {
-  Command,
-  CommandGroup,
-} from "@/globals/components/shad-cn/command";
+import { Command, CommandGroup } from "@/globals/components/shad-cn/command";
 import {
   Popover,
   PopoverContent,
@@ -15,31 +12,36 @@ import { useState } from "react";
 import { Checkbox } from "@/globals/components/shad-cn/checkbox";
 import { Label } from "@/globals/components/shad-cn/label";
 
-type CheckboxGroupProps<T extends string> = {
-  choices: T[];
+type CheckboxItem = {
+  id: string;
+  label: string;
+};
+
+type CheckboxGroupProps = {
+  choices: CheckboxItem[];
   placeholder: string;
-  selectedValues: T[];
-  onSelect: (newValues: T[]) => void;
-  maxHeight?: string
+  selectedValues: string[];
+  onSelect: (newValues: string[]) => void;
+  maxHeight?: string;
 };
 
 /**
  * Checkbox Group that allows you to select multiple groups
  * The selected items are returned as an array in a two-column layout
  */
-const CheckboxGroup = <T extends string>({
+const CheckboxGroup = ({
   choices,
   placeholder,
   selectedValues,
   onSelect,
   maxHeight = "300px", // Default max height
-}: CheckboxGroupProps<T>) => {
+}: CheckboxGroupProps) => {
   const [open, setOpen] = useState(false);
 
-  const handleToggle = (item: T) => {
-    const newSelectedValues = selectedValues.includes(item)
-      ? selectedValues.filter((selected) => selected !== item)
-      : [...selectedValues, item];
+  const handleToggle = (value: string) => {
+    const newSelectedValues = selectedValues.includes(value)
+      ? selectedValues.filter((selected) => selected !== value)
+      : [...selectedValues, value];
 
     onSelect(newSelectedValues);
   };
@@ -58,8 +60,8 @@ const CheckboxGroup = <T extends string>({
           aria-expanded={open}
           className="min-w-[250px] justify-between"
         >
-          {selectedValues.length > 0 
-            ? `${placeholder} (${selectedValues.length} selected)` 
+          {selectedValues.length > 0
+            ? `${placeholder} (${selectedValues.length} selected)`
             : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -67,27 +69,24 @@ const CheckboxGroup = <T extends string>({
       <PopoverContent className="min-w-[300px] p-0">
         <Command>
           <CommandGroup>
-            <div 
+            <div
               className="grid grid-cols-2 gap-4 p-4"
-              style={{ maxHeight, overflowY: 'auto' }}
+              style={{ maxHeight, overflowY: "auto" }}
             >
               {/* First Column */}
               <div className="space-y-2">
                 {firstColumn.map((item) => (
-                  <div 
-                    key={item} 
-                    className="flex items-center space-x-2"
-                  >
+                  <div key={item.id} className="flex items-center space-x-2">
                     <Checkbox
-                      id={`first-${item}`}
-                      checked={selectedValues.includes(item)}
-                      onCheckedChange={() => handleToggle(item)}
+                      id={`first-${item.id}`}
+                      checked={selectedValues.includes(item.id)}
+                      onCheckedChange={() => handleToggle(item.id)}
                     />
-                    <Label 
-                      htmlFor={`first-${item}`} 
+                    <Label
+                      htmlFor={`first-${item.id}`}
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      {item}
+                      {item.label}
                     </Label>
                   </div>
                 ))}
@@ -96,20 +95,17 @@ const CheckboxGroup = <T extends string>({
               {/* Second Column */}
               <div className="space-y-2">
                 {secondColumn.map((item) => (
-                  <div 
-                    key={item} 
-                    className="flex items-center space-x-2"
-                  >
+                  <div key={item.id} className="flex items-center space-x-2">
                     <Checkbox
-                      id={`second-${item}`}
-                      checked={selectedValues.includes(item)}
-                      onCheckedChange={() => handleToggle(item)}
+                      id={`second-${item.id}`}
+                      checked={selectedValues.includes(item.id)}
+                      onCheckedChange={() => handleToggle(item.id)}
                     />
-                    <Label 
-                      htmlFor={`second-${item}`} 
+                    <Label
+                      htmlFor={`second-${item.id}`}
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      {item}
+                      {item.label}
                     </Label>
                   </div>
                 ))}
@@ -118,16 +114,16 @@ const CheckboxGroup = <T extends string>({
 
             {/* Select All / Clear All Footer */}
             <div className="border-t px-4 py-2 flex justify-end">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
-                onClick={() => onSelect(choices)}
+                onClick={() => onSelect(choices.map((c) => c.id))}
                 className="text-xs"
               >
                 Select All
               </Button>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => onSelect([])}
                 className="text-xs"
