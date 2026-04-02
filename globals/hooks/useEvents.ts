@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Event, EventAPI, EventForm, EventStats } from "@/globals/types/events";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
+import { EventCategory, Group } from "@prisma/client";
 
 type EventScope = "visible" | "mine";
 type UseEventsOptions = {
@@ -47,9 +48,7 @@ const useEventAction = (action: "SUBMIT" | "APPROVE" | "REJECT") => {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          action === "REJECT"
-            ? { action, reason: payload.reason }
-            : { action }
+          action === "REJECT" ? { action, reason: payload.reason } : { action },
         ),
       });
     },
@@ -81,7 +80,7 @@ export const useDeleteEvent = () => {
 };
 
 /**
- * Sets the event to start recording timeout instead of timein 
+ * Sets the event to start recording timeout instead of timein
  */
 export const useStartTimeoutMode = () => {
   const queryClient = useQueryClient();
@@ -166,6 +165,17 @@ export const useFetchEvent = (eventId?: string) => {
       return transformEvent(event);
     },
     enabled: !!eventId,
+  });
+};
+
+export const useFetchGroupsByCategory = (eventCategory?: EventCategory) => {
+  return useQuery({
+    queryKey: ["groups", "by-category", eventCategory],
+    enabled: !!eventCategory,
+    queryFn: () => {
+      return fetchApi<Group[]>(`/api/groups/${eventCategory}`);
+    },
+    staleTime: 1000 * 60 * 5,
   });
 };
 
