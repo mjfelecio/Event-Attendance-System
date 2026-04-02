@@ -1,4 +1,4 @@
-import { Event } from "@/globals/types/events";
+import { Event, EventForm } from "@/globals/types/events";
 
 /**
  * Filters and sorts events so that only upcoming or ongoing ones remain.
@@ -22,4 +22,23 @@ export function getUpcomingEvents(data?: Event[]): Event[] {
       return start >= todayStart || end >= todayStart;
     })
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+}
+
+/**
+ * Displays only the date portion of the datetime
+ */
+export function normalizeAllDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+export function formatEventPayload(data: EventForm): EventForm {
+  return {
+    ...data,
+    start: data.allDay ? normalizeAllDay(data.start) : data.start,
+    end: data.allDay ? normalizeAllDay(data.end) : data.end,
+  };
+}
+
+export function toDate(str: string) {
+  return new Date(str);
 }
