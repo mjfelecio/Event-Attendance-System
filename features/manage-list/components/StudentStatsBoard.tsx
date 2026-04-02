@@ -13,10 +13,10 @@ const StudentStatsBoard = () => {
     if (!students || !studentStats) return null;
 
     return {
-      all: studentStats.ALL,
-      college: studentStats.COLLEGE,
-      shs: studentStats.SHS,
-      house: studentStats.HOUSE,
+      ALL: studentStats.ALL,
+      COLLEGE: studentStats.COLLEGE,
+      SHS: studentStats.SHS,
+      HOUSE: studentStats.HOUSE,
     };
   }, [students, studentStats]);
 

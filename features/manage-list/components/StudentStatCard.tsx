@@ -15,9 +15,9 @@ const StudentStatCard = ({ stat, isLoading = false }: StudentStatCardProps) => {
     ? new Intl.NumberFormat().format(value)
     : "N/A";
   const href =
-    category === "all"
-      ? `/manage-list/manage-student?category=all&label=All%20Students`
-      : `/manage-list/manage-which?type=${category}`;
+    category === "ALL"
+      ? `/manage-list/manage-student?category=ALL`
+      : `/manage-list/manage-which?category=${category}`;
 
   return (
     <Link

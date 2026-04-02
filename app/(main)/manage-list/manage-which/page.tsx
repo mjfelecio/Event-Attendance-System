@@ -5,18 +5,18 @@ import { ManageListCategory } from "@/features/manage-list/types";
 
 type Props = {
   searchParams: Promise<{
-    type?: ManageListCategory;
+    category?: ManageListCategory;
   }>;
 };
 
 const ManageWhichPage = async ({ searchParams }: Props) => {
   const params = await searchParams;
-  const type = params.type ?? "COLLEGE";
+  const category = params.category ?? "COLLEGE";
 
   const renderContent = () => {
-    if (type === "COLLEGE") return <CollegeSelectionBoard />;
-    if (type === "SHS") return <ShsSelectionBoard />;
-    if (type === "HOUSE") return <HouseSelectionBoard />;
+    if (category === "COLLEGE") return <CollegeSelectionBoard />;
+    if (category === "SHS") return <ShsSelectionBoard />;
+    if (category === "HOUSE") return <HouseSelectionBoard />;
 
     return (
       <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-[0_16px_32px_rgba(15,23,42,0.08)]">
