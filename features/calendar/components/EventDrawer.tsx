@@ -26,12 +26,12 @@ import {
   useSaveEvent,
   useApproveEvent,
   useSubmitEvent,
-  useFetchGroupsByCategory,
 } from "@/globals/hooks/useEvents";
 import { EVENT_CHOICES } from "@/features/calendar/constants/categoryGroups"; // Keep just the categories here
 import { Event } from "@/globals/types/events";
 import EventActionButtons from "./EventActionButtons";
 import { formatEventPayload } from "@/globals/utils/events";
+import { useFetchGroupsByCategory } from "@/globals/hooks/useGroups";
 
 type EventDrawerProps = {
   isOpen: boolean;

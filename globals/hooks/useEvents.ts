@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Event, EventAPI, EventForm, EventStats } from "@/globals/types/events";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
-import { EventCategory, Group } from "@prisma/client";
 
 type EventScope = "visible" | "mine";
 type UseEventsOptions = {
@@ -165,17 +164,6 @@ export const useFetchEvent = (eventId?: string) => {
       return transformEvent(event);
     },
     enabled: !!eventId,
-  });
-};
-
-export const useFetchGroupsByCategory = (eventCategory?: EventCategory) => {
-  return useQuery({
-    queryKey: ["groups", "by-category", eventCategory],
-    enabled: !!eventCategory,
-    queryFn: () => {
-      return fetchApi<Group[]>(`/api/groups/${eventCategory}`);
-    },
-    staleTime: 1000 * 60 * 5,
   });
 };
 

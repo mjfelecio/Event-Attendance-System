@@ -9,7 +9,19 @@ export const useFetchGroupsForStudent = (studentId?: string) => {
     queryKey: ["groups", "byStudentId", studentId],
     enabled: !!studentId,
     queryFn: () => {
-      return fetchApi<GroupsByCategory>(`/api/groups/for-student/${studentId}`);
+      return fetchApi<GroupsByCategory>(`/api/groups/forStudent/${studentId}`);
     },
+		staleTime: 0
+  });
+};
+
+export const useFetchGroupsByCategory = (eventCategory?: EventCategory) => {
+  return useQuery({
+    queryKey: ["groups", "by-category", eventCategory],
+    enabled: !!eventCategory,
+    queryFn: () => {
+      return fetchApi<Group[]>(`/api/groups/byCategory/${eventCategory}`);
+    },
+    staleTime: 1000 * 60 * 5,
   });
 };
