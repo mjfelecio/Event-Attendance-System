@@ -17,22 +17,24 @@ const CollegeSelectionBoard = () => {
           Select a department to open its roster.
         </p>
       </header>
+      
       <SelectionBoardFrame>
         <div className="mx-auto grid w-full max-w-5xl grid-cols-1 place-items-center gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {COLLEGE_DEPARTMENTS.map((dept) => (
             <Link
-              key={dept.title}
+              key={dept.slug}
               href={{
                 pathname: "/manage-list/manage-student",
                 query: {
-                  category: "college",
-                  item: dept.slug,
-                  label: dept.title,
+                  category: "COLLEGE", 
+                  department: dept.slug,
                 },
               }}
               className="group relative flex min-h-[280px] w-full max-w-[320px] flex-col items-center justify-center gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white px-8 py-7 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_34px_rgba(37,99,235,0.16)]"
             >
+              {/* Decorative Gradient */}
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_58%)] opacity-60 transition group-hover:opacity-100" />
+              
               <div className="flex items-center justify-center">
                 <div className="relative h-40 w-40">
                   <Image
@@ -41,9 +43,11 @@ const CollegeSelectionBoard = () => {
                     fill
                     sizes="10rem"
                     className="object-contain"
+                    priority={false}
                   />
                 </div>
               </div>
+              
               <div className="relative space-y-2 text-center">
                 <p className="text-xl font-semibold text-slate-900">
                   {dept.title}

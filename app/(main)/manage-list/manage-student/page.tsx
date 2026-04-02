@@ -1,88 +1,33 @@
+"use client";
+
 import Link from "next/link";
-import ManageStudentClient from "@/features/manage-list/components/ManageStudentClient";
-import { mapStudentsToRows } from "@/features/manage-list/utils/mapStudentToRow";
-import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
-import { prisma } from "@/globals/libs/prisma";
+import { ManageListCategory } from "@/features/manage-list/types";
+import { useSearchParams } from "next/navigation";
+import { useStudentsV2 } from "@/globals/hooks/useStudents";
+import { useEffect, useState } from "react";
 
-type ManageStudentPageProps = {
-  searchParams: ManageStudentContext;
+const CATEGORY_LABELS: Record<ManageListCategory, string> = {
+  COLLEGE: "College Department",
+  SHS: "Senior High Strand",
+  HOUSE: "House",
+  ALL: "All Students",
 };
 
-const categoryLabels: Record<ManageStudentContext["category"], string> = {
-  college: "College Department",
-  shs: "Senior High Strand",
-  house: "House",
-  all: "All Students",
-};
+const ManageStudentPage = () => {
+  const searchParams = useSearchParams();
+  const filters = Object.fromEntries(searchParams.entries());
 
-const filterByContext = (
-  rows: StudentRow[],
-  category: ManageStudentContext["category"],
-  item?: string
-) => {
-  const isCollegeYear = (yearLevel: StudentRow["yearLevel"]) =>
-    yearLevel === "YEAR_1" ||
-    yearLevel === "YEAR_2" ||
-    yearLevel === "YEAR_3" ||
-    yearLevel === "YEAR_4";
+  const { data: students } = useStudentsV2(filters);
 
-  const isShsYear = (yearLevel: StudentRow["yearLevel"]) =>
-    yearLevel === "GRADE_11" || yearLevel === "GRADE_12";
-
-  return rows.filter((student) => {
-    if (category === "all") {
-      return true;
-    }
-
-    if (category === "college") {
-      if (student.schoolLevel !== "COLLEGE" || !isCollegeYear(student.yearLevel)) {
-        return false;
-      }
-
-      if (item) {
-        return student.departmentSlug === item;
-      }
-      return true;
-    }
-
-    if (category === "shs") {
-      if (student.schoolLevel !== "SHS" || !isShsYear(student.yearLevel)) {
-        return false;
-      }
-
-      if (item) {
-        return student.programSlug === item;
-      }
-      return true;
-    }
-
-    if (category === "house") {
-      if (item) {
-        return student.houseSlug === item;
-      }
-      return Boolean(student.house);
-    }
-
-    return true;
-  });
-};
-
-const ManageStudentPage = async ({ searchParams }: ManageStudentPageProps) => {
-  const params = await Promise.resolve(searchParams ?? {});
-  const { category = "all", label, item } = params;
+  const category = filters?.category as ManageListCategory
+  const label = CATEGORY_LABELS[category] ?? ""
   const backHref =
-    category === "all"
+    filters?.category === "ALL"
       ? "/manage-list"
-      : `/manage-list/manage-which?type=${category}`;
+      : `/manage-list/manage-which?category=${filters?.category}`;
 
-  const students = await prisma.student.findMany({
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
-
-  const studentRows = mapStudentsToRows(students);
-  const baseRows = filterByContext(studentRows, category, item);
+  // const studentRows = mapStudentsToRows(students);
+  // const baseRows = filterByContext(studentRows, category, item);
 
   return (
     <section className="flex flex-1 justify-center overflow-y-auto bg-[radial-gradient(circle_at_top,#eef2ff_0%,#f8fafc_45%,#ffffff_100%)] p-6 text-slate-900 md:p-8">
@@ -96,13 +41,13 @@ const ManageStudentPage = async ({ searchParams }: ManageStudentPageProps) => {
           </Link>
         </div>
 
-        <ManageStudentClient
+        {/* <ManageStudentClient
           category={category}
           label={label}
           item={item}
           categoryHeading={categoryLabels[category] ?? categoryLabels.all}
           rows={baseRows}
-        />
+        /> */}
       </div>
     </section>
   );

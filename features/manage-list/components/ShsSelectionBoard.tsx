@@ -38,9 +38,8 @@ const ShsSelectionBoard = () => {
                   href={{
                     pathname: "/manage-list/manage-student",
                     query: {
-                      category: "shs",
-                      item: strand.slug,
-                      label: strand.title,
+                      category: "SHS", 
+                      strand: strand.slug,
                     },
                   }}
                   className="group inline-flex w-full max-w-[220px] items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-white px-5 py-3 text-center text-sm font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-[0_10px_20px_rgba(37,99,235,0.16)]"
@@ -70,9 +69,8 @@ const ShsSelectionBoard = () => {
                   href={{
                     pathname: "/manage-list/manage-student",
                     query: {
-                      category: "shs",
-                      item: strand.slug,
-                      label: strand.title,
+                      category: "SHS", 
+                      strand: strand.slug,
                     },
                   }}
                   className="group inline-flex w-full max-w-[220px] items-center justify-center gap-2 rounded-xl border border-cyan-100 bg-white px-5 py-3 text-center text-sm font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 hover:shadow-[0_10px_20px_rgba(8,145,178,0.16)]"
