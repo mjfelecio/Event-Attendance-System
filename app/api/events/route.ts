@@ -125,7 +125,7 @@ export async function POST(req: Request) {
         data: {
           ...baseData,
           includedGroups: {
-            connect: baseData.includedGroups.map((g) => ({ id: g })),
+            set: baseData.includedGroups.map((g) => ({ id: g })),
           },
         },
       });
