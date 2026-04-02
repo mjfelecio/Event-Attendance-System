@@ -22,3 +22,15 @@ export type StudentAPI = Omit<Student, "createdAt" | "updatedAt"> & {
   createdAt: string;
   updatedAt: string;
 };
+
+// BELOW IS TEMPORARY
+type WithGroups = {
+  house?: string;
+  section?: string;
+  department?: string;
+  program?: string;
+  strand?: string;
+};
+
+export type StudentWithGroups = Student & WithGroups;
+export type StudentAPIWithGroups = Student & WithGroups;

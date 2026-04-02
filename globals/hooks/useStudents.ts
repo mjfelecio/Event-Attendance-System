@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Student, StudentAPI } from "@/globals/types/students";
+import { Student, StudentAPI, StudentAPIWithGroups, StudentWithGroups } from "@/globals/types/students";
 import { useMemo } from "react";
 import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
 import { fetchApi } from "@/globals/utils/api";
@@ -7,7 +7,7 @@ import { queryKeys } from "@/globals/utils/queryKeys";
 import { EventCategory } from "@prisma/client";
 
 // Transform function to make sure that the dates are actually a Date object
-const transformStudent = (e: StudentAPI): Student => ({
+const transformStudent = (e: StudentAPI | StudentAPIWithGroups): Student => ({
   ...e,
   createdAt: new Date(e.createdAt),
   updatedAt: new Date(e.updatedAt),
@@ -114,6 +114,45 @@ export const useStudentsStats = () => {
       return fetchApi<Record<EventCategory, number>>(`/api/stats/student-counts`);
     },
   });
+};
+
+/**
+ * Fetches students based on active search filters.
+ * @param filters - The parsed object from your querySchema (category, house, etc.)
+ * @param searchQuery - Optional client-side string for immediate fuzzy filtering (e.g., name)
+ */
+export const useStudentsV2 = (filters: any = {}, searchQuery?: string) => {
+  // 1. Generate the query string from the filters object
+  const queryString = useMemo(() => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.append(key, String(value));
+    });
+    return params.toString();
+  }, [filters]);
+
+  const { data: students, ...queryResult } = useQuery({
+    // 2. Include queryString in the key so React Query refetches when filters change
+    queryKey: [...queryKeys.students.all(), queryString],
+    queryFn: async (): Promise<StudentWithGroups[]> => {
+      const url = queryString ? `/api/students?${queryString}` : "/api/students";
+      const data = await fetchApi<StudentAPIWithGroups[]>(url);
+      return data.map(transformStudent);
+    },
+  });
+
+  // TODO: RETHINK THIS APPROACH IN THE FUTURE
+  const filteredStudents = useMemo(() => {
+    if (!students) return undefined;
+    if (!searchQuery) return students;
+
+    return filterAndSortStudents(students, searchQuery);
+  }, [students, searchQuery]);
+
+  return {
+    ...queryResult,
+    data: filteredStudents,
+  };
 };
 
 export default useStudents;
