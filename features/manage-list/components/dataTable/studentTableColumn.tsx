@@ -1,89 +1,17 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentWithGroups } from "@/globals/types/students";
-import {
-  useDeleteRecord,
-  useUpdateAttendanceRecord,
-} from "@/globals/hooks/useRecords";
-import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
-import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
-import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 import { formatSection, normalizeName } from "@/globals/utils/formatting";
+import { Delete, Edit } from "lucide-react";
 
-function ActionsCell({ row }: { row: any }) {
-  const { id: recordId, eventId, studentId } = row.original;
-  const { mutateAsync: deleteRecord, isPending: isDeleting } =
-    useDeleteRecord(eventId);
-  const { mutateAsync: recordAttendance, isPending: isUpdating } =
-    useUpdateAttendanceRecord(eventId);
-  const confirm = useConfirm();
+type ColumnArgs = {
+  onEdit: (student: StudentWithGroups) => void;
+  onDelete: (id: string) => void;
+};
 
-  const handleRecordAttendance = async () => {
-    try {
-      await recordAttendance(recordId);
-      toastSuccess("Attendance updated");
-    } catch (error) {
-      toastDanger(`Failed to update: ${studentId}`);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!recordId) return;
-
-    const confirmed = await confirm({
-      title: "Mark as absent?",
-      description:
-        "This removes the student record from this event. This is an irreversable action.",
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await deleteRecord(recordId);
-      toastSuccess("Record removed");
-    } catch (error) {
-      toastDanger(`Failed to delete: ${studentId}`);
-    }
-  };
-
-  const isLoading = isDeleting || isUpdating;
-
-  return (
-    <div className="flex gap-2 justify-center items-center">
-      {[
-        {
-          id: "present",
-          icon: ATTENDANCE_STATUS_ICONS.present,
-          color: "text-emerald-600",
-          handler: handleRecordAttendance,
-          disabled: isLoading,
-          title: "Mark as Present",
-        },
-        {
-          id: "absent",
-          icon: ATTENDANCE_STATUS_ICONS.absent,
-          color: "text-red-400",
-          handler: handleDelete,
-          disabled: isLoading || !recordId,
-          title: "Mark as Absent (Delete Record)",
-        },
-      ].map(({ id, icon: Icon, color, handler, disabled, title }) => (
-        <button
-          key={id}
-          onClick={handler}
-          disabled={disabled}
-          title={title}
-          className={`flex items-center justify-center w-7 h-7 rounded-full transition-colors hover:scale-110 active:scale-95 ${
-            disabled ? "opacity-30 grayscale" : ""
-          }`}
-        >
-          <Icon className={`w-5 h-5 ${color}`} />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-export const columns: ColumnDef<StudentWithGroups>[] = [
+export const getStudentColumns = ({
+  onEdit,
+  onDelete,
+}: ColumnArgs): ColumnDef<StudentWithGroups>[] => [
   {
     accessorKey: "id",
     header: () => <div className="text-center">Student ID</div>,
@@ -135,7 +63,9 @@ export const columns: ColumnDef<StudentWithGroups>[] = [
     accessorKey: "department",
     header: () => <div className="text-center">Department</div>,
     cell: ({ getValue }) => (
-      <div className="text-center">{normalizeName(getValue() as string) || "-"}</div>
+      <div className="text-center">
+        {normalizeName(getValue() as string) || "-"}
+      </div>
     ),
   },
   {
@@ -167,13 +97,35 @@ export const columns: ColumnDef<StudentWithGroups>[] = [
     accessorKey: "section",
     header: () => <div className="text-center">Section</div>,
     cell: ({ getValue }) => (
-      <div className="text-center">{formatSection(getValue() as string) || "-"}</div>
+      <div className="text-center">
+        {formatSection(getValue() as string) || "-"}
+      </div>
     ),
     enableGlobalFilter: false,
   },
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }) => <ActionsCell row={row} />,
+    cell: ({ row }) => {
+      const student = row.original;
+      return (
+        <div className="flex items-center justify-center gap-2 md:gap-3">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-100 md:px-2 md:text-xs"
+            onClick={() => onEdit(student)}
+          >
+            <Edit className="size-3.5" strokeWidth={1.6} />
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-50 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-rose-700 transition hover:border-rose-400 hover:bg-rose-100 md:px-2 md:text-xs"
+            onClick={() => onDelete(student.id)}
+          >
+            <Delete className="size-3.5" strokeWidth={1.6} />
+          </button>
+        </div>
+      );
+    },
   },
 ];

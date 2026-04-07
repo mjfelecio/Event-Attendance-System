@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import StudentTable from "@/features/manage-list/components/StudentTable";
 import StudentManageToolbar from "@/features/manage-list/components/StudentManageToolbar";
 import AddStudentDialog from "@/features/manage-list/components/AddStudentDialog";
@@ -8,8 +8,9 @@ import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStud
 import { useStudentTableControls } from "@/features/manage-list/hooks/useStudentTableControls";
 import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
 import StudentsDataTable from "./dataTable/StudentsDataTable";
-import { columns } from "./dataTable/studentTableColumn";
+import { getStudentColumns } from "./dataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
+import { toastSuccess } from "@/globals/components/shared/toasts";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
@@ -61,6 +62,22 @@ const ManageStudentClient = ({
     rows: studentRows,
     resetKey: `${category}:${item ?? ""}:${label ?? ""}`,
   });
+
+  const handleEdit = () => { 
+    toastSuccess("Editing")
+  }
+
+  const handleDelete = () => { 
+    toastSuccess("Deleting")
+  }
+
+  const columns = useMemo(
+    () => getStudentColumns({ 
+      onEdit: handleEdit, 
+      onDelete: handleDelete 
+    }),
+    []
+  );
 
   const totalRows = studentRows.length;
   const visibleRowsCount = visibleRows.length;
