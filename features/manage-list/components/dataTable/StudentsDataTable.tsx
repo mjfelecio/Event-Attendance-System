@@ -35,6 +35,8 @@ type DataTableProps<TData, TValue> = {
   categorySubheader: string;
   /** The slug for the group currently being displayed */
   groupSlug: string;
+  /** Callback for adding a student */
+  onAddStudent: () => void;
 };
 
 /**
@@ -51,6 +53,7 @@ export function StudentsDataTable<TData, TValue>({
   categoryHeader,
   categorySubheader,
   groupSlug,
+  onAddStudent
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -84,7 +87,7 @@ export function StudentsDataTable<TData, TValue>({
         categoryHeader={categoryHeader}
         categorySubheader={categorySubheader}
         groupSlug={groupSlug}
-        onAddStudent={() => {}}
+        onAddStudent={onAddStudent}
         filterOptions={dynamicFilters}
       />
 

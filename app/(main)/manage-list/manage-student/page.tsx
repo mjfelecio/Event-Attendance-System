@@ -71,7 +71,6 @@ const ManageStudentPage = () => {
           label={config.label}
           item={itemSlug || "General"}
           categoryHeading={config.heading}
-          rows={[]}
           students={students ?? []}
         />
       </div>

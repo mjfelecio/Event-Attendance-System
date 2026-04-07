@@ -1,23 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import StudentTable from "@/features/manage-list/components/StudentTable";
-import StudentManageToolbar from "@/features/manage-list/components/StudentManageToolbar";
-import AddStudentDialog from "@/features/manage-list/components/AddStudentDialog";
-import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
-import { useStudentTableControls } from "@/features/manage-list/hooks/useStudentTableControls";
-import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
+import { useMemo, useState } from "react";
+import { ManageStudentContext } from "@/features/manage-list/types";
 import StudentsDataTable from "./dataTable/StudentsDataTable";
 import { getStudentColumns } from "./dataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
 import { toastSuccess } from "@/globals/components/shared/toasts";
+import StudentFormDrawer from "./StudentFormDrawer";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
   label?: string;
   item?: string;
   categoryHeading: string;
-  rows: StudentRow[];
   students: StudentWithGroups[];
 }
 
@@ -26,207 +21,169 @@ const ManageStudentClient = ({
   label,
   item,
   categoryHeading,
-  rows,
   students,
 }: ManageStudentClientProps) => {
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
-  const [studentRows, setStudentRows] = useState(rows);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<StudentWithGroups | null>(null);
+  const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
 
-  useEffect(() => {
-    setStudentRows(rows);
-  }, [rows]);
+  const handleEdit = () => {
+    toastSuccess("Editing");
+  };
 
-  const {
-    searchValue,
-    setSearchValue,
-    sortField,
-    setSortField,
-    sortDirection,
-    setSortDirection,
-    resetSort,
-    filters,
-    updateFilter,
-    clearFilters,
-    filterOptions,
-    availablePrograms,
-    availableSections,
-    availableLevels,
-    availableHouses,
-    visibleRows,
-  } = useStudentTableControls({
-    rows: studentRows,
-    resetKey: `${category}:${item ?? ""}:${label ?? ""}`,
-  });
-
-  const handleEdit = () => { 
-    toastSuccess("Editing")
-  }
-
-  const handleDelete = () => { 
-    toastSuccess("Deleting")
-  }
+  const handleDelete = () => {
+    toastSuccess("Deleting");
+  };
 
   const columns = useMemo(
-    () => getStudentColumns({ 
-      onEdit: handleEdit, 
-      onDelete: handleDelete 
-    }),
-    []
+    () =>
+      getStudentColumns({
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+      }),
+    [],
   );
 
-  const totalRows = studentRows.length;
-  const visibleRowsCount = visibleRows.length;
-  const activeFilterCount = Object.values(filters).filter(
-    (value) => value !== "all",
-  ).length;
-  const isSearching = searchValue.trim().length > 0;
+  // const normalizeFormData = (data: StudentFormData) => ({
+  //   id: data.id,
+  //   lastName: data.lastName.trim(),
+  //   firstName: data.firstName.trim(),
+  //   middleName: data.middleName === "N/A" ? null : data.middleName.trim(),
+  //   schoolLevel: data.schoolLevel,
+  //   shsStrand:
+  //     data.schoolLevel === "SHS"
+  //       ? data.shsStrand && data.shsStrand !== "N/A"
+  //         ? data.shsStrand.trim()
+  //         : null
+  //       : null,
+  //   collegeProgram:
+  //     data.schoolLevel === "COLLEGE"
+  //       ? data.collegeProgram && data.collegeProgram !== "N/A"
+  //         ? data.collegeProgram.trim()
+  //         : null
+  //       : null,
+  //   department:
+  //     data.schoolLevel === "COLLEGE" && data.department.trim()
+  //       ? data.department.trim()
+  //       : null,
+  //   house: data.house.trim() ? data.house.trim() : null,
+  //   section: data.section.trim(),
+  //   yearLevel: data.yearLevel,
+  //   status: data.status,
+  // });
 
-  const normalizeFormData = (data: StudentFormData) => ({
-    id: data.id,
-    lastName: data.lastName.trim(),
-    firstName: data.firstName.trim(),
-    middleName: data.middleName === "N/A" ? null : data.middleName.trim(),
-    schoolLevel: data.schoolLevel,
-    shsStrand:
-      data.schoolLevel === "SHS"
-        ? data.shsStrand && data.shsStrand !== "N/A"
-          ? data.shsStrand.trim()
-          : null
-        : null,
-    collegeProgram:
-      data.schoolLevel === "COLLEGE"
-        ? data.collegeProgram && data.collegeProgram !== "N/A"
-          ? data.collegeProgram.trim()
-          : null
-        : null,
-    department:
-      data.schoolLevel === "COLLEGE" && data.department.trim()
-        ? data.department.trim()
-        : null,
-    house: data.house.trim() ? data.house.trim() : null,
-    section: data.section.trim(),
-    yearLevel: data.yearLevel,
-    status: data.status,
-  });
+  // const handleAddStudent = async (data: StudentFormData) => {
+  //   setSubmitError(null);
 
-  const handleAddStudent = async (data: StudentFormData) => {
-    setSubmitError(null);
+  //   try {
+  //     const response = await fetch("/api/students", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(normalizeFormData(data)),
+  //     });
 
-    try {
-      const response = await fetch("/api/students", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(normalizeFormData(data)),
-      });
+  //     if (!response.ok) {
+  //       const payload = await response.json().catch(() => ({}));
+  //       throw new Error(payload?.message ?? "Failed to add student");
+  //     }
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.message ?? "Failed to add student");
-      }
+  //     const payload = (await response.json()) as { student: StudentRow };
+  //     setStudentRows((prev) => [payload.student, ...prev]);
+  //   } catch (error) {
+  //     console.error("Error adding student", error);
+  //     setSubmitError(
+  //       error instanceof Error ? error.message : "Failed to add student",
+  //     );
+  //     throw error;
+  //   }
+  // };
 
-      const payload = (await response.json()) as { student: StudentRow };
-      setStudentRows((prev) => [payload.student, ...prev]);
-    } catch (error) {
-      console.error("Error adding student", error);
-      setSubmitError(
-        error instanceof Error ? error.message : "Failed to add student",
-      );
-      throw error;
-    }
-  };
+  // const handleEditStudent = (student: StudentRow) => {
+  //   setEditingStudent(student);
+  //   setIsEditDialogOpen(true);
+  // };
 
-  const handleEditStudent = (student: StudentRow) => {
-    setEditingStudent(student);
-    setIsEditDialogOpen(true);
-  };
+  // const handleUpdateStudent = async (data: StudentFormData) => {
+  //   if (!editingStudent) return;
 
-  const handleUpdateStudent = async (data: StudentFormData) => {
-    if (!editingStudent) return;
+  //   setSubmitError(null);
 
-    setSubmitError(null);
+  //   try {
+  //     const response = await fetch(
+  //       `/api/students/${editingStudent.studentNumber}`,
+  //       {
+  //         method: "PATCH",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(normalizeFormData(data)),
+  //       },
+  //     );
 
-    try {
-      const response = await fetch(
-        `/api/students/${editingStudent.studentNumber}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(normalizeFormData(data)),
-        },
-      );
+  //     if (!response.ok) {
+  //       const payload = await response.json().catch(() => ({}));
+  //       throw new Error(payload?.message ?? "Failed to update student");
+  //     }
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.message ?? "Failed to update student");
-      }
+  //     const payload = (await response.json()) as { student: StudentRow };
+  //     setStudentRows((prev) =>
+  //       prev.map((row) =>
+  //         row.studentNumber === payload.student.studentNumber
+  //           ? payload.student
+  //           : row,
+  //       ),
+  //     );
+  //     setIsEditDialogOpen(false);
+  //     setEditingStudent(null);
+  //   } catch (error) {
+  //     console.error("Error updating student", error);
+  //     setSubmitError(
+  //       error instanceof Error ? error.message : "Failed to update student",
+  //     );
+  //     throw error;
+  //   }
+  // };
 
-      const payload = (await response.json()) as { student: StudentRow };
-      setStudentRows((prev) =>
-        prev.map((row) =>
-          row.studentNumber === payload.student.studentNumber
-            ? payload.student
-            : row,
-        ),
-      );
-      setIsEditDialogOpen(false);
-      setEditingStudent(null);
-    } catch (error) {
-      console.error("Error updating student", error);
-      setSubmitError(
-        error instanceof Error ? error.message : "Failed to update student",
-      );
-      throw error;
-    }
-  };
+  // const handleDeleteStudent = async (student: StudentRow) => {
+  //   if (
+  //     !window.confirm(
+  //       `Delete student ${student.firstName} ${student.lastName}?`,
+  //     )
+  //   ) {
+  //     return;
+  //   }
 
-  const handleDeleteStudent = async (student: StudentRow) => {
-    if (
-      !window.confirm(
-        `Delete student ${student.firstName} ${student.lastName}?`,
-      )
-    ) {
-      return;
-    }
+  //   setSubmitError(null);
 
-    setSubmitError(null);
+  //   try {
+  //     const response = await fetch(`/api/students/${student.studentNumber}`, {
+  //       method: "DELETE",
+  //     });
 
-    try {
-      const response = await fetch(`/api/students/${student.studentNumber}`, {
-        method: "DELETE",
-      });
+  //     if (!response.ok) {
+  //       const payload = await response.json().catch(() => ({}));
+  //       throw new Error(payload?.message ?? "Failed to delete student");
+  //     }
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.message ?? "Failed to delete student");
-      }
-
-      setStudentRows((prev) =>
-        prev.filter((row) => row.studentNumber !== student.studentNumber),
-      );
-    } catch (error) {
-      console.error("Error deleting student", error);
-      setSubmitError(
-        error instanceof Error ? error.message : "Failed to delete student",
-      );
-    }
-  };
+  //     setStudentRows((prev) =>
+  //       prev.filter((row) => row.studentNumber !== student.studentNumber),
+  //     );
+  //   } catch (error) {
+  //     console.error("Error deleting student", error);
+  //     setSubmitError(
+  //       error instanceof Error ? error.message : "Failed to delete student",
+  //     );
+  //   }
+  // };
 
   return (
     <div className="flex w-full flex-col gap-6">
-      {submitError && (
+      {/* {submitError && (
         <div className="mx-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm md:mx-12">
           {submitError}
         </div>
-      )}
+      )} */}
 
       <StudentsDataTable
         columns={columns}
@@ -235,15 +192,22 @@ const ManageStudentClient = ({
         categoryHeader={label ?? ""}
         categorySubheader={categoryHeading ?? ""}
         groupSlug={item ?? ""}
+        onAddStudent={() => setIsStudentFormOpen(true)}
       />
 
-      <AddStudentDialog
+      {/* <AddStudentDialog
         open={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onSubmit={handleAddStudent}
+      /> */}
+
+      <StudentFormDrawer
+        isOpen={isStudentFormOpen}
+        onClose={() => setIsStudentFormOpen(false)}
+        student={undefined}
       />
 
-      <AddStudentDialog
+      {/* <AddStudentDialog
         open={isEditDialogOpen}
         onClose={() => {
           setIsEditDialogOpen(false);
@@ -271,7 +235,7 @@ const ManageStudentClient = ({
         mode="edit"
         title="Edit Student"
         submitLabel="Save Changes"
-      />
+      /> */}
     </div>
   );
 };
