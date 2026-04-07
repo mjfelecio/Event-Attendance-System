@@ -1,191 +1,167 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Eraser } from 'lucide-react';
-import { type FilterState } from '@/features/manage-list/hooks/useStudentTableControls';
+import { Eraser, Filter } from "lucide-react";
+import { Table } from "@tanstack/react-table";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/globals/components/shad-cn/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/globals/components/shad-cn/select";
+import { PopoverClose } from "@radix-ui/react-popover";
 
-interface StudentFilterPopoverProps {
-  open: boolean;
-  onClose: () => void;
-  filters: FilterState;
-  updateFilter: (key: keyof FilterState, value: string) => void;
-  clearFilters: () => void;
-  departments: string[];
-  programs: string[];
-  sections: string[];
-  levels: string[];
-  houses: string[];
-  popoverId?: string;
+interface Props<TData> {
+  table: Table<TData>;
+  children: React.ReactNode;
+  options: {
+    departments: string[];
+    programs: string[];
+    houses: string[];
+    sections: string[];
+    levels: string[];
+  };
 }
 
-const StudentFilterPopover = ({
-  open,
-  onClose,
-  filters,
-  updateFilter,
-  clearFilters,
-  departments,
-  programs,
-  sections,
-  levels,
-  houses,
-  popoverId,
-}: StudentFilterPopoverProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [openSelectKey, setOpenSelectKey] = useState<string | null>(null);
+const FilterGroup = ({
+  label,
+  columnId,
+  items,
+  filterValue,
+  onFilterValueChange,
+}: {
+  label: string;
+  columnId: string;
+  items: string[];
+  filterValue: string;
+  onFilterValueChange: (colId: string, val: string) => void;
+}) => {
+  if (!items || items.length === 0) return null;
 
-  useEffect(() => {
-    if (!open) {
-      setOpenSelectKey(null);
-      return;
-    }
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+        {label}
+      </span>
+      <Select
+        value={filterValue}
+        onValueChange={(val) => onFilterValueChange(columnId, val)}
+      >
+        <SelectTrigger className="h-10 w-full rounded-xl border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+          <SelectValue placeholder={`All ${label}`} />
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+          <SelectItem value="all" className="text-xs font-medium">
+            All {label}
+          </SelectItem>
+          <div className="my-1 h-px bg-slate-100" />
+          {items.map((item) => (
+            <SelectItem key={item} value={item} className="text-xs font-medium">
+              {item}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpenSelectKey(null);
-      }
-    };
+const StudentFilterPopover = <TData,>({
+  table,
+  children,
+  options,
+}: Props<TData>) => {
+  const columnFilters = table.getState().columnFilters;
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpenSelectKey(null);
-      }
-    };
+  const getFilterValue = (id: string) =>
+    (columnFilters.find((f) => f.id === id)?.value as string) || "all";
 
-    window.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('keydown', handleEscape);
-
-    return () => {
-      window.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }, [open]);
-
-  const closeSelect = () => setOpenSelectKey(null);
-
-  if (!open) {
-    return null;
-  }
-
-  const renderSelect = (
-    label: string,
-    value: string,
-    onChange: (next: string) => void,
-    options: string[],
-    key: string,
-  ) => {
-    const displayValue = value === 'all' ? `All ${label}` : value;
-    const isOpen = openSelectKey === key;
-
-    const handleSelect = (next: string) => {
-      onChange(next);
-      closeSelect();
-    };
-
-    const renderOption = (optionValue: string, optionLabel: string) => {
-      const isActive = value === optionValue;
-
-      return (
-        <button
-          key={optionValue}
-          type="button"
-          onClick={() => handleSelect(optionValue)}
-          className={`flex w-full items-center justify-between gap-3 rounded-lg px-4 py-2 text-sm font-medium transition ${
-            isActive
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <span className="truncate">{optionLabel}</span>
-          {isActive ? <Check className="h-4 w-4" strokeWidth={1.6} /> : null}
-        </button>
-      );
-    };
-
-    return (
-      <div className="space-y-2">
-        <span className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
-          {label}
-        </span>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setOpenSelectKey((prev) => (prev === key ? null : key))}
-            className={`flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300/40 ${
-              isOpen ? 'ring-2 ring-indigo-300/40' : ''
-            }`}
-          >
-            <span className="truncate text-left">{displayValue}</span>
-            <ChevronDown
-              className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-              strokeWidth={1.6}
-            />
-          </button>
-          {isOpen ? (
-            <div className="absolute left-0 right-0 z-10 mt-2 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_16px_30px_rgba(15,23,42,0.12)]">
-              {renderOption('all', `All ${label}`)}
-              <div className="my-2 h-px bg-slate-100" />
-              {options.map((option) => renderOption(option, option))}
-            </div>
-          ) : null}
-        </div>
-      </div>
-    );
+  const setFilterValue = (id: string, value: string) => {
+    table.getColumn(id)?.setFilterValue(value === "all" ? undefined : value);
   };
 
   return (
-    <div
-      id={popoverId}
-      role="dialog"
-      aria-label="Filter students"
-      className="absolute right-0 top-full z-20 mt-2 w-[min(20rem,calc(100vw-2rem))] max-h-[calc(100vh-6rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_40px_RGBA(15,23,42,0.12)]"
-      ref={containerRef}
-    >
-      <div className="flex h-full max-h-[calc(100vh-8rem)] flex-col">
-        <header className="mb-4 shrink-0">
-          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
-            Filter Students By
-          </p>
-        </header>
+    <Popover>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
 
-        <div className="flex flex-1 flex-col gap-5 overflow-y-auto pr-1 text-sm text-slate-700">
-          {renderSelect('Department', filters.department, (next) => updateFilter('department', next), departments, 'department')}
-          {renderSelect(
-            'Program / Strand',
-            filters.program,
-            (next) => updateFilter('program', next),
-            programs,
-            'program',
-          )}
-          {renderSelect('House', filters.house, (next) => updateFilter('house', next), houses, 'house')}
-          {renderSelect('Section', filters.section, (next) => updateFilter('section', next), sections, 'section')}
-          {renderSelect('Year Level', filters.level, (next) => updateFilter('level', next), levels, 'level')}
-        </div>
-
-        <hr className="my-5 border-slate-200" />
-
-        <div className="shrink-0">
-          <div className="flex items-center justify-center gap-2">
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-72 rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-[0_20px_50px_rgba(15,23,42,0.15)] backdrop-blur-sm"
+      >
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-indigo-600">
+              <Filter className="h-3.5 w-3.5" strokeWidth={2.5} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                Filters
+              </span>
+            </div>
             <button
-              type="button"
-              onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3.5 py-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
+              onClick={() => table.resetColumnFilters()}
+              className="group flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 transition hover:bg-red-50 hover:text-red-600"
             >
-              <Eraser className="h-3.5 w-3.5" strokeWidth={1.6} />
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex items-center gap-1.5 rounded-full border border-indigo-600 bg-indigo-600 px-4 py-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-white transition hover:bg-indigo-500"
-            >
-              <Check className="h-3.5 w-3.5" strokeWidth={1.6} />
-              Done
+              <Eraser className="h-3 w-3" />
+              Clear
             </button>
           </div>
+
+          {/* Filter Scroll Area */}
+          <div className="flex flex-col gap-5 max-h-[300px] overflow-y-auto pr-1">
+            <FilterGroup
+              label="Department"
+              columnId="department"
+              items={options.departments}
+              filterValue={getFilterValue("department")}
+              onFilterValueChange={setFilterValue}
+            />
+            <FilterGroup
+              label="Program / Strand"
+              columnId="program"
+              items={options.programs}
+              filterValue={getFilterValue("program")}
+              onFilterValueChange={setFilterValue}
+            />
+            <FilterGroup
+              label="House"
+              columnId="house"
+              items={options.houses}
+              filterValue={getFilterValue("house")}
+              onFilterValueChange={setFilterValue}
+            />
+            <FilterGroup
+              label="Section"
+              columnId="section"
+              items={options.sections}
+              filterValue={getFilterValue("section")}
+              onFilterValueChange={setFilterValue}
+            />
+            <FilterGroup
+              label="Year Level"
+              columnId="yearLevel"
+              items={options.levels}
+              filterValue={getFilterValue("yearLevel")}
+              onFilterValueChange={setFilterValue}
+            />
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Simple Close */}
+          <PopoverClose asChild>
+            <button className="flex w-full items-center justify-center rounded-full bg-indigo-600 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-white shadow-md shadow-indigo-100 transition-all hover:bg-indigo-500 active:scale-95">
+              Done
+            </button>
+          </PopoverClose>
         </div>
-      </div>
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 

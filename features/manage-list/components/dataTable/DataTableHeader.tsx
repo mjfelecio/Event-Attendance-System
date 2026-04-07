@@ -3,6 +3,8 @@ import { ArrowUpDown, Filter, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import StudentSearchInput from "@/features/manage-list/components/StudentSearchInput";
 import { useState } from "react";
+import StudentSortPopover from "../StudentSortPopover";
+import StudentFilterPopover from "../StudentFilterPopover";
 
 type Props<TData> = {
   // DATA
@@ -32,6 +34,10 @@ const DataTableHeader = <TData,>({
   const [searchValue, setSearchValue] = useState("");
 
   const visibleRowsCount = table.getRowCount();
+
+  const togglePopover = (type: typeof activePopover) => {
+    setActivePopover((prev) => (prev === type ? null : type));
+  };
 
   return (
     <div className="p-6 gap-5 overflow-hidden flex flex-col relative rounded-3xl border border-slate-200 bg-white/95 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur">
@@ -101,10 +107,10 @@ const DataTableHeader = <TData,>({
             </Link>
 
             <div className="flex items-center gap-2">
-              <div className="relative">
+              <StudentSortPopover table={table}>
                 <button
                   type="button"
-                  onClick={() => setActivePopover("sort")}
+                  onClick={() => togglePopover("sort")}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-800"
                   aria-expanded={activePopover === "sort"}
                   aria-controls="student-sort-popover"
@@ -112,23 +118,21 @@ const DataTableHeader = <TData,>({
                   <ArrowUpDown className="size-4" strokeWidth={1.6} />
                   Sort
                 </button>
+              </StudentSortPopover>
 
-                {/* <StudentSortPopover
-                    open={isSortOpen}
-                    onClose={() => setIsSortOpen(false)}
-                    sortField={sortField}
-                    setSortField={setSortField}
-                    sortDirection={sortDirection}
-                    setSortDirection={setSortDirection}
-                    resetSort={resetSort}
-                    popoverId="student-sort-popover"
-                  /> */}
-              </div>
-
-              <div className="relative">
+              <StudentFilterPopover
+                table={table}
+                options={{
+                  departments: [],
+                  programs: [],
+                  houses: [],
+                  sections: [],
+                  levels: [],
+                }}
+              >
                 <button
                   type="button"
-                  onClick={() => setActivePopover("filter")}
+                  onClick={() => togglePopover("filter")}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-800"
                   aria-expanded={activePopover === "filter"}
                   aria-controls="student-filter-popover"
@@ -136,21 +140,7 @@ const DataTableHeader = <TData,>({
                   <Filter className="size-4" strokeWidth={1.6} />
                   Filter
                 </button>
-
-                {/* <StudentFilterPopover
-                    open={isFilterOpen}
-                    onClose={() => setIsFilterOpen(false)}
-                    filters={filters}
-                    updateFilter={updateFilter}
-                    clearFilters={clearFilters}
-                    departments={departments}
-                    programs={programs}
-                    sections={sections}
-                    levels={levels}
-                    houses={houses}
-                    popoverId="student-filter-popover"
-                  /> */}
-              </div>
+              </StudentFilterPopover>
             </div>
           </div>
 
