@@ -1,4 +1,4 @@
-import { Student as PrismaStudent, SchoolLevel } from "@prisma/client";
+import { Group, Student as PrismaStudent, SchoolLevel } from "@prisma/client";
 
 export type Student = PrismaStudent;
 
@@ -30,6 +30,7 @@ type WithGroups = {
   department?: string;
   program?: string;
   strand?: string;
+  groups?: Group[]
 };
 
 export type StudentWithGroups = Student & WithGroups;
