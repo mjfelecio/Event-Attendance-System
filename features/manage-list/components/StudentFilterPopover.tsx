@@ -16,6 +16,7 @@ import {
 } from "@/globals/components/shad-cn/select";
 import { PopoverClose } from "@radix-ui/react-popover";
 import { Option } from "@/globals/types/primitives";
+import { capitalize } from "lodash";
 
 interface Props<TData> {
   table: Table<TData>;
@@ -38,21 +39,25 @@ const FilterGroup = ({
 }) => {
   if (!items || items.length === 0) return null;
 
+  const formattedLabel = label.includes("Level")
+    ? capitalize(label.split("L")[0]) + " " + "Level"
+    : capitalize(label);
+
   return (
     <div className="flex flex-col gap-2">
       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-        {label}
+        {formattedLabel}
       </span>
       <Select
         value={filterValue}
         onValueChange={(val) => onFilterValueChange(columnId, val)}
       >
         <SelectTrigger className="h-10 w-full rounded-xl border-slate-200 bg-slate-50/50 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
-          <SelectValue placeholder={`All ${label}`} />
+          <SelectValue placeholder={`All ${formattedLabel}`} />
         </SelectTrigger>
         <SelectContent className="rounded-xl border-slate-200 shadow-xl">
           <SelectItem value="all" className="text-xs font-medium">
-            All {label}
+            All {formattedLabel}
           </SelectItem>
           <div className="my-1 h-px bg-slate-100" />
           {items.map((item) => (
@@ -114,16 +119,23 @@ const StudentFilterPopover = <TData,>({
 
           {/* DYNAMIC SCROLL AREA */}
           <div className="flex flex-col gap-5 max-h-[350px] overflow-y-auto pr-1">
-            {Object.entries(options).map(([category, items]) => (
-              <FilterGroup
-                key={category}
-                label={category.charAt(0) + category.slice(1).toLowerCase()}
-                columnId={category.toLowerCase()}
-                items={items}
-                filterValue={getFilterValue(category.toLowerCase())}
-                onFilterValueChange={setFilterValue}
-              />
-            ))}
+            {Object.entries(options).map(([category, items]) => {
+              // Ensures flat data like schoolLevel and yearLevel are accessed properly
+              const normalizedCategory = category.includes("Level")
+                ? category.split("L")[0].toLowerCase() + "Level"
+                : category.toLowerCase();
+
+              return (
+                <FilterGroup
+                  key={category}
+                  label={normalizedCategory}
+                  columnId={normalizedCategory}
+                  items={items}
+                  filterValue={getFilterValue(normalizedCategory)}
+                  onFilterValueChange={setFilterValue}
+                />
+              );
+            })}
           </div>
 
           <hr className="border-slate-100" />

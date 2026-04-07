@@ -10,8 +10,6 @@ const getDynamicFilters = (data: any[]) => {
       if (!filterMap[group.category]) {
         filterMap[group.category] = new Map();
       }
-      // Map.set(key, value) -> Map.set('azul', 'Azul')
-      // This automatically overwrites duplicates
       filterMap[group.category].set(group.slug, group.name);
     });
 
@@ -20,7 +18,7 @@ const getDynamicFilters = (data: any[]) => {
     extraFields.forEach((field) => {
       const val = student[field];
       if (val) {
-        const categoryKey = field.toUpperCase();
+        const categoryKey = field;
         if (!filterMap[categoryKey]) filterMap[categoryKey] = new Map();
         
         const label = val.replace("_", " ");
