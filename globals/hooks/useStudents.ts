@@ -1,13 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Student, StudentAPI, StudentAPIWithGroups, StudentWithGroups } from "@/globals/types/students";
 import { useMemo } from "react";
 import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
 import { EventCategory } from "@prisma/client";
+import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
 
 // Transform function to make sure that the dates are actually a Date object
-const transformStudent = (e: StudentAPI | StudentAPIWithGroups): Student => ({
+const transformStudent = (e: StudentAPI | StudentAPIWithGroups): StudentWithGroups => ({
   ...e,
   createdAt: new Date(e.createdAt),
   updatedAt: new Date(e.updatedAt),
@@ -153,6 +154,29 @@ export const useStudentsV2 = (filters: any = {}, searchQuery?: string) => {
     ...queryResult,
     data: filteredStudents,
   };
+};
+
+/**
+ * Creates or Edit a student
+ *
+ * @returns created or edited Student object
+ */
+export const useSaveStudent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (student: StudentFormData) => {
+      return fetchApi<StudentFormData>("/api/events", {
+        method: "POST",
+        body: JSON.stringify(event),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+
+    // TODO: Replace this with optimistic handling and manual adding of the data
+    // Instead of revalidating the whole thing, which hits the backend
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
+  });
 };
 
 export default useStudents;

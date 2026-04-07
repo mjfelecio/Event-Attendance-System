@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import StudentTable from "@/features/manage-list/components/StudentTable";
@@ -7,6 +7,9 @@ import AddStudentDialog from "@/features/manage-list/components/AddStudentDialog
 import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
 import { useStudentTableControls } from "@/features/manage-list/hooks/useStudentTableControls";
 import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
+import StudentsDataTable from "./dataTable/StudentsDataTable";
+import { columns } from "./dataTable/studentTableColumn";
+import { StudentWithGroups } from "@/globals/types/students";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
@@ -14,6 +17,7 @@ interface ManageStudentClientProps {
   item?: string;
   categoryHeading: string;
   rows: StudentRow[];
+  students: StudentWithGroups[];
 }
 
 const ManageStudentClient = ({
@@ -22,6 +26,7 @@ const ManageStudentClient = ({
   item,
   categoryHeading,
   rows,
+  students,
 }: ManageStudentClientProps) => {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -59,7 +64,9 @@ const ManageStudentClient = ({
 
   const totalRows = studentRows.length;
   const visibleRowsCount = visibleRows.length;
-  const activeFilterCount = Object.values(filters).filter((value) => value !== "all").length;
+  const activeFilterCount = Object.values(filters).filter(
+    (value) => value !== "all",
+  ).length;
   const isSearching = searchValue.trim().length > 0;
 
   const normalizeFormData = (data: StudentFormData) => ({
@@ -111,7 +118,9 @@ const ManageStudentClient = ({
       setStudentRows((prev) => [payload.student, ...prev]);
     } catch (error) {
       console.error("Error adding student", error);
-      setSubmitError(error instanceof Error ? error.message : "Failed to add student");
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to add student",
+      );
       throw error;
     }
   };
@@ -127,13 +136,16 @@ const ManageStudentClient = ({
     setSubmitError(null);
 
     try {
-      const response = await fetch(`/api/students/${editingStudent.studentNumber}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/students/${editingStudent.studentNumber}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(normalizeFormData(data)),
         },
-        body: JSON.stringify(normalizeFormData(data)),
-      });
+      );
 
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
@@ -143,20 +155,28 @@ const ManageStudentClient = ({
       const payload = (await response.json()) as { student: StudentRow };
       setStudentRows((prev) =>
         prev.map((row) =>
-          row.studentNumber === payload.student.studentNumber ? payload.student : row
-        )
+          row.studentNumber === payload.student.studentNumber
+            ? payload.student
+            : row,
+        ),
       );
       setIsEditDialogOpen(false);
       setEditingStudent(null);
     } catch (error) {
       console.error("Error updating student", error);
-      setSubmitError(error instanceof Error ? error.message : "Failed to update student");
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to update student",
+      );
       throw error;
     }
   };
 
   const handleDeleteStudent = async (student: StudentRow) => {
-    if (!window.confirm(`Delete student ${student.firstName} ${student.lastName}?`)) {
+    if (
+      !window.confirm(
+        `Delete student ${student.firstName} ${student.lastName}?`,
+      )
+    ) {
       return;
     }
 
@@ -172,10 +192,14 @@ const ManageStudentClient = ({
         throw new Error(payload?.message ?? "Failed to delete student");
       }
 
-      setStudentRows((prev) => prev.filter((row) => row.studentNumber !== student.studentNumber));
+      setStudentRows((prev) =>
+        prev.filter((row) => row.studentNumber !== student.studentNumber),
+      );
     } catch (error) {
       console.error("Error deleting student", error);
-      setSubmitError(error instanceof Error ? error.message : "Failed to delete student");
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to delete student",
+      );
     }
   };
 
@@ -186,43 +210,14 @@ const ManageStudentClient = ({
           {submitError}
         </div>
       )}
-      <StudentManageToolbar
-        categoryHeading={categoryHeading}
-        label={label}
-        item={item}
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
-        sortField={sortField}
-        setSortField={setSortField}
-        sortDirection={sortDirection}
-        setSortDirection={setSortDirection}
-        resetSort={resetSort}
-        filters={filters}
-        updateFilter={updateFilter}
-        clearFilters={clearFilters}
-        departments={filterOptions.departments}
-        programs={availablePrograms}
-        sections={availableSections}
-        levels={availableLevels}
-        houses={availableHouses}
-        isSortOpen={isSortOpen}
-        setIsSortOpen={setIsSortOpen}
-        isFilterOpen={isFilterOpen}
-        setIsFilterOpen={setIsFilterOpen}
-        onAddStudent={() => setIsAddDialogOpen(true)}
-        totalRows={totalRows}
-        visibleRowsCount={visibleRowsCount}
-        activeFilterCount={activeFilterCount}
-        isSearching={isSearching}
-      />
 
-      <StudentTable
-        rows={visibleRows}
-        totalRows={totalRows}
-        activeFilterCount={activeFilterCount}
-        isSearching={isSearching}
-        onEditStudent={handleEditStudent}
-        onDeleteStudent={handleDeleteStudent}
+      <StudentsDataTable
+        columns={columns}
+        data={students ?? []}
+        isLoading={false}
+        categoryHeader={label ?? ""}
+        categorySubheader={categoryHeading ?? ""}
+        groupSlug={item ?? ""}
       />
 
       <AddStudentDialog
