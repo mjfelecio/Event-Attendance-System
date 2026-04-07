@@ -15,17 +15,12 @@ import {
   SelectValue,
 } from "@/globals/components/shad-cn/select";
 import { PopoverClose } from "@radix-ui/react-popover";
+import { Option } from "@/globals/types/primitives";
 
 interface Props<TData> {
   table: Table<TData>;
   children: React.ReactNode;
-  options: {
-    departments: string[];
-    programs: string[];
-    houses: string[];
-    sections: string[];
-    levels: string[];
-  };
+  options: Record<string, Option[]>;
 }
 
 const FilterGroup = ({
@@ -37,7 +32,7 @@ const FilterGroup = ({
 }: {
   label: string;
   columnId: string;
-  items: string[];
+  items: Option[];
   filterValue: string;
   onFilterValueChange: (colId: string, val: string) => void;
 }) => {
@@ -61,8 +56,12 @@ const FilterGroup = ({
           </SelectItem>
           <div className="my-1 h-px bg-slate-100" />
           {items.map((item) => (
-            <SelectItem key={item} value={item} className="text-xs font-medium">
-              {item}
+            <SelectItem
+              key={item.value}
+              value={item.value}
+              className="text-xs font-medium"
+            >
+              {item.label}
             </SelectItem>
           ))}
         </SelectContent>
@@ -82,20 +81,22 @@ const StudentFilterPopover = <TData,>({
     (columnFilters.find((f) => f.id === id)?.value as string) || "all";
 
   const setFilterValue = (id: string, value: string) => {
-    table.getColumn(id)?.setFilterValue(value === "all" ? undefined : value);
+    const column = table.getColumn(id);
+    if (column) {
+      column.setFilterValue(value === "all" ? undefined : value);
+    }
   };
 
   return (
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-
       <PopoverContent
         align="end"
         sideOffset={8}
         className="w-72 rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-[0_20px_50px_rgba(15,23,42,0.15)] backdrop-blur-sm"
       >
         <div className="flex flex-col gap-6">
-          {/* Header */}
+          {/* Header logic remains same */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-indigo-600">
               <Filter className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -107,53 +108,25 @@ const StudentFilterPopover = <TData,>({
               onClick={() => table.resetColumnFilters()}
               className="group flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 transition hover:bg-red-50 hover:text-red-600"
             >
-              <Eraser className="h-3 w-3" />
-              Clear
+              <Eraser className="h-3 w-3" /> Clear
             </button>
           </div>
 
-          {/* Filter Scroll Area */}
-          <div className="flex flex-col gap-5 max-h-[300px] overflow-y-auto pr-1">
-            <FilterGroup
-              label="Department"
-              columnId="department"
-              items={options.departments}
-              filterValue={getFilterValue("department")}
-              onFilterValueChange={setFilterValue}
-            />
-            <FilterGroup
-              label="Program / Strand"
-              columnId="program"
-              items={options.programs}
-              filterValue={getFilterValue("program")}
-              onFilterValueChange={setFilterValue}
-            />
-            <FilterGroup
-              label="House"
-              columnId="house"
-              items={options.houses}
-              filterValue={getFilterValue("house")}
-              onFilterValueChange={setFilterValue}
-            />
-            <FilterGroup
-              label="Section"
-              columnId="section"
-              items={options.sections}
-              filterValue={getFilterValue("section")}
-              onFilterValueChange={setFilterValue}
-            />
-            <FilterGroup
-              label="Year Level"
-              columnId="yearLevel"
-              items={options.levels}
-              filterValue={getFilterValue("yearLevel")}
-              onFilterValueChange={setFilterValue}
-            />
+          {/* DYNAMIC SCROLL AREA */}
+          <div className="flex flex-col gap-5 max-h-[350px] overflow-y-auto pr-1">
+            {Object.entries(options).map(([category, items]) => (
+              <FilterGroup
+                key={category}
+                label={category.charAt(0) + category.slice(1).toLowerCase()}
+                columnId={category.toLowerCase()}
+                items={items}
+                filterValue={getFilterValue(category.toLowerCase())}
+                onFilterValueChange={setFilterValue}
+              />
+            ))}
           </div>
 
           <hr className="border-slate-100" />
-
-          {/* Simple Close */}
           <PopoverClose asChild>
             <button className="flex w-full items-center justify-center rounded-full bg-indigo-600 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-white shadow-md shadow-indigo-100 transition-all hover:bg-indigo-500 active:scale-95">
               Done

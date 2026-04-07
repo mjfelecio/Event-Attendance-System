@@ -2,14 +2,15 @@ import { Table as TableType } from "@tanstack/react-table";
 import { ArrowUpDown, Filter, Plus, Upload } from "lucide-react";
 import Link from "next/link";
 import StudentSearchInput from "@/features/manage-list/components/StudentSearchInput";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import StudentSortPopover from "../StudentSortPopover";
 import StudentFilterPopover from "../StudentFilterPopover";
+import { Option } from "@/globals/types/primitives";
 
 type Props<TData> = {
   // DATA
   table: TableType<TData>;
-  totalRows: number;
+  filterOptions: Record<string, Option[]>;
 
   // UI
   categoryHeader: string;
@@ -22,7 +23,7 @@ type Props<TData> = {
 
 const DataTableHeader = <TData,>({
   table,
-  totalRows,
+  filterOptions,
   categoryHeader,
   categorySubheader,
   groupSlug,
@@ -31,13 +32,13 @@ const DataTableHeader = <TData,>({
   const [activePopover, setActivePopover] = useState<"filter" | "sort" | null>(
     null,
   );
-  const [searchValue, setSearchValue] = useState("");
 
-  const visibleRowsCount = table.getRowCount();
+  const totalRows = table.getCoreRowModel().rows.length;
+  const visibleRowsCount = table.getPaginationRowModel().rows.length;
 
-  const togglePopover = (type: typeof activePopover) => {
+  const togglePopover = useCallback((type: typeof activePopover) => {
     setActivePopover((prev) => (prev === type ? null : type));
-  };
+  }, []);
 
   return (
     <div className="p-6 gap-5 overflow-hidden flex flex-col relative rounded-3xl border border-slate-200 bg-white/95 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur">
@@ -122,13 +123,7 @@ const DataTableHeader = <TData,>({
 
               <StudentFilterPopover
                 table={table}
-                options={{
-                  departments: [],
-                  programs: [],
-                  houses: [],
-                  sections: [],
-                  levels: [],
-                }}
+                options={filterOptions}
               >
                 <button
                   type="button"
@@ -145,8 +140,8 @@ const DataTableHeader = <TData,>({
           </div>
 
           <StudentSearchInput
-            value={searchValue}
-            onChange={(value) => setSearchValue(value)}
+            value={table.getState().globalFilter ?? ""}
+            onChange={(value) => table.setGlobalFilter(value)}
           />
         </div>
       </div>

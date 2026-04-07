@@ -1,6 +1,5 @@
 "use client";
 
-import DataTablePagination from "@/globals/components/shared/dataTable/DataTablePagination";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -11,9 +10,10 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import DataTableBody from "./DataTableBody";
 import DataTableHeader from "./DataTableHeader";
+import getDynamicFilters from "../../utils/getDynamicFilters";
 
 /**
  * Props for the application's standard DataTable component.
@@ -50,7 +50,7 @@ export function StudentsDataTable<TData, TValue>({
   isLoading,
   categoryHeader,
   categorySubheader,
-  groupSlug
+  groupSlug,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -74,15 +74,18 @@ export function StudentsDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+
+  const dynamicFilters = useMemo(() => getDynamicFilters(data), [data]);
+
   return (
     <div className="flex flex-col gap-4 w-full rounded-md">
       <DataTableHeader
         table={table}
-        totalRows={0}
         categoryHeader={categoryHeader}
         categorySubheader={categorySubheader}
         groupSlug={groupSlug}
         onAddStudent={() => {}}
+        filterOptions={dynamicFilters}
       />
 
       <DataTableBody table={table} isLoading={isLoading} />
