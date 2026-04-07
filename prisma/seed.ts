@@ -121,12 +121,20 @@ async function main() {
   console.log("Creating students...");
   for (let i = 0; i < 100; i++) {
     const schoolLevel = randomChoice([SchoolLevel.SHS, SchoolLevel.COLLEGE]);
+    const yearLevel =
+      schoolLevel === SchoolLevel.COLLEGE
+        ? randomChoice([
+            YearLevel.YEAR_1,
+            YearLevel.YEAR_2,
+            YearLevel.YEAR_3,
+            YearLevel.YEAR_4,
+          ])
+        : randomChoice([YearLevel.GRADE_11, YearLevel.GRADE_12]);
 
     // Pick relevant groups for this student
     const studentGroups = [
       randomChoice(allGroups.filter((g) => g.category === "HOUSE")),
       randomChoice(allGroups.filter((g) => g.category === "SECTION")),
-      randomChoice(allGroups.filter((g) => g.category === "DEPARTMENT")),
     ];
 
     if (schoolLevel === SchoolLevel.SHS) {
@@ -136,6 +144,7 @@ async function main() {
     } else {
       studentGroups.push(
         randomChoice(allGroups.filter((g) => g.category === "PROGRAM")),
+        randomChoice(allGroups.filter((g) => g.category === "DEPARTMENT")),
       );
     }
 
@@ -145,7 +154,7 @@ async function main() {
         firstName: faker.person.firstName(),
         lastName: faker.person.lastName(),
         schoolLevel,
-        yearLevel: randomChoice(Object.values(YearLevel)),
+        yearLevel: yearLevel,
         section: "A",
         groups: {
           connect: studentGroups.map((g) => ({ id: g.id })),
