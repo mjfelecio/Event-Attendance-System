@@ -17,7 +17,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import {
   StudentFormValues,
   studentSchema,
-} from "@/features/auth/schema/studentSchema";
+} from "@/globals/schemas/studentSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const FIELDS_TO_VALIDATE: Record<Step, (keyof StudentFormValues)[]> = {

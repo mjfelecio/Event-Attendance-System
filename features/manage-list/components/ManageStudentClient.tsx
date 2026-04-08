@@ -7,7 +7,7 @@ import { getStudentColumns } from "./dataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
 import { toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";
-import { StudentFormValues } from "@/features/auth/schema/studentSchema";
+import { StudentFormValues } from "@/globals/schemas/studentSchema";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];

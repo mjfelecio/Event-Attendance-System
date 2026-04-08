@@ -4,7 +4,7 @@ import { useFormContext } from "react-hook-form";
 import FormInput from "@/globals/components/shared/FormInput";
 import { FieldGroup, FieldSet } from "@/globals/components/shad-cn/field";
 import SectionHeading from "./SectionHeading";
-import { StudentFormValues } from "@/features/auth/schema/studentSchema";
+import { StudentFormValues } from "@/globals/schemas/studentSchema";
 
 const GroupsSection = () => {
   const {
