@@ -34,9 +34,5 @@ export const useFetchGroups = () => {
       return fetchApi<Record<EventCategory, Option[]>>("/api/groups");
     },
     staleTime: 1000 * 60 * 5,
-    select: (d) => {
-      console.table(d);
-      return d;
-    }
   });
 };

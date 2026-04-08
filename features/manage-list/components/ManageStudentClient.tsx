@@ -5,9 +5,10 @@ import { ManageStudentContext } from "@/features/manage-list/types";
 import StudentsDataTable from "./dataTable/StudentsDataTable";
 import { getStudentColumns } from "./dataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
-import { toastSuccess } from "@/globals/components/shared/toasts";
+import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";
 import { StudentFormValues } from "@/globals/schemas/studentSchema";
+import { useSaveStudent } from "@/globals/hooks/useStudents";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
@@ -27,6 +28,8 @@ const ManageStudentClient = ({
   const [formData, setFormData] = useState<StudentWithGroups | null>(null);
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
 
+  const { mutateAsync } = useSaveStudent();
+
   const handleEdit = () => {
     toastSuccess("Editing");
   };
@@ -44,84 +47,21 @@ const ManageStudentClient = ({
     [],
   );
 
-  const handleSubmit = (data: StudentFormValues) => {
-    toastSuccess("Submitted successfully!")
-    console.table(data);
-  }
+  const handleSubmit = async (data: StudentFormValues) => {
+    try {
+      const student = await mutateAsync(data);
 
-  // const handleAddStudent = async (data: StudentFormData) => {
-  //   setSubmitError(null);
+      if (!student) {
+        toastDanger("Failed to add student");
+      }
 
-  //   try {
-  //     const response = await fetch("/api/students", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(normalizeFormData(data)),
-  //     });
-
-  //     if (!response.ok) {
-  //       const payload = await response.json().catch(() => ({}));
-  //       throw new Error(payload?.message ?? "Failed to add student");
-  //     }
-
-  //     const payload = (await response.json()) as { student: StudentRow };
-  //     setStudentRows((prev) => [payload.student, ...prev]);
-  //   } catch (error) {
-  //     console.error("Error adding student", error);
-  //     setSubmitError(
-  //       error instanceof Error ? error.message : "Failed to add student",
-  //     );
-  //     throw error;
-  //   }
-  // };
-
-  // const handleEditStudent = (student: StudentRow) => {
-  //   setEditingStudent(student);
-  //   setIsEditDialogOpen(true);
-  // };
-
-  // const handleUpdateStudent = async (data: StudentFormData) => {
-  //   if (!editingStudent) return;
-
-  //   setSubmitError(null);
-
-  //   try {
-  //     const response = await fetch(
-  //       `/api/students/${editingStudent.studentNumber}`,
-  //       {
-  //         method: "PATCH",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(normalizeFormData(data)),
-  //       },
-  //     );
-
-  //     if (!response.ok) {
-  //       const payload = await response.json().catch(() => ({}));
-  //       throw new Error(payload?.message ?? "Failed to update student");
-  //     }
-
-  //     const payload = (await response.json()) as { student: StudentRow };
-  //     setStudentRows((prev) =>
-  //       prev.map((row) =>
-  //         row.studentNumber === payload.student.studentNumber
-  //           ? payload.student
-  //           : row,
-  //       ),
-  //     );
-  //     setIsEditDialogOpen(false);
-  //     setEditingStudent(null);
-  //   } catch (error) {
-  //     console.error("Error updating student", error);
-  //     setSubmitError(
-  //       error instanceof Error ? error.message : "Failed to update student",
-  //     );
-  //     throw error;
-  //   }
-  // };
+      toastSuccess("Submitted successfully!");
+      console.table(student);
+    } catch (error) {
+      console.error("Error adding student", error);
+      throw error;
+    }
+  };
 
   // const handleDeleteStudent = async (student: StudentRow) => {
   //   if (

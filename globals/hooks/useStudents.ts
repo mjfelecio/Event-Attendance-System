@@ -5,7 +5,7 @@ import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
 import { EventCategory } from "@prisma/client";
-import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
+import { StudentFormValues } from "../schemas/studentSchema";
 
 // Transform function to make sure that the dates are actually a Date object
 const transformStudent = (e: StudentAPI | StudentAPIWithGroups): StudentWithGroups => ({
@@ -164,10 +164,10 @@ export const useStudentsV2 = (filters: any = {}, searchQuery?: string) => {
 export const useSaveStudent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (student: StudentFormData) => {
-      return fetchApi<StudentFormData>("/api/events", {
+    mutationFn: (student: StudentFormValues) => {
+      return fetchApi<StudentWithGroups>("/api/students", {
         method: "POST",
-        body: JSON.stringify(event),
+        body: JSON.stringify(student),
         headers: { "Content-Type": "application/json" },
       });
     },
@@ -175,7 +175,7 @@ export const useSaveStudent = () => {
     // TODO: Replace this with optimistic handling and manual adding of the data
     // Instead of revalidating the whole thing, which hits the backend
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.students.all() }),
   });
 };
 

@@ -77,7 +77,6 @@ export function StudentsDataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-
   const dynamicFilters = useMemo(() => getDynamicFilters(data), [data]);
 
   return (

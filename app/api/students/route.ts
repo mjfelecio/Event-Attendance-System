@@ -1,130 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
-import {
-  mapStudentToRow,
-  mapStudentToSource,
-  slugify,
-} from "@/features/manage-list/utils/mapStudentToRow";
 import { z } from "zod";
 import { err, ok } from "@/globals/utils/api";
-import { studentCreateSchema } from "@/features/manage-list/utils/studentSchemas";
-import { Student } from "@/globals/types/students";
-import { buildStudentQuery, transformStudent } from "@/globals/utils/queryBuilder";
-import { handlePrismaError } from "@/globals/utils/prismaError";
+import {
+  buildStudentQuery,
+  transformStudent,
+} from "@/globals/utils/queryBuilder";
+import { studentSchema } from "@/globals/schemas/studentSchema";
+import { respondWithError } from "@/globals/utils/httpError";
 
-// const isCollegeYearLevel = (yearLevel: YearLevel) =>
-//   yearLevel === YearLevel.YEAR_1 ||
-//   yearLevel === YearLevel.YEAR_2 ||
-//   yearLevel === YearLevel.YEAR_3 ||
-//   yearLevel === YearLevel.YEAR_4;
+export async function POST(request: NextRequest) {
+  try {
+    const payload = await request.json();
+    const validatedData = studentSchema.parse(payload);
 
-// const isShsYearLevel = (yearLevel: YearLevel) =>
-//   yearLevel === YearLevel.GRADE_11 || yearLevel === YearLevel.GRADE_12;
+    // Collect all slugs from the flat form data
+    const groupSlugs = [
+      validatedData.section,
+      validatedData.house,
+      validatedData.department,
+      validatedData.program,
+      validatedData.strand,
+    ].filter(Boolean) as string[];
 
-// export async function POST(request: Request) {
-//   try {
-//     const payload = await request.json();
-//     const data = studentCreateSchema.parse({
-//       ...payload,
-//       status: payload?.status ?? StudentStatus.ACTIVE,
-//     });
+    // Find the actual Group records to get their IDs
+    // This ensures we only connect to groups that actually exist in the DB
+    const groups = await prisma.group.findMany({
+      where: {
+        slug: { in: groupSlugs },
+      },
+      select: { id: true },
+    });
 
-//     const isCollege = data.schoolLevel === SchoolLevel.COLLEGE;
-//     const isShs = data.schoolLevel === SchoolLevel.SHS;
+    // Create the student and connect the groups
+    const student = await prisma.student.create({
+      data: {
+        id: validatedData.id,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        middleName: validatedData.middleName || null,
+        schoolLevel: validatedData.schoolLevel,
+        yearLevel: validatedData.yearLevel,
+        groups: {
+          connect: groups.map((g) => ({ id: g.id })),
+        },
+      },
+      include: {
+        groups: true,
+      },
+    });
 
-//     if (isShs && !data.shsStrand) {
-//       return NextResponse.json(err("SHS students require an SHS strand."), {
-//         status: 400,
-//       });
-//     }
-
-//     if (isCollege && !data.collegeProgram) {
-//       return NextResponse.json(
-//         err("College students require a college program."),
-//         { status: 400 }
-//       );
-//     }
-
-//     if (isCollege && !data.department) {
-//       return NextResponse.json(err("College students require a department."), {
-//         status: 400,
-//       });
-//     }
-
-//     if (isCollege && !isCollegeYearLevel(data.yearLevel)) {
-//       return NextResponse.json(
-//         err("College students must be from 1st to 4th year."),
-//         { status: 400 }
-//       );
-//     }
-
-//     if (isShs && !isShsYearLevel(data.yearLevel)) {
-//       return NextResponse.json(
-//         err("SHS students must be Grade 11 or Grade 12."),
-//         { status: 400 }
-//       );
-//     }
-
-//     const normalizedDepartment = isCollege ? data.department ?? null : null;
-//     const normalizedShsStrand = isShs ? data.shsStrand ?? null : null;
-//     const normalizedCollegeProgram = isCollege ? data.collegeProgram ?? null : null;
-
-//     const departmentSlug = normalizedDepartment
-//       ? slugify(normalizedDepartment) ?? null
-//       : null;
-//     const houseSlug = data.house ? slugify(data.house) ?? null : null;
-
-//     const student = await prisma.student.create({
-//       data: {
-//         id: data.id,
-//         lastName: data.lastName,
-//         firstName: data.firstName,
-//         middleName: data.middleName ?? null,
-//         schoolLevel: data.schoolLevel,
-//         shsStrand: normalizedShsStrand,
-//         collegeProgram: normalizedCollegeProgram,
-//         section: data.section,
-//         yearLevel: data.yearLevel,
-//         status: data.status ?? StudentStatus.ACTIVE,
-//         department: normalizedDepartment,
-//         departmentSlug,
-//         house: data.house ?? null,
-//         houseSlug,
-//       },
-//     });
-
-//     const studentRow = mapStudentToRow(
-//       mapStudentToSource({
-//         ...student,
-//         name: `${student.firstName} ${student.lastName}`.trim(),
-//       })
-//     );
-
-//     return NextResponse.json(ok({ student: studentRow }), { status: 201 });
-//   } catch (error) {
-//     if (error instanceof z.ZodError) {
-//       // TODO: What is this issues object, I need to check how its used like
-//       // Since this should conform to ok, err pattern for the NextResponse
-//       // Like the other responses that I have modified
-//       return NextResponse.json(
-//         { message: "Invalid student data.", issues: error.flatten() },
-//         { status: 400 }
-//       );
-//     }
-
-//     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-//       if (error.code === "P2002") {
-//         return NextResponse.json(
-//           err("A student with that ID already exists.", "DUPLICATE"),
-//           { status: 409 }
-//         );
-//       }
-//     }
-
-//     console.error("Failed to create student", error);
-//     return NextResponse.json(err("Failed to create student."), { status: 500 });
-//   }
-// }
+    return NextResponse.json(ok(student), { status: 201 });
+  } catch (error) {
+    return respondWithError(error);
+  }
+}
 
 // NOTE: values must be the slug versions
 const querySchema = z.object({
@@ -152,14 +82,13 @@ export async function GET(request: NextRequest) {
     const rawStudents = await prisma.student.findMany({
       where,
       include: { groups: true },
-      orderBy: { lastName: 'asc' }
+      orderBy: { lastName: "asc" },
     });
 
-    const students = rawStudents.map(transformStudent)
+    const students = rawStudents.map(transformStudent);
 
     return NextResponse.json(ok(students), { status: 200 });
   } catch (error) {
-    const { status, message } = handlePrismaError(error);
-    return NextResponse.json(err(message), { status });
+    respondWithError(error)
   }
 }
