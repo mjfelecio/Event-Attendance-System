@@ -17,7 +17,7 @@ interface FormInputProps extends ComponentProps<typeof Input> {
 }
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
-  ({ label, description, error, id, className, ...props }, _ref) => {
+  ({ label, description, error, id, className, ...props }, ref) => {
     const inputId = id ?? `input-${label.replace(/\s+/g, "-").toLowerCase()}`;
 
     return (
@@ -29,6 +29,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           {label}
         </FieldLabel>
         <Input
+          ref={ref}
           id={inputId}
           className={`border-slate-200 rounded-xl mb-0 ${className}`}
           {...props}
