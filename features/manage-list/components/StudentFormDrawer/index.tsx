@@ -40,12 +40,19 @@ export default function StudentFormDrawer({ student, isOpen, onClose }: Props) {
 
   const methods = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
-		mode: "onChange",
+    mode: "onChange",
     defaultValues: {
       id: "",
       firstName: "",
       lastName: "",
       middleName: "",
+      schoolLevel: undefined,
+      yearLevel: undefined,
+      section: "",
+      house: "",
+      department: "",
+      program: "",
+      strand: "",
     },
   });
 
@@ -56,7 +63,7 @@ export default function StudentFormDrawer({ student, isOpen, onClose }: Props) {
 
   const handleNext = useCallback(async () => {
     // Validate the fields in each step
-    const isValid = await methods.trigger(FIELDS_TO_VALIDATE[step]);
+    const isValid = await methods.trigger(FIELDS_TO_VALIDATE[step], { shouldFocus: true });
     if (!isValid) return;
 
     setStep(step === "personal" ? "academic" : "groups");
@@ -79,7 +86,7 @@ export default function StudentFormDrawer({ student, isOpen, onClose }: Props) {
           {/* SCROLLABLE FORM AREA */}
           <div className="flex-1 overflow-y-auto px-6 space-y-8">
             {step === "personal" && <PersonalInfoSection />}
-            {step === "academic" && <AcademicSection student={student} />}
+            {step === "academic" && <AcademicSection />}
             {step === "groups" && <GroupsSection student={student} />}
           </div>
 
