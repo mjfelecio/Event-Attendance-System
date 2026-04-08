@@ -7,7 +7,7 @@ import { getStudentColumns } from "./dataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
 import { toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";
-import AddStudentDialog from "./AddStudentDialog";
+import { StudentFormValues } from "@/features/auth/schema/studentSchema";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
@@ -44,33 +44,10 @@ const ManageStudentClient = ({
     [],
   );
 
-  // const normalizeFormData = (data: StudentFormData) => ({
-  //   id: data.id,
-  //   lastName: data.lastName.trim(),
-  //   firstName: data.firstName.trim(),
-  //   middleName: data.middleName === "N/A" ? null : data.middleName.trim(),
-  //   schoolLevel: data.schoolLevel,
-  //   shsStrand:
-  //     data.schoolLevel === "SHS"
-  //       ? data.shsStrand && data.shsStrand !== "N/A"
-  //         ? data.shsStrand.trim()
-  //         : null
-  //       : null,
-  //   collegeProgram:
-  //     data.schoolLevel === "COLLEGE"
-  //       ? data.collegeProgram && data.collegeProgram !== "N/A"
-  //         ? data.collegeProgram.trim()
-  //         : null
-  //       : null,
-  //   department:
-  //     data.schoolLevel === "COLLEGE" && data.department.trim()
-  //       ? data.department.trim()
-  //       : null,
-  //   house: data.house.trim() ? data.house.trim() : null,
-  //   section: data.section.trim(),
-  //   yearLevel: data.yearLevel,
-  //   status: data.status,
-  // });
+  const handleSubmit = (data: StudentFormValues) => {
+    toastSuccess("Submitted successfully!")
+    console.table(data);
+  }
 
   // const handleAddStudent = async (data: StudentFormData) => {
   //   setSubmitError(null);
@@ -180,12 +157,6 @@ const ManageStudentClient = ({
 
   return (
     <div className="flex w-full flex-col gap-6">
-      {/* {submitError && (
-        <div className="mx-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm md:mx-12">
-          {submitError}
-        </div>
-      )} */}
-
       <StudentsDataTable
         columns={columns}
         data={students ?? []}
@@ -196,47 +167,12 @@ const ManageStudentClient = ({
         onAddStudent={() => setIsStudentFormOpen(true)}
       />
 
-      {/* <AddStudentDialog
-        open={isStudentFormOpen}
-        onClose={() => setIsStudentFormOpen(false)}
-        onSubmit={handleEdit}
-      /> */}
-
       <StudentFormDrawer
+        student={undefined}
         isOpen={isStudentFormOpen}
         onClose={() => setIsStudentFormOpen(false)}
-        student={undefined}
+        onSubmit={handleSubmit}
       />
-
-      {/* <AddStudentDialog
-        open={isEditDialogOpen}
-        onClose={() => {
-          setIsEditDialogOpen(false);
-          setEditingStudent(null);
-        }}
-        onSubmit={handleUpdateStudent}
-        initialData={
-          editingStudent
-            ? {
-                id: editingStudent.studentNumber,
-                lastName: editingStudent.lastName,
-                firstName: editingStudent.firstName,
-                middleName: editingStudent.middleName ?? "",
-                schoolLevel: editingStudent.schoolLevel,
-                shsStrand: editingStudent.shsStrand ?? "",
-                collegeProgram: editingStudent.collegeProgram ?? "",
-                department: editingStudent.department ?? "",
-                house: editingStudent.house ?? "",
-                section: editingStudent.section,
-                yearLevel: editingStudent.yearLevel,
-                status: editingStudent.status,
-              }
-            : undefined
-        }
-        mode="edit"
-        title="Edit Student"
-        submitLabel="Save Changes"
-      /> */}
     </div>
   );
 };

@@ -7,13 +7,13 @@ const baseStudentSchema = z
     lastName: z.string().min(1),
     firstName: z.string().min(1),
     middleName: z.string().trim().optional().nullable(),
-    schoolLevel: z.nativeEnum(SchoolLevel),
+    schoolLevel: z.enum(SchoolLevel),
     shsStrand: z.string().trim().optional().nullable(),
     collegeProgram: z.string().trim().optional().nullable(),
     department: z.string().trim().optional().nullable(),
     house: z.string().trim().optional().nullable(),
     section: z.string().min(1),
-    yearLevel: z.nativeEnum(YearLevel),
+    yearLevel: z.enum(YearLevel),
   })
   .superRefine((data, ctx) => {
     const hasDepartment = Boolean(data.department && data.department.trim());
