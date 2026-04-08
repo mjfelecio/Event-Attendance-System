@@ -7,6 +7,7 @@ import { getStudentColumns } from "./dataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
 import { toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";
+import AddStudentDialog from "./AddStudentDialog";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
@@ -196,9 +197,9 @@ const ManageStudentClient = ({
       />
 
       {/* <AddStudentDialog
-        open={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
-        onSubmit={handleAddStudent}
+        open={isStudentFormOpen}
+        onClose={() => setIsStudentFormOpen(false)}
+        onSubmit={handleEdit}
       /> */}
 
       <StudentFormDrawer

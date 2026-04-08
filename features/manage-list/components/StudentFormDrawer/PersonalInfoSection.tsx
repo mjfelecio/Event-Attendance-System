@@ -1,27 +1,55 @@
-import { Input } from "@/globals/components/shad-cn/input";
-import { Label } from "@/globals/components/shad-cn/label";
 import SectionHeading from "./SectionHeading";
+import FormInput from "@/globals/components/shared/FormInput";
+import { FieldGroup, FieldSet } from "@/globals/components/shad-cn/field";
+import { useFormContext } from "react-hook-form";
+import { StudentFormValues } from "@/features/auth/schema/studentSchema";
 
-const PersonalInfoSection = ({ student }: { student?: any }) => (
-  <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-    <SectionHeading title="Personal Details" description="Basic identification info" />
-    <div className="grid gap-4">
-      <div className="space-y-1.5">
-        <Label className="text-[10px] uppercase font-bold text-slate-400 ml-1">Student ID</Label>
-        <Input placeholder="2022-XXXXX" defaultValue={student?.id} className="rounded-xl border-slate-200 focus-visible:ring-slate-900" />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label className="text-[10px] uppercase font-bold text-slate-400 ml-1">First Name</Label>
-          <Input placeholder="John" defaultValue={student?.firstName} className="rounded-xl border-slate-200" />
+const PersonalInfoSection = () => {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<StudentFormValues>();
+
+  return (
+    <FieldSet className="animate-in fade-in slide-in-from-right-4 duration-300">
+      <SectionHeading
+        title="Personal Details"
+        description="Basic identification info"
+      />
+
+      <FieldGroup className="grid grid-cols-1 gap-y-4">
+        <FormInput
+          label="Student ID"
+          placeholder="2026XXXXXX"
+          {...register("id")}
+          error={errors.id?.message}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput
+            label="First Name"
+            placeholder="John"
+            {...register("firstName")}
+            error={errors.firstName?.message}
+          />
+          <FormInput
+            label="Last Name"
+            placeholder="Doe"
+            {...register("lastName")}
+            error={errors.lastName?.message}
+          />
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-[10px] uppercase font-bold text-slate-400 ml-1">Last Name</Label>
-          <Input placeholder="Doe" defaultValue={student?.lastName} className="rounded-xl border-slate-200" />
-        </div>
-      </div>
-    </div>
-  </div>
-);
+
+        <FormInput
+          label="Middle Name"
+          placeholder="Mirron"
+          {...register("middleName")}
+          error={errors.middleName?.message}
+          description="Leave blank if not applicable"
+        />
+      </FieldGroup>
+    </FieldSet>
+  );
+};
 
 export default PersonalInfoSection;

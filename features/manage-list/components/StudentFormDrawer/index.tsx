@@ -13,9 +13,12 @@ import StepIndicator from "./StepIndicator";
 import PersonalInfoSection from "./PersonalInfoSection";
 import AcademicSection from "./AcademicSection";
 import GroupsSection from "./GroupsSection";
+import { FormProvider, useForm } from "react-hook-form";
+import { StudentFormValues, studentSchema } from "@/features/auth/schema/studentSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface Props {
-  student?: StudentWithGroups | null;
+  student?: StudentWithGroups;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -24,8 +27,17 @@ export type Step = "personal" | "academic" | "groups";
 
 export default function StudentFormDrawer({ student, isOpen, onClose }: Props) {
   const [step, setStep] = useState<Step>("personal");
-
   const isEdit = !!student;
+
+  const methods = useForm<StudentFormValues>({
+    resolver: zodResolver(studentSchema),
+    defaultValues: {
+      id: "",
+      firstName: "",
+      lastName: "",
+      middleName: "",
+    },
+  });
 
   const handleClose = () => {
     setStep("personal");
@@ -35,6 +47,8 @@ export default function StudentFormDrawer({ student, isOpen, onClose }: Props) {
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
       <SheetContent className="flex flex-col w-full sm:max-w-md border-l-slate-200 bg-white p-0">
+        <FormProvider {...methods} >
+
         {/* HEADER */}
         <SheetHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
           <SheetTitle className="text-xl font-bold text-slate-800">
@@ -45,9 +59,11 @@ export default function StudentFormDrawer({ student, isOpen, onClose }: Props) {
           </div>
         </SheetHeader>
 
+
+
         {/* SCROLLABLE FORM AREA */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          {step === "personal" && <PersonalInfoSection student={student} />}
+        <div className="flex-1 overflow-y-auto px-6 space-y-8">
+          {step === "personal" && <PersonalInfoSection />}
           {step === "academic" && <AcademicSection student={student} />}
           {step === "groups" && <GroupsSection student={student} />}
         </div>
@@ -79,6 +95,8 @@ export default function StudentFormDrawer({ student, isOpen, onClose }: Props) {
             )}
           </div>
         </SheetFooter>
+        </FormProvider>
+
       </SheetContent>
     </Sheet>
   );
