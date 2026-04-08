@@ -1,4 +1,4 @@
-import { SchoolLevel, StudentStatus, YearLevel } from "@prisma/client";
+import { SchoolLevel, YearLevel } from "@prisma/client";
 import { z } from "zod";
 
 const baseStudentSchema = z
@@ -14,7 +14,6 @@ const baseStudentSchema = z
     house: z.string().trim().optional().nullable(),
     section: z.string().min(1),
     yearLevel: z.nativeEnum(YearLevel),
-    status: z.nativeEnum(StudentStatus),
   })
   .superRefine((data, ctx) => {
     const hasDepartment = Boolean(data.department && data.department.trim());
