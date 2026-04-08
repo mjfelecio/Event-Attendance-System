@@ -155,7 +155,6 @@ async function main() {
         lastName: faker.person.lastName(),
         schoolLevel,
         yearLevel: yearLevel,
-        section: "A",
         groups: {
           connect: studentGroups.map((g) => ({ id: g.id })),
         },

@@ -41,7 +41,6 @@ model Student {
   lastName    String
   firstName   String
   middleName  String?
-  section     String
   yearLevel   YearLevel
   schoolLevel SchoolLevel
 
