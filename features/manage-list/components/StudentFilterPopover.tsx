@@ -37,7 +37,10 @@ const FilterGroup = ({
   filterValue: string;
   onFilterValueChange: (colId: string, val: string) => void;
 }) => {
-  if (!items || items.length === 0) return null;
+  // Hide the filter group if they only have a single item
+  // Since it wont do anything anyways since that is already
+  // what is being displayed
+  if (!items || items.length === 1) return null;
 
   const formattedLabel = label.includes("Level")
     ? capitalize(label.split("L")[0]) + " " + "Level"
