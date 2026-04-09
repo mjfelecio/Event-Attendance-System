@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/globals/libs/prisma";
 import { StudentAttendanceRecord } from "@/globals/types/students";
-import { ok } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
 import { fullName } from "@/globals/utils/formatting";
 import { assertEventVisibility, requireAuth } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
 
-// Fetch all attendance record of a specific event
 export async function GET(
   _req: Request,
   { params }: { params: { eventId: string } },
@@ -16,54 +14,45 @@ export async function GET(
     const user = await requireAuth();
     const { eventId } = await params;
 
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { includedGroups: true },
+    });
+
     if (!event) {
-      return NextResponse.json(ok(null), { status: 404 });
+      return NextResponse.json(err("No event found"));
     }
 
     assertEventVisibility(event, user);
 
+    // Fetch records and include the student relations
     const recordsWithStudent = await prisma.record.findMany({
       where: { eventId },
-      select: {
-        id: true,
-        eventId: true,
-        studentId: true,
-        createdAt: true,
-        timein: true,
-        timeout: true,
+      include: {
         student: {
-          select: {
-            firstName: true,
-            middleName: true,
-            lastName: true,
-            schoolLevel: true,
-            section: true,
-          },
+          include: { groups: true },
         },
       },
+      orderBy: { createdAt: "desc" },
     });
 
-    type RecordWithStudent = (typeof recordsWithStudent)[number];
+    // Map to StudentAttendanceRecord type
+    const records: StudentAttendanceRecord[] = recordsWithStudent.map((r) => {
+      const s = r.student;
 
-    const records: StudentAttendanceRecord[] = recordsWithStudent.map(
-      (r: RecordWithStudent) => ({
+      return {
         id: r.id,
         eventId: r.eventId,
         studentId: r.studentId,
-        fullName: fullName(
-          r.student.firstName,
-          r.student.middleName || "",
-          r.student.lastName,
-        ),
-        schoolLevel: r.student.schoolLevel,
-        section: r.student.section,
-        timein: r.timein ? new Date(r.timein).toString() : null,
-        timeout: r.timeout ? new Date(r.timeout).toString() : null,
-      }),
-    );
+        fullName: fullName(s.firstName, s.middleName || "", s.lastName),
+        schoolLevel: s.schoolLevel,
+        section: s.groups.find((g) => g.category === "SECTION")?.slug ?? "",
+        timein: r.timein ? r.timein.toISOString() : null,
+        timeout: r.timeout ? r.timeout.toISOString() : null,
+      };
+    });
 
-    return NextResponse.json(ok(records), { status: 200 });
+    return NextResponse.json(ok(records));
   } catch (error) {
     return respondWithError(error);
   }

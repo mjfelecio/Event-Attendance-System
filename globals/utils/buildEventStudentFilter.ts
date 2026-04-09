@@ -18,8 +18,6 @@ export const buildEventStudentFilter = (
   // For everything else, we query the 'groups' relation by slug
   const includedSlugs: string[] = event.includedGroups.map((g) => g.slug);
 
-  console.log(includedSlugs);
-
   if (includedSlugs.length > 0) {
     where.groups = {
       some: {
