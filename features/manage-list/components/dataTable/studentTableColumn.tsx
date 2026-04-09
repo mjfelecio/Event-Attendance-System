@@ -44,7 +44,7 @@ export const getStudentColumns = ({
     accessorKey: "schoolLevel",
     header: () => <div className="text-center">Level</div>,
     cell: ({ getValue }) => (
-      <div className="text-center">
+      <div className="text-center uppercase">
         {normalizeName(getValue() as string) || "-"}
       </div>
     ),
@@ -81,7 +81,7 @@ export const getStudentColumns = ({
     accessorKey: "strand",
     header: () => <div className="text-center">Strand</div>,
     cell: ({ getValue }) => (
-      <div className="text-center">{(getValue() as string) || "-"}</div>
+      <div className="text-center uppercase">{(getValue() as string) || "-"}</div>
     ),
   },
   {

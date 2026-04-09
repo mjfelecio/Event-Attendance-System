@@ -72,6 +72,7 @@ const ManageStudentPage = () => {
           item={itemSlug || "General"}
           categoryHeading={config.heading}
           students={students ?? []}
+          isLoading={isLoading}
         />
       </div>
     </section>

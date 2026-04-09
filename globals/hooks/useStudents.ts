@@ -129,10 +129,9 @@ export const useStudentsStats = () => {
 /**
  * Fetches students based on active search filters.
  * @param filters - The parsed object from your querySchema (category, house, etc.)
- * @param searchQuery - Optional client-side string for immediate fuzzy filtering (e.g., name)
  */
-export const useStudentsV2 = (filters: any = {}, searchQuery?: string) => {
-  // 1. Generate the query string from the filters object
+export const useStudentsV2 = (filters: any = {}) => {
+  // Generate the query string from the filters object
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -141,8 +140,7 @@ export const useStudentsV2 = (filters: any = {}, searchQuery?: string) => {
     return params.toString();
   }, [filters]);
 
-  const { data: students, ...queryResult } = useQuery({
-    // 2. Include queryString in the key so React Query refetches when filters change
+  return useQuery({
     queryKey: [...queryKeys.students.all(), queryString],
     queryFn: async (): Promise<StudentWithGroups[]> => {
       const url = queryString
@@ -152,19 +150,6 @@ export const useStudentsV2 = (filters: any = {}, searchQuery?: string) => {
       return data.map(transformStudent);
     },
   });
-
-  // TODO: RETHINK THIS APPROACH IN THE FUTURE
-  const filteredStudents = useMemo(() => {
-    if (!students) return undefined;
-    if (!searchQuery) return students;
-
-    return filterAndSortStudents(students, searchQuery);
-  }, [students, searchQuery]);
-
-  return {
-    ...queryResult,
-    data: filteredStudents,
-  };
 };
 
 /**

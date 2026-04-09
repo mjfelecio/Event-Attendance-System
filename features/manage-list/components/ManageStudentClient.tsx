@@ -17,6 +17,7 @@ interface ManageStudentClientProps {
   item?: string;
   categoryHeading: string;
   students: StudentWithGroups[];
+  isLoading: boolean;
 }
 
 const ManageStudentClient = ({
@@ -25,6 +26,7 @@ const ManageStudentClient = ({
   item,
   categoryHeading,
   students,
+  isLoading
 }: ManageStudentClientProps) => {
   const [formData, setFormData] = useState<StudentWithGroups>();
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
@@ -92,7 +94,7 @@ const ManageStudentClient = ({
       <StudentsDataTable
         columns={columns}
         data={students ?? []}
-        isLoading={false}
+        isLoading={isLoading}
         categoryHeader={label ?? ""}
         categorySubheader={categoryHeading ?? ""}
         groupSlug={item ?? ""}
