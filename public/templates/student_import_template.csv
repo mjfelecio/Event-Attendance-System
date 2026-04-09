@@ -1,0 +1,4 @@
+id,lastName,firstName,middleName,schoolLevel,yearLevel,section,house,program,department,strand
+20260000000,Doe,John,Quincy,COLLEGE,YEAR_1,bscs-1a,vierdyy,bscs,computer-studies,
+20260000001,Smith,Jane,Marie,SHS,GRADE_12,stem-2a,azul,,,stem
+20260000002,Garcia,Alex,,COLLEGE,YEAR_2,bsit-2a,giallio,bsit,computer-studies,

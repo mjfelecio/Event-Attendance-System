@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCSVReader, formatFileSize } from "react-papaparse";
-import { Upload, FileSpreadsheet, X, Loader2, Users } from "lucide-react";
+import { Upload, FileSpreadsheet, X, Loader2, Info, CheckCircle2 } from "lucide-react";
 import { Button } from "@/globals/components/shad-cn/button";
 import {
   Card,
@@ -18,7 +18,6 @@ import {
   AlertTitle,
 } from "@/globals/components/shad-cn/alert";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
-import { ApiError, fetchApi } from "@/globals/utils/api";
 
 type Props = {
   onImportSuccess: (count: number) => void;
@@ -41,138 +40,127 @@ export default function StudentImporter({ onImportSuccess }: Props) {
       });
 
       const data = await response.json();
-      if (data.success) {
-        toastSuccess(data.message);
-        onImportSuccess(data.count);
+
+      if (response.ok && data.success) {
+        toastSuccess(data.message || "Import completed successfully.");
+        onImportSuccess(data.data?.count ?? 0);
         setParsedData(null);
       } else {
-        toastDanger(data.message || "Bulk import failed.");
-        console.error(
-          "Parse error: ",
-          JSON.stringify(data.issues, null, 2),
-        );
+        // Handle Zod or Prisma errors from the API
+        const errorMsg = data.message || "Bulk import failed.";
+        toastDanger(errorMsg);
+        console.error("Import Error Detail:", data.error || data.issues);
       }
     } catch (error) {
-      toastDanger("Network error during bulk import.");
+      toastDanger("Network error. Please check your connection.");
+      console.error(error);
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const resetState = (removeFileProps: any, e: any) => {
+    removeFileProps.onClick(e);
+    setParsedData(null);
+  };
+
   return (
     <CSVReader
-      config={{
-        header: true,
-        skipEmptyLines: true,
-      }}
-      onUploadAccepted={(results: any) => {
-        setParsedData(results.data);
-      }}
+      config={{ header: true, skipEmptyLines: true }}
+      onUploadAccepted={(results: any) => setParsedData(results.data)}
     >
-      {({
-        getRootProps,
-        acceptedFile,
-        ProgressBar,
-        getRemoveFileProps,
-      }: any) => (
-        <Card className="md:col-span-2 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">Data Source</CardTitle>
+      {({ getRootProps, acceptedFile, ProgressBar, getRemoveFileProps }: any) => (
+        <Card className="col-span-2 shadow-sm border-slate-200 overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b">
+            <CardTitle className="text-lg font-bold text-slate-800">Student Masterlist Import</CardTitle>
             <CardDescription>
-              Select a .csv file containing the student masterlist.
+              Upload a CSV file to bulk create or update student records.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="p-6 space-y-6">
             {!acceptedFile ? (
               <div
                 {...getRootProps()}
-                className="relative group border-2 border-dashed rounded-xl p-12 transition-colors hover:bg-muted/50 flex flex-col items-center justify-center space-y-4 cursor-pointer"
+                className="group relative border-2 border-dashed border-slate-200 rounded-2xl p-12 transition-all hover:bg-slate-50 hover:border-indigo-300 flex flex-col items-center justify-center space-y-4 cursor-pointer"
               >
-                <div className="p-4 bg-primary/5 rounded-full text-primary">
+                <div className="p-4 bg-indigo-50 rounded-full text-indigo-600 transition-transform group-hover:scale-110">
                   <Upload className="w-8 h-8" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium">
-                    Drop file here or click to browse
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 text-balance">
-                    Supported formats: CSV (Max 10MB)
-                  </p>
+                  <p className="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
+                  <p className="text-xs text-slate-500 mt-1">CSV files only (Max 10MB)</p>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-xl bg-primary/5 border-primary/20">
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center justify-between p-4 border rounded-xl bg-emerald-50/30 border-emerald-100">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-white rounded-lg border shadow-sm text-primary">
+                    <div className="p-3 bg-white rounded-lg border border-emerald-100 shadow-sm text-emerald-600">
                       <FileSpreadsheet className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold">{acceptedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatFileSize(acceptedFile.size)} • Ready for
-                        Validation
+                      <p className="text-sm font-bold text-slate-900">{acceptedFile.name}</p>
+                      <p className="text-xs text-slate-500 font-medium">
+                        {formatFileSize(acceptedFile.size)} • {parsedData?.length ?? 0} rows detected
                       </p>
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    {...getRemoveFileProps()}
-                    onClick={(e: any) => {
-                      getRemoveFileProps().onClick(e);
-                      setParsedData(null);
-                    }}
+                    className="text-slate-400 hover:text-red-500 hover:bg-red-50"
+                    onClick={(e) => resetState(getRemoveFileProps(), e)}
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
-
-                <div className="h-1 px-1">
-                  <ProgressBar />
-                </div>
+                <ProgressBar className="bg-emerald-500" />
               </div>
             )}
 
-            <Alert className="bg-muted/50 border-none">
-              <Users className="h-4 w-4" />
-              <AlertTitle className="text-xs font-bold uppercase tracking-wider">
-                Note on Department Mapping
+            <Alert className="bg-amber-50/50 border-amber-100 text-amber-900">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-[0.65rem] font-bold uppercase tracking-widest text-amber-700">
+                Slug-Based Matching
               </AlertTitle>
-              <AlertDescription className="text-xs text-muted-foreground">
-                Slugs (e.g., <code className="text-primary">cite-dept</code>)
-                are automatically generated if not provided in the upload.
+              <AlertDescription className="text-xs leading-relaxed opacity-80 inline">
+                Ensure columns for <code className="font-bold">section</code>, <code className="font-bold">department</code>, and <code className="font-bold">house</code> use valid system slugs.
               </AlertDescription>
             </Alert>
           </CardContent>
 
-          <CardFooter className="flex justify-end gap-3 bg-muted/20 border-t p-4">
-            <Button
-              variant="ghost"
-              disabled={!acceptedFile || isProcessing}
-              {...getRemoveFileProps()}
-              onClick={(e: any) => {
-                getRemoveFileProps().onClick(e);
-                setParsedData(null);
-              }}
-            >
-              Reset
-            </Button>
-            <Button
-              disabled={!acceptedFile || isProcessing}
-              onClick={handleImport}
-              className="min-w-[140px]"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Importing...
-                </>
-              ) : (
-                "Execute Import"
-              )}
-            </Button>
+          <CardFooter className="flex justify-between items-center bg-slate-50/50 border-t p-4 px-6">
+            <p className="text-[10px] text-slate-400 font-medium max-w-[200px]">
+              Processing occurs in a single transaction. Invalid rows will roll back the entire batch.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                disabled={!acceptedFile || isProcessing}
+                onClick={(e) => resetState(getRemoveFileProps(), e)}
+                className="border-slate-200"
+              >
+                Reset
+              </Button>
+              <Button
+                disabled={!acceptedFile || isProcessing}
+                onClick={handleImport}
+                className="min-w-[140px] bg-indigo-600 hover:bg-indigo-700 shadow-md"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Execute Import
+                  </>
+                )}
+              </Button>
+            </div>
           </CardFooter>
         </Card>
       )}

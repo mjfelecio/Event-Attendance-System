@@ -20,8 +20,8 @@ const ImportStudentPage = () => {
         </div>
         <Button variant="outline" size="sm" className="gap-2" asChild>
           <a
-            href="/templates/students.csv"
-            download="student_import_template.xlsx"
+            href="/templates/student_import_template.csv"
+            download="student_import_template.csv"
           >
             <Download className="w-4 h-4" />
             CSV Template
@@ -64,11 +64,11 @@ const ImportStudentPage = () => {
             <ul className="text-xs text-muted-foreground space-y-2 list-disc pl-4">
               <li>
                 <strong>SHS:</strong> Requires{" "}
-                <code className="text-primary">shsStrand</code>
+                <code className="text-primary">strand</code>
               </li>
               <li>
                 <strong>College:</strong> Requires{" "}
-                <code className="text-primary">collegeProgram</code>
+                <code className="text-primary">program</code>
               </li>
               <li>
                 New IDs will create records; existing IDs will be updated
