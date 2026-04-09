@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { ManageStudentContext } from "@/features/manage-list/types";
-import StudentsDataTable from "./dataTable/StudentsDataTable";
-import { getStudentColumns } from "./dataTable/studentTableColumn";
+import StudentsDataTable from "./StudentsDataTable";
+import { getStudentColumns } from "./StudentsDataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";

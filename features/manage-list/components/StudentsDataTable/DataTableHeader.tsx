@@ -1,7 +1,7 @@
 import { Table as TableType } from "@tanstack/react-table";
 import { ArrowUpDown, Filter, Plus, Upload } from "lucide-react";
 import Link from "next/link";
-import StudentSearchInput from "@/features/manage-list/components/StudentSearchInput";
+import StudentSearchInput from "@/features/manage-list/components/StudentsDataTable/StudentSearchInput";
 import { useCallback, useState } from "react";
 import StudentSortPopover from "../StudentSortPopover";
 import StudentFilterPopover from "../StudentFilterPopover";
