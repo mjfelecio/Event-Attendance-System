@@ -6,6 +6,7 @@ import { buildStudentQuery } from "@/globals/utils/queryBuilder";
 import { studentSchema } from "@/globals/schemas/studentSchema";
 import { respondWithError } from "@/globals/utils/httpError";
 import { flattenStudentGroups } from "@/globals/utils/students";
+import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,28 +64,62 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// NOTE: values must be the slug versions
 const querySchema = z.object({
-  category: z.enum(["SHS", "COLLEGE", "HOUSE", "ALL"]).optional(),
+  // Single fetch params
+  id: z.string().optional(),
+  eventId: z.string().optional(),
 
+  // Bulk filter params
+  category: z.enum(["SHS", "COLLEGE", "HOUSE", "ALL"]).optional(),
   department: z.string().optional(),
   program: z.string().optional(),
   strand: z.string().optional(),
-  // HARDCODED FOR NOW
-  house: z.enum(["azul", "vierrdy", "giallio", "cahel", "roxxo"]).optional(),
-  // limit: 20
+  house: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const result = querySchema.safeParse(Object.fromEntries(searchParams));
-
-  if (!result.success) {
-    return NextResponse.json(err("Invalid parameters"), { status: 400 });
-  }
 
   try {
-    const where = buildStudentQuery(result.data);
+    const result = querySchema.parse(Object.fromEntries(searchParams));
+
+    const { id, eventId, ...filters } = result;
+
+    // Single Student Fetch (Scoped by Event or Absolute)
+    if (id) {
+      let eventFilter = {};
+
+      if (eventId) {
+        const event = await prisma.event.findUnique({
+          where: { id: eventId },
+          include: { includedGroups: true },
+        });
+
+        if (!event) {
+          return NextResponse.json(err("Event not found"), { status: 404 });
+        }
+        eventFilter = buildEventStudentFilter(event);
+      }
+
+      const rawStudent = await prisma.student.findFirst({
+        where: {
+          id,
+          ...eventFilter,
+        },
+        include: { groups: true },
+      });
+
+      if (!rawStudent) {
+        return NextResponse.json(err("Student not found or ineligible"), {
+          status: 404,
+        });
+      }
+
+      return NextResponse.json(ok(flattenStudentGroups(rawStudent)));
+    }
+
+    // Bulk Student Fetch (List View)
+    const where = buildStudentQuery(filters);
 
     const rawStudents = await prisma.student.findMany({
       where,
@@ -93,9 +128,8 @@ export async function GET(request: NextRequest) {
     });
 
     const students = rawStudents.map(flattenStudentGroups);
-
-    return NextResponse.json(ok(students), { status: 200 });
+    return NextResponse.json(ok(students));
   } catch (error) {
-    respondWithError(error);
+    return respondWithError(error);
   }
 }

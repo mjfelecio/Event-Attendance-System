@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Student } from "@/globals/types/students";
 import { Event } from "@/globals/types/events";
 import { ComboBoxValue } from "@/globals/components/shared/ComboBox";
-import { useEventStudents } from "@/globals/hooks/useStudents";
+import { useStudentsFromEvent } from "@/globals/hooks/useStudents";
 import { fullName } from "@/globals/utils/formatting";
 import SearchBar from "@/features/attendance/components/SearchBar";
 import { useRecordOfStudentInEvent } from "@/globals/hooks/useRecords";
@@ -35,7 +35,7 @@ const ManualAttendanceSection = ({
 }: StudentDetailsProps) => {
   const [query, setQuery] = useState("");
 
-  const { data: students } = useEventStudents(selectedEvent?.id, query);
+  const { data: students } = useStudentsFromEvent(selectedEvent?.id, query);
   const { data: studentRecord } = useRecordOfStudentInEvent(
     selectedEvent?.id,
     displayedStudent?.id

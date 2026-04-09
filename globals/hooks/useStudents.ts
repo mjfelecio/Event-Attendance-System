@@ -15,7 +15,7 @@ const transformStudent = (e: StudentDTO | StudentDTO): Student => ({
 });
 
 /** Fetches all students included in an event */
-export const useEventStudents = (eventId?: string, query?: string) => {
+export const useStudentsFromEvent = (eventId?: string, query?: string) => {
   const { data: students, ...queryResult } = useQuery({
     queryKey: queryKeys.students.fromEvent(eventId!),
     enabled: !!eventId,
@@ -23,7 +23,7 @@ export const useEventStudents = (eventId?: string, query?: string) => {
       if (!eventId) return;
 
       const students = await fetchApi<StudentDTO[]>(
-        `/api/events/${eventId}/students`,
+        `/api/students?eventId=${eventId}`,
       );
       return students.map(transformStudent);
     },
@@ -76,7 +76,7 @@ export const useStudentFromEvent = ({
       if (!eventId || !studentId) return null;
 
       const student = await fetchApi<StudentDTO>(
-        `/api/events/${eventId}/students/${studentId}`,
+        `/api/students?eventId=${eventId}&studentId=${studentId}`,
       );
       return transformStudent(student);
     },
@@ -155,7 +155,7 @@ export const useDeleteStudent = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => {
-      return fetchApi<Student>(`/api/students/${id}`, {
+      return fetchApi<StudentDTO>(`/api/students/${id}`, {
         method: "DELETE",
       });
     },
