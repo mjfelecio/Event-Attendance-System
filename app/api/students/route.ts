@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const payload = await request.json();
     const validatedData = studentSchema.parse(payload);
 
-    // Collect all slugs from the flat form data
+    // Resolve group slugs to IDs
     const groupSlugs = [
       validatedData.section,
       validatedData.house,
@@ -23,18 +23,27 @@ export async function POST(request: NextRequest) {
       validatedData.strand,
     ].filter(Boolean) as string[];
 
-    // Find the actual Group records to get their IDs
-    // This ensures we only connect to groups that actually exist in the DB
     const groups = await prisma.group.findMany({
-      where: {
-        slug: { in: groupSlugs },
-      },
+      where: { slug: { in: groupSlugs } },
       select: { id: true },
     });
 
-    // Create the student and connect the groups
-    const student = await prisma.student.create({
-      data: {
+    const groupConnectIds = groups.map((g) => ({ id: g.id }));
+
+    // We use the student's ID (the 11-character string) as the unique identifier
+    const student = await prisma.student.upsert({
+      where: { id: validatedData.id },
+      update: {
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        middleName: validatedData.middleName || null,
+        schoolLevel: validatedData.schoolLevel,
+        yearLevel: validatedData.yearLevel,
+        groups: {
+          set: groupConnectIds, // Replaces old groups with new ones
+        },
+      },
+      create: {
         id: validatedData.id,
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
@@ -42,7 +51,7 @@ export async function POST(request: NextRequest) {
         schoolLevel: validatedData.schoolLevel,
         yearLevel: validatedData.yearLevel,
         groups: {
-          connect: groups.map((g) => ({ id: g.id })),
+          connect: groupConnectIds,
         },
       },
       include: {
@@ -50,7 +59,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(ok(student), { status: 201 });
+    return NextResponse.json(ok(student), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }

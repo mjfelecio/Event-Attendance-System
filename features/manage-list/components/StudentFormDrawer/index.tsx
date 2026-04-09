@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -62,12 +62,32 @@ export default function StudentFormDrawer({
     },
   });
 
+  useEffect(() => {
+    if (!student) return;
+
+    methods.reset({
+      id: student.id,
+      lastName: student.lastName,
+      firstName: student.firstName,
+      middleName: student.middleName ?? "",
+      schoolLevel: student.schoolLevel,
+      yearLevel: student.yearLevel,
+      section: student.section,
+      department: student.department,
+      house: student.house,
+      program: student.program,
+      strand: student.strand,
+    });
+  }, [student]);
+
   const handleClose = useCallback(() => {
     setStep("personal");
     onClose();
   }, []);
 
-  const handleNext = useCallback(async () => {
+  const handleNext = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent submission
+
     // Validate the fields in each step
     const isValid = await methods.trigger(FIELDS_TO_VALIDATE[step], {
       shouldFocus: true,
@@ -107,6 +127,7 @@ export default function StudentFormDrawer({
               <div className="flex gap-2 w-full">
                 {step !== "personal" && (
                   <Button
+                    type="button"
                     variant="outline"
                     onClick={() =>
                       setStep(step === "groups" ? "academic" : "personal")
@@ -119,6 +140,7 @@ export default function StudentFormDrawer({
 
                 {step !== "groups" ? (
                   <Button
+                    type="button"
                     onClick={handleNext}
                     className="flex-1 bg-slate-900 rounded-xl font-bold uppercase tracking-wider text-[10px] hover:bg-slate-800"
                   >

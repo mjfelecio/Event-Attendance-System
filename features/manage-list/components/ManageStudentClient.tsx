@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ManageStudentContext } from "@/features/manage-list/types";
 import StudentsDataTable from "./dataTable/StudentsDataTable";
 import { getStudentColumns } from "./dataTable/studentTableColumn";
@@ -25,18 +25,40 @@ const ManageStudentClient = ({
   categoryHeading,
   students,
 }: ManageStudentClientProps) => {
-  const [formData, setFormData] = useState<StudentWithGroups | null>(null);
+  const [formData, setFormData] = useState<StudentWithGroups>();
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
 
   const { mutateAsync } = useSaveStudent();
 
-  const handleEdit = () => {
-    toastSuccess("Editing");
-  };
+  const handleEdit = useCallback((data: StudentWithGroups) => {
+    setFormData(data);
+    setIsStudentFormOpen(true);
+  }, []);
 
-  const handleDelete = () => {
+  const handleAdd = useCallback(() => {
+    setFormData(undefined);
+    setIsStudentFormOpen(true);
+  }, []);
+
+  const handleDelete = useCallback(() => {
     toastSuccess("Deleting");
-  };
+  }, []);
+
+  const handleSubmit = useCallback(async (data: StudentFormValues) => {
+    try {
+      const student = await mutateAsync(data);
+
+      if (!student) {
+        toastDanger("Failed to add student");
+      }
+
+      toastSuccess("Student saved.");
+    } catch (error) {
+      console.error("Error adding student", error);
+      toastDanger("Failed saving student.");
+      throw error;
+    }
+  }, []);
 
   const columns = useMemo(
     () =>
@@ -47,54 +69,6 @@ const ManageStudentClient = ({
     [],
   );
 
-  const handleSubmit = async (data: StudentFormValues) => {
-    try {
-      const student = await mutateAsync(data);
-
-      if (!student) {
-        toastDanger("Failed to add student");
-      }
-
-      toastSuccess("Submitted successfully!");
-      console.table(student);
-    } catch (error) {
-      console.error("Error adding student", error);
-      throw error;
-    }
-  };
-
-  // const handleDeleteStudent = async (student: StudentRow) => {
-  //   if (
-  //     !window.confirm(
-  //       `Delete student ${student.firstName} ${student.lastName}?`,
-  //     )
-  //   ) {
-  //     return;
-  //   }
-
-  //   setSubmitError(null);
-
-  //   try {
-  //     const response = await fetch(`/api/students/${student.studentNumber}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     if (!response.ok) {
-  //       const payload = await response.json().catch(() => ({}));
-  //       throw new Error(payload?.message ?? "Failed to delete student");
-  //     }
-
-  //     setStudentRows((prev) =>
-  //       prev.filter((row) => row.studentNumber !== student.studentNumber),
-  //     );
-  //   } catch (error) {
-  //     console.error("Error deleting student", error);
-  //     setSubmitError(
-  //       error instanceof Error ? error.message : "Failed to delete student",
-  //     );
-  //   }
-  // };
-
   return (
     <div className="flex w-full flex-col gap-6">
       <StudentsDataTable
@@ -104,11 +78,12 @@ const ManageStudentClient = ({
         categoryHeader={label ?? ""}
         categorySubheader={categoryHeading ?? ""}
         groupSlug={item ?? ""}
-        onAddStudent={() => setIsStudentFormOpen(true)}
+        onAddStudent={handleAdd}
       />
 
       <StudentFormDrawer
-        student={undefined}
+        key={formData?.id}
+        student={formData}
         isOpen={isStudentFormOpen}
         onClose={() => setIsStudentFormOpen(false)}
         onSubmit={handleSubmit}

@@ -148,9 +148,10 @@ async function main() {
       );
     }
 
+    const baseId = 20250000000;
     await prisma.student.create({
       data: {
-        id: String(202500001 + i),
+        id: String(baseId + i).padStart(11, "0"),
         firstName: faker.person.firstName(),
         lastName: faker.person.lastName(),
         schoolLevel,
