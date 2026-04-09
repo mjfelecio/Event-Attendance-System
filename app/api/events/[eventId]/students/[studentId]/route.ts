@@ -7,12 +7,15 @@ import { NextRequest, NextResponse } from "next/server";
 // Fetch a single student that is included in the event
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string; studentId: string } }
+  { params }: { params: { eventId: string; studentId: string } },
 ) {
   const { eventId, studentId } = await params;
 
   try {
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { includedGroups: true },
+    });
 
     if (!event) {
       return NextResponse.json(err("Event doesnt exist"), { status: 404 });
@@ -27,7 +30,7 @@ export async function GET(
     if (!student) {
       return NextResponse.json(
         err("Student does not exist or is not included in the event"),
-        { status: 404 }
+        { status: 404 },
       );
     }
 

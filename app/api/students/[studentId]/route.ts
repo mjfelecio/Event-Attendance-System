@@ -15,7 +15,7 @@ export async function GET(
     let event;
 
     if (eventId) {
-      event = await prisma.event.findUnique({ where: { id: eventId } });
+      event = await prisma.event.findUnique({ where: { id: eventId }, include: { includedGroups: true } });
     } else {
       event = undefined;
     }

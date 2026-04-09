@@ -11,6 +11,7 @@ export async function POST(req: Request) {
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
+      include: { includedGroups: true }
     });
 
     if (!event) {
