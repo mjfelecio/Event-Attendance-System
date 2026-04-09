@@ -1,10 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Student,
-  StudentAPI,
-  StudentAPIWithGroups,
-  StudentWithGroups,
-} from "@/globals/types/students";
+import { Student, StudentDTO } from "@/globals/types/students";
 import { useMemo } from "react";
 import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
 import { fetchApi } from "@/globals/utils/api";
@@ -13,9 +8,7 @@ import { EventCategory } from "@prisma/client";
 import { StudentFormValues } from "../schemas/studentSchema";
 
 // Transform function to make sure that the dates are actually a Date object
-const transformStudent = (
-  e: StudentAPI | StudentAPIWithGroups,
-): StudentWithGroups => ({
+const transformStudent = (e: StudentDTO | StudentDTO): Student => ({
   ...e,
   createdAt: new Date(e.createdAt),
   updatedAt: new Date(e.updatedAt),
@@ -29,7 +22,7 @@ export const useEventStudents = (eventId?: string, query?: string) => {
     queryFn: async () => {
       if (!eventId) return;
 
-      const students = await fetchApi<StudentAPI[]>(
+      const students = await fetchApi<StudentDTO[]>(
         `/api/events/${eventId}/students`,
       );
       return students.map(transformStudent);
@@ -58,7 +51,7 @@ export const useStudent = (studentId?: string) => {
     queryFn: async () => {
       if (!studentId) return;
 
-      const student = await fetchApi<StudentAPI>(`/api/students/${studentId}`);
+      const student = await fetchApi<StudentDTO>(`/api/students/${studentId}`);
       return transformStudent(student);
     },
   });
@@ -82,7 +75,7 @@ export const useStudentFromEvent = ({
     queryFn: async () => {
       if (!eventId || !studentId) return null;
 
-      const student = await fetchApi<StudentAPI>(
+      const student = await fetchApi<StudentDTO>(
         `/api/events/${eventId}/students/${studentId}`,
       );
       return transformStudent(student);
@@ -120,11 +113,11 @@ export const useFetchStudents = (filters: any = {}) => {
 
   return useQuery({
     queryKey: [...queryKeys.students.all(), queryString],
-    queryFn: async (): Promise<StudentWithGroups[]> => {
+    queryFn: async (): Promise<Student[]> => {
       const url = queryString
         ? `/api/students?${queryString}`
         : "/api/students";
-      const data = await fetchApi<StudentAPIWithGroups[]>(url);
+      const data = await fetchApi<StudentDTO[]>(url);
       return data.map(transformStudent);
     },
   });
@@ -139,7 +132,7 @@ export const useSaveStudent = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (student: StudentFormValues) => {
-      return fetchApi<StudentWithGroups>("/api/students", {
+      return fetchApi<Student>("/api/students", {
         method: "POST",
         body: JSON.stringify(student),
         headers: { "Content-Type": "application/json" },
@@ -162,7 +155,7 @@ export const useDeleteStudent = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => {
-      return fetchApi<StudentWithGroups>(`/api/students/${id}`, {
+      return fetchApi<Student>(`/api/students/${id}`, {
         method: "DELETE",
       });
     },

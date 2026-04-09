@@ -1,17 +1,17 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { StudentWithGroups } from "@/globals/types/students";
+import { Student } from "@/globals/types/students";
 import { formatSection, normalizeName } from "@/globals/utils/formatting";
 import { Delete, Edit } from "lucide-react";
 
 type ColumnArgs = {
-  onEdit: (student: StudentWithGroups) => void;
+  onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
 };
 
 export const getStudentColumns = ({
   onEdit,
   onDelete,
-}: ColumnArgs): ColumnDef<StudentWithGroups>[] => [
+}: ColumnArgs): ColumnDef<Student>[] => [
   {
     accessorKey: "id",
     header: () => <div className="text-center">Student ID</div>,

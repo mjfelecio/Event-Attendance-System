@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import StudentsDataTable from "./StudentsDataTable";
 import { getStudentColumns } from "./StudentsDataTable/studentTableColumn";
-import { StudentWithGroups } from "@/globals/types/students";
+import { Student } from "@/globals/types/students";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";
 import { StudentFormValues } from "@/globals/schemas/studentSchema";
@@ -14,7 +14,7 @@ interface ManageStudentClientProps {
   label?: string;
   item?: string;
   categoryHeading: string;
-  students: StudentWithGroups[];
+  students: Student[];
   isLoading: boolean;
 }
 
@@ -25,14 +25,14 @@ const ManageStudentClient = ({
   students,
   isLoading
 }: ManageStudentClientProps) => {
-  const [formData, setFormData] = useState<StudentWithGroups>();
+  const [formData, setFormData] = useState<Student>();
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
 
   const { mutateAsync: saveStudent } = useSaveStudent();
   const { mutateAsync: deleteStudent } = useDeleteStudent();
   const confirm = useConfirm();
 
-  const handleEdit = useCallback((data: StudentWithGroups) => {
+  const handleEdit = useCallback((data: Student) => {
     setFormData(data);
     setIsStudentFormOpen(true);
   }, []);

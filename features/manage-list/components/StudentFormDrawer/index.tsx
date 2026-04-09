@@ -7,7 +7,7 @@ import {
   SheetFooter,
 } from "@/globals/components/shad-cn/sheet";
 import { Button } from "@/globals/components/shad-cn/button";
-import { StudentWithGroups } from "@/globals/types/students";
+import { Student } from "@/globals/types/students";
 import { ChevronRight, ChevronLeft, Save } from "lucide-react";
 import StepIndicator from "./StepIndicator";
 import PersonalInfoSection from "./PersonalInfoSection";
@@ -27,7 +27,7 @@ const FIELDS_TO_VALIDATE: Record<Step, (keyof StudentFormValues)[]> = {
 };
 
 interface Props {
-  student?: StudentWithGroups;
+  student?: Student;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (validatedFormData: StudentFormValues) => void;
