@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ManageStudentContext } from "@/features/manage-list/types";
 import StudentsDataTable from "./StudentsDataTable";
 import { getStudentColumns } from "./StudentsDataTable/studentTableColumn";
 import { StudentWithGroups } from "@/globals/types/students";
@@ -12,7 +11,6 @@ import { useDeleteStudent, useSaveStudent } from "@/globals/hooks/useStudents";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 interface ManageStudentClientProps {
-  category: ManageStudentContext["category"];
   label?: string;
   item?: string;
   categoryHeading: string;
@@ -21,7 +19,6 @@ interface ManageStudentClientProps {
 }
 
 const ManageStudentClient = ({
-  category,
   label,
   item,
   categoryHeading,

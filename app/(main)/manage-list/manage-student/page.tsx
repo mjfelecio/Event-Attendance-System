@@ -67,7 +67,6 @@ const ManageStudentPage = () => {
         </Link>
 
         <ManageStudentClient
-          category={category}
           label={config.label}
           item={itemSlug || "General"}
           categoryHeading={config.heading}
