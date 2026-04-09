@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Event, EventAPI, EventStats, NewEvent } from "@/globals/types/events";
+import { Event, EventAPI, EventForm, EventStats } from "@/globals/types/events";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
 
@@ -26,8 +26,8 @@ const transformEvent = (e: EventAPI): Event => ({
 export const useSaveEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (event: Event | NewEvent) => {
-      return fetchApi<Event>("/api/events", {
+    mutationFn: (event: EventForm) => {
+      return fetchApi<EventForm>("/api/events", {
         method: "POST",
         body: JSON.stringify(event),
         headers: { "Content-Type": "application/json" },
@@ -47,9 +47,7 @@ const useEventAction = (action: "SUBMIT" | "APPROVE" | "REJECT") => {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          action === "REJECT"
-            ? { action, reason: payload.reason }
-            : { action }
+          action === "REJECT" ? { action, reason: payload.reason } : { action },
         ),
       });
     },
@@ -81,7 +79,7 @@ export const useDeleteEvent = () => {
 };
 
 /**
- * Sets the event to start recording timeout instead of timein 
+ * Sets the event to start recording timeout instead of timein
  */
 export const useStartTimeoutMode = () => {
   const queryClient = useQueryClient();

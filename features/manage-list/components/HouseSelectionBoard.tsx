@@ -26,9 +26,8 @@ const HouseSelectionBoard = () => {
               href={{
                 pathname: "/manage-list/manage-student",
                 query: {
-                  category: "house",
-                  item: house.slug,
-                  label: house.name,
+                  category: "HOUSE", 
+                  house: house.slug,
                 },
               }}
               className="group relative flex min-h-[250px] w-full max-w-[230px] flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-6 text-center shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-2 hover:border-indigo-200 hover:shadow-[0_18px_34px_rgba(37,99,235,0.16)]"

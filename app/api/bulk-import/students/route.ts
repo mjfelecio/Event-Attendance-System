@@ -1,24 +1,9 @@
 import { NextResponse } from "next/server";
-import { StudentStatus, SchoolLevel, YearLevel, Prisma } from "@prisma/client";
-import { z } from "zod";
 import { prisma } from "@/globals/libs/prisma";
-import { slugify } from "@/features/manage-list/utils/mapStudentToRow";
 import { err, ok } from "@/globals/utils/api";
-
-const studentSchema = z.object({
-  id: z.string().min(1, "ID is required"),
-  lastName: z.string().min(1),
-  firstName: z.string().min(1),
-  middleName: z.string().optional().nullable(),
-  section: z.string().min(1),
-  yearLevel: z.nativeEnum(YearLevel),
-  schoolLevel: z.nativeEnum(SchoolLevel),
-  shsStrand: z.string().optional().nullable(),
-  collegeProgram: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-  house: z.string().optional().nullable(),
-  status: z.nativeEnum(StudentStatus).default(StudentStatus.ACTIVE),
-});
+import { studentSchema } from "@/globals/schemas/studentSchema";
+import { z } from "zod";
+import { respondWithError } from "@/globals/utils/httpError";
 
 const bulkSchema = z.array(studentSchema);
 
@@ -28,88 +13,92 @@ export async function POST(request: Request) {
     const parseResult = bulkSchema.safeParse(body);
 
     if (!parseResult.success) {
+      console.warn(
+        "Failed parsing imported data: ",
+        z.treeifyError(parseResult.error),
+      );
       return NextResponse.json(
+        err("Invalid data format: \n" + parseResult.error.message),
         {
-          success: false,
-          message: "Invalid bulk data format. See the logs for more details.",
-          issues: z.treeifyError(parseResult.error),
+          status: 400,
         },
-        { status: 400 },
       );
     }
 
     const students = parseResult.data;
 
+    // Collect all unique slugs across all students to resolve IDs in one go
+    const allSlugs = Array.from(
+      new Set(
+        students.flatMap((s) =>
+          [s.section, s.house, s.department, s.program, s.strand].filter(
+            Boolean,
+          ),
+        ),
+      ),
+    ) as string[];
+
+    // Fetch all relevant groups
+    const foundGroups = await prisma.group.findMany({
+      where: { slug: { in: allSlugs } },
+      select: { id: true, slug: true },
+    });
+
+    // Create a lookup map for speed: slug -> id
+    const groupMap = new Map(foundGroups.map((g) => [g.slug, g.id]));
+
+    // Process the transaction
     const results = await prisma.$transaction(
       students.map((data) => {
-        const isCollege = data.schoolLevel === SchoolLevel.COLLEGE;
-        const isShs = data.schoolLevel === SchoolLevel.SHS;
-
-        const normalizedDepartment = isCollege
-          ? (data.department ?? null)
-          : null;
-        const departmentSlug = normalizedDepartment
-          ? slugify(normalizedDepartment)
-          : null;
-        const houseSlug = data.house ? slugify(data.house) : null;
+        // Map data slugs to actual IDs found in our lookup
+        const studentGroupIds = [
+          data.section,
+          data.house,
+          data.department,
+          data.program,
+          data.strand,
+        ]
+          .filter(Boolean)
+          .map((slug) => groupMap.get(slug as string))
+          .filter(Boolean)
+          .map((id) => ({ id }));
 
         return prisma.student.upsert({
           where: { id: data.id },
           update: {
-            lastName: data.lastName,
             firstName: data.firstName,
-            middleName: data.middleName,
+            lastName: data.lastName,
+            middleName: data.middleName || null,
             schoolLevel: data.schoolLevel,
-            shsStrand: isShs ? data.shsStrand : null,
-            collegeProgram: isCollege ? data.collegeProgram : null,
-            section: data.section,
             yearLevel: data.yearLevel,
-            status: data.status,
-            department: normalizedDepartment,
-            departmentSlug,
-            house: data.house,
-            houseSlug,
+            groups: {
+              set: studentGroupIds, // Replace existing relationships
+            },
           },
           create: {
-            id: String(data.id),
-            lastName: data.lastName,
+            id: data.id,
             firstName: data.firstName,
-            middleName: data.middleName,
+            lastName: data.lastName,
+            middleName: data.middleName || null,
             schoolLevel: data.schoolLevel,
-            shsStrand: isShs ? data.shsStrand : null,
-            collegeProgram: isCollege ? data.collegeProgram : null,
-            section: data.section,
             yearLevel: data.yearLevel,
-            status: data.status,
-            department: normalizedDepartment,
-            departmentSlug,
-            house: data.house,
-            houseSlug,
+            groups: {
+              connect: studentGroupIds,
+            },
           },
         });
       }),
     );
 
     return NextResponse.json(
-      {
-        success: true,
+      ok({
         message: `Successfully processed ${results.length} records.`,
         count: results.length,
-      },
+      }),
       { status: 200 },
     );
   } catch (error) {
     console.error("BULK_IMPORT_ERROR", error);
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return NextResponse.json(
-        err(`Database error: ${error.message}`, error.code),
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json(err("Internal server error during bulk import."), {
-      status: 500,
-    });
+    respondWithError(error);
   }
 }

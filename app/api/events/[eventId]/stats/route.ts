@@ -14,7 +14,7 @@ export async function GET(
     const user = await requireAuth();
     const { eventId } = await params;
 
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    const event = await prisma.event.findUnique({ where: { id: eventId }, include: { includedGroups: true } });
 
     if (!event) {
       return NextResponse.json(ok(null), { status: 404 });

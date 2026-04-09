@@ -5,24 +5,24 @@ export const STUDENT_STATS: StudentStat[] = [
     title: "College Students",
     logo: "/logos/school/Logo_College_Department.png",
     align: "left",
-    category: "college",
+    category: "COLLEGE",
   },
   {
     title: "SHS Students",
     logo: "/logos/school/aclc.png",
     align: "right",
-    category: "shs",
+    category: "SHS",
   },
   {
     title: "All Students",
     logo: "/logos/school/logo.png",
     align: "left",
-    category: "all",
+    category: "ALL",
   },
   {
     title: "House Members",
     logo: "/logos/school/cup.png",
     align: "right",
-    category: "house",
+    category: "HOUSE",
   },
 ];

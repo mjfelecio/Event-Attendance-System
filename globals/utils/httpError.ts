@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import z, { ZodError } from "zod";
 
 import { err } from "@/globals/utils/api";
 import { AuthError } from "@/globals/utils/auth";
@@ -13,6 +13,7 @@ export function respondWithError(error: unknown) {
   }
 
   if (error instanceof ZodError) {
+    console.warn("Zod Error: ", z.treeifyError(error));
     return NextResponse.json(err("Invalid request payload."), {
       status: 400,
     });

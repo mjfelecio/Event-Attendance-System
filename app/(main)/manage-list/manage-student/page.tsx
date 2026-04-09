@@ -1,107 +1,77 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useFetchStudents } from "@/globals/hooks/useStudents";
 import ManageStudentClient from "@/features/manage-list/components/ManageStudentClient";
-import { mapStudentsToRows } from "@/features/manage-list/utils/mapStudentToRow";
-import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
-import { prisma } from "@/globals/libs/prisma";
+import { ManageListCategory } from "@/features/manage-list/types";
 
-type ManageStudentPageProps = {
-  searchParams: ManageStudentContext;
+const CATEGORY_CONFIG: Record<
+  ManageListCategory,
+  {
+    label: string;
+    heading: string;
+    queryKey?: string; // The key used in searchParams (e.g., 'department')
+  }
+> = {
+  COLLEGE: {
+    label: "College Department",
+    heading: "College Rosters",
+    queryKey: "department",
+  },
+  SHS: {
+    label: "Senior High Strand",
+    heading: "SHS Rosters",
+    queryKey: "strand",
+  },
+  HOUSE: {
+    label: "House",
+    heading: "House Rosters",
+    queryKey: "house",
+  },
+  ALL: {
+    label: "All Students",
+    heading: "Main Student Directory",
+  },
 };
 
-const categoryLabels: Record<ManageStudentContext["category"], string> = {
-  college: "College Department",
-  shs: "Senior High Strand",
-  house: "House",
-  all: "All Students",
-};
+const ManageStudentPage = () => {
+  const searchParams = useSearchParams();
+  const filters = Object.fromEntries(searchParams.entries());
 
-const filterByContext = (
-  rows: StudentRow[],
-  category: ManageStudentContext["category"],
-  item?: string
-) => {
-  const isCollegeYear = (yearLevel: StudentRow["yearLevel"]) =>
-    yearLevel === "YEAR_1" ||
-    yearLevel === "YEAR_2" ||
-    yearLevel === "YEAR_3" ||
-    yearLevel === "YEAR_4";
+  const { data: students, isLoading } = useFetchStudents(filters);
 
-  const isShsYear = (yearLevel: StudentRow["yearLevel"]) =>
-    yearLevel === "GRADE_11" || yearLevel === "GRADE_12";
+  // Derive Category State
+  const category = (filters?.category as ManageListCategory) || "ALL";
+  const config = CATEGORY_CONFIG[category];
 
-  return rows.filter((student) => {
-    if (category === "all") {
-      return true;
-    }
+  // Dynamically extract the "item" slug based on the category's specific query key
+  const itemSlug = config.queryKey
+    ? (filters[config.queryKey] as string)
+    : undefined; 
 
-    if (category === "college") {
-      if (student.schoolLevel !== "COLLEGE" || !isCollegeYear(student.yearLevel)) {
-        return false;
-      }
-
-      if (item) {
-        return student.departmentSlug === item;
-      }
-      return true;
-    }
-
-    if (category === "shs") {
-      if (student.schoolLevel !== "SHS" || !isShsYear(student.yearLevel)) {
-        return false;
-      }
-
-      if (item) {
-        return student.programSlug === item;
-      }
-      return true;
-    }
-
-    if (category === "house") {
-      if (item) {
-        return student.houseSlug === item;
-      }
-      return Boolean(student.house);
-    }
-
-    return true;
-  });
-};
-
-const ManageStudentPage = async ({ searchParams }: ManageStudentPageProps) => {
-  const params = await Promise.resolve(searchParams ?? {});
-  const { category = "all", label, item } = params;
   const backHref =
-    category === "all"
+    category === "ALL"
       ? "/manage-list"
-      : `/manage-list/manage-which?type=${category}`;
-
-  const students = await prisma.student.findMany({
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
-
-  const studentRows = mapStudentsToRows(students);
-  const baseRows = filterByContext(studentRows, category, item);
+      : `/manage-list/manage-which?category=${category}`;
 
   return (
     <section className="flex flex-1 justify-center overflow-y-auto bg-[radial-gradient(circle_at_top,#eef2ff_0%,#f8fafc_45%,#ffffff_100%)] p-6 text-slate-900 md:p-8">
-      <div className="flex w-full max-w-[1600px] flex-col gap-6">
-        <div className="px-6 md:px-12">
-          <Link
-            href={backHref}
-            className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-700"
-          >
-            {"<"} Back to selection
-          </Link>
-        </div>
+      <div className="flex w-full max-w-[1200px] flex-col gap-2">
+        <Link
+          href={backHref}
+          className="inline-flex items-center w-fit rounded-full border border-slate-200 bg-white py-2 px-6 md:px-12 text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-200 hover:text-indigo-700"
+        >
+          <span className="mr-2">←</span> Back to selection
+        </Link>
 
         <ManageStudentClient
           category={category}
-          label={label}
-          item={item}
-          categoryHeading={categoryLabels[category] ?? categoryLabels.all}
-          rows={baseRows}
+          label={config.label}
+          item={itemSlug || "General"}
+          categoryHeading={config.heading}
+          students={students ?? []}
+          isLoading={isLoading}
         />
       </div>
     </section>

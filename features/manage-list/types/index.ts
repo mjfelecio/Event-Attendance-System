@@ -1,7 +1,7 @@
 import { YearLevel } from "@prisma/client";
 import { LucideIcon } from "lucide-react";
 
-export type ManageListCategory = "all" | "college" | "shs" | "house";
+export type ManageListCategory = "ALL" | "COLLEGE" | "SHS" | "HOUSE";
 
 export type StudentStat = {
   title: string;

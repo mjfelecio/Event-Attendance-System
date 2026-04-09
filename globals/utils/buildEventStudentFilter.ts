@@ -1,104 +1,55 @@
-import { SchoolLevel, StudentStatus } from "@prisma/client";
+import { Group, Prisma, SchoolLevel } from "@prisma/client";
 import { Event } from "@/globals/types/events";
 import { Student } from "../types/students";
 
- 
 // ============================================================================
 // UTILITY: Build student filter based on event criteria
 // ============================================================================
-export const buildEventStudentFilter = (event: Event): Record<string, any> => {
-  const where: Record<string, any> = {
-    status: StudentStatus.ACTIVE,
-  };
+export const buildEventStudentFilter = (
+  event: Event & { includedGroups: Group[] },
+): Prisma.StudentWhereInput => {
+  const where: Prisma.StudentWhereInput = {};
 
-  switch (event.category) {
-    case "ALL":
-      break;
+  // Categories that map to enums remain the same
+  if (event.category === "COLLEGE") where.schoolLevel = SchoolLevel.COLLEGE;
+  if (event.category === "SHS") where.schoolLevel = SchoolLevel.SHS;
+  if (event.category === "ALL") return where;
 
-    case "COLLEGE":
-      where.schoolLevel = SchoolLevel.COLLEGE;
-      break;
+  // For everything else, we query the 'groups' relation by slug
+  const includedSlugs: string[] = event.includedGroups.map((g) => g.slug);
 
-    case "SHS":
-      where.schoolLevel = SchoolLevel.SHS;
-      break;
-
-    case "DEPARTMENT":
-      const departments = JSON.parse(event.includedGroups || "[]");
-      where.departmentSlug = { in: departments };
-      break;
-
-    case "STRAND":
-      const strands = JSON.parse(event.includedGroups || "[]");
-      where.shsStrand = { in: strands };
-      break;
-
-    case "HOUSE":
-      const houses = JSON.parse(event.includedGroups || "[]");
-      where.houseSlug = { in: houses };
-      break;
-
-    case "PROGRAM":
-      const programs = JSON.parse(event.includedGroups || "[]");
-      where.collegeProgram = { in: programs };
-      break;
-    
-    case "SECTION":
-      const sections = JSON.parse(event.includedGroups || "[]");
-      where.section = { in: sections };
-      break;
-
-    case "YEAR":
-      const year = JSON.parse(event.includedGroups || "[]");
-      where.yearLevel = { in: year };
-      break;
-
-    default:
-      break;
+  if (includedSlugs.length > 0) {
+    where.groups = {
+      some: {
+        slug: { in: includedSlugs },
+      },
+    };
   }
 
   return where;
 };
 
 /**
- * Checks if a specific student is eligible to join an event 
+ * Checks if a specific student is eligible to join an event
  * based on the event's category and included groups.
  */
-export const isStudentInEvent = (student: Student, event: Event): boolean => {
-  // Ensure student is active first
-  if (student.status !== StudentStatus.ACTIVE) return false;
+export const isStudentInEvent = (
+  student: Student,
+  event: Event & { includedGroups: Group[] },
+): boolean => {
+  const category = event.category;
+  if (category === "ALL") return true;
+  if (category === "COLLEGE") return student.schoolLevel === "COLLEGE";
+  if (category === "SHS") return student.schoolLevel === "SHS";
 
-  const includedGroups: string[] = JSON.parse(event.includedGroups || "[]");
+  const includedSlugs: string[] = event.includedGroups.map((g) => g.slug);
 
-  switch (event.category) {
-    case "ALL":
-      return true;
+  // Dynamically check the flattened property matching the category
+  // e.g., if category is "HOUSE", it checks student["house"]
+  const studentGroupSlug = student[category.toLowerCase() as keyof Student];
 
-    case "COLLEGE":
-      return student.schoolLevel === SchoolLevel.COLLEGE;
-
-    case "SHS":
-      return student.schoolLevel === SchoolLevel.SHS;
-
-    case "DEPARTMENT":
-      return !!student.departmentSlug && includedGroups.includes(student.departmentSlug);
-
-    case "STRAND":
-      return !!student.shsStrand && includedGroups.includes(student.shsStrand);
-
-    case "HOUSE":
-      return !!student.houseSlug && includedGroups.includes(student.houseSlug);
-
-    case "PROGRAM":
-      return !!student.collegeProgram && includedGroups.includes(student.collegeProgram);
-    
-    case "SECTION":
-      return !!student.section && includedGroups.includes(student.section);
-
-    case "YEAR":
-      return !!student.yearLevel && includedGroups.includes(student.yearLevel);
-
-    default:
-      return false;
-  }
+  return (
+    typeof studentGroupSlug === "string" &&
+    includedSlugs.includes(studentGroupSlug)
+  );
 };

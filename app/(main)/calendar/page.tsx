@@ -103,6 +103,7 @@ const CalendarPage = () => {
 
       {/* Event Drawer - form for creating/editing events */}
       <EventDrawer
+        key={formData?.id} // To reset the form whenever data changes lol
         mode={drawerMode}
         initialData={formData ?? undefined}
         isOpen={isDrawerOpen}

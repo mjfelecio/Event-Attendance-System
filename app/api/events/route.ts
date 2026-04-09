@@ -10,36 +10,15 @@ import {
   requireRole,
 } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
+import { eventSchema } from "@/globals/schemas";
+import { toDate } from "@/globals/utils/events";
 
 const eventStatusEnum = z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]);
 const eventScopeEnum = z.enum(["visible", "mine"]);
-const eventCategoryEnum = z.enum([
-  "ALL",
-  "COLLEGE",
-  "SHS",
-  "DEPARTMENT",
-  "HOUSE",
-  "STRAND",
-  "PROGRAM",
-  "SECTION",
-  "YEAR",
-]);
 
 const listQuerySchema = z.object({
   status: eventStatusEnum.optional(),
   scope: eventScopeEnum.optional(),
-});
-
-const eventMutationSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1),
-  location: z.string().nullable().optional(),
-  category: eventCategoryEnum,
-  includedGroups: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  start: z.coerce.date(),
-  end: z.coerce.date(),
-  allDay: z.boolean().optional().default(false),
 });
 
 const deleteSchema = z.object({ id: z.string().min(1) });
@@ -48,7 +27,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireAuth();
     const query = listQuerySchema.safeParse(
-      Object.fromEntries(new URL(req.url).searchParams)
+      Object.fromEntries(new URL(req.url).searchParams),
     );
 
     const where: Record<string, unknown> = {};
@@ -78,10 +57,22 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const events = await prisma.event.findMany({
+    const rawEvents = await prisma.event.findMany({
       where,
+      include: {
+        includedGroups: {
+          select: {
+            id: true,
+          },
+        },
+      },
       orderBy: { start: "asc" },
     });
+
+    const events = rawEvents.map((event) => ({
+      ...event,
+      includedGroups: event.includedGroups.map((group) => group.id),
+    }));
 
     return NextResponse.json(ok(events), { status: 200 });
   } catch (error) {
@@ -92,7 +83,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
-    const payload = eventMutationSchema.parse(await req.json());
+    const rawData = await req.json();
+
+    const payload = eventSchema.parse({
+      ...rawData,
+      start: toDate(rawData.start),
+      end: toDate(rawData.end),
+    });
 
     const baseData = {
       title: payload.title,
@@ -125,7 +122,12 @@ export async function POST(req: Request) {
 
       const updated = await prisma.event.update({
         where: { id: payload.id },
-        data: baseData,
+        data: {
+          ...baseData,
+          includedGroups: {
+            set: baseData.includedGroups.map((g) => ({ id: g })),
+          },
+        },
       });
 
       return NextResponse.json(ok(updated), { status: 200 });
@@ -138,6 +140,9 @@ export async function POST(req: Request) {
         ...baseData,
         status: "DRAFT",
         createdById: user.id,
+        includedGroups: {
+          connect: baseData.includedGroups.map((g) => ({ id: g })),
+        },
       },
     });
 
@@ -167,9 +172,9 @@ export async function DELETE(req: Request) {
       return NextResponse.json(
         err(
           "Cannot delete this event because attendance has already been recorded.",
-          "EVENT_HAS_RECORDS"
+          "EVENT_HAS_RECORDS",
         ),
-        { status: 409 }
+        { status: 409 },
       );
     }
 
