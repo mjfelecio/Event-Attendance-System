@@ -64,6 +64,7 @@ export default function EventDrawer({
     resetForm,
     setValue,
     watch,
+    register,
     formState: { errors, isDirty },
   } = useEventForm(initialData);
 
@@ -174,7 +175,7 @@ export default function EventDrawer({
       onOpenChange={(open) => !open && handleDrawerClose()}
       direction="right"
     >
-      <DrawerContent className="border-l bg-white sm:max-w-[480px]">
+      <DrawerContent className="border-l bg-white sm:max-w-[480px] min-w-[500px]">
         <form
           onSubmit={(e) => {
             if (!isReadOnlyView) handleSaveDraft(e);
@@ -182,8 +183,8 @@ export default function EventDrawer({
           }}
           className="flex h-full flex-col"
         >
-          <DrawerHeader className="border-b px-5 py-5">
-            <DrawerTitle className="text-3xl font-bold">
+          <DrawerHeader className=" px-5 pt-5">
+            <DrawerTitle className="text-2xl font-bold">
               {isEdit ? "Edit Event" : "Create Event"}
             </DrawerTitle>
             {isReadOnlyApprovedView ? (
@@ -201,52 +202,26 @@ export default function EventDrawer({
 
           <div
             ref={formScrollRef}
-            className="flex-1 overflow-y-auto px-5 pb-6 pt-4"
+            className="flex-1 overflow-y-auto px-5 pb-6"
           >
             <fieldset
               disabled={isReadOnlyView}
               className={`flex flex-col gap-4 ${isReadOnlyView ? "opacity-80" : ""}`}
             >
-              <div>
-                <Controller
-                  name="title"
-                  control={control}
-                  render={({ field }) => (
-                    <FormInput
-                      label="Title"
-                      placeholder="Enter event title"
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    />
-                  )}
-                />
-                {errors.title && (
-                  <p className="text-sm text-red-500">
-                    * {errors.title.message}
-                  </p>
-                )}
-              </div>
+              <FormInput
+                label="Title"
+                placeholder="Enter event title"
+                {...register("title")}
+                error={errors.title?.message}
+              />
 
               {/* Event Location Field */}
-              <div>
-                <Controller
-                  name="location"
-                  control={control}
-                  render={({ field }) => (
-                    <FormInput
-                      label="Location"
-                      placeholder="Enter event location (optional)"
-                      onValueChange={field.onChange}
-                      value={field.value ?? ""}
-                    />
-                  )}
-                />
-                {errors.location && (
-                  <p className="text-sm text-red-500">
-                    * {errors.location.message}
-                  </p>
-                )}
-              </div>
+              <FormInput
+                label="Location"
+                placeholder="Enter event location (optional)"
+                {...register("location")}
+                error={errors.location?.message}
+              />
 
               {/* Category */}
               <div>
