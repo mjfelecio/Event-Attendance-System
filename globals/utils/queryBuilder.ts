@@ -1,5 +1,5 @@
-import { Group, Prisma, Student } from "@prisma/client";
-import { StudentWithGroups } from "@/globals/types/students";
+import { Group, Prisma, Student as PrismaStudent } from "@prisma/client";
+import { Student } from "@/globals/types/students";
 
 /**
  * Builds a Prisma 'where' object based on provided search filters.
@@ -42,25 +42,4 @@ export function buildStudentQuery(params: any): Prisma.StudentWhereInput {
 
   // Combine all conditions using AND
   return { AND: conditions };
-}
-
-// TODO: TEMP LOCATION BELOW
-/**
- * Maps the groups the student belongs to into a field
- * in the student, allowing for easy access down the road
- * 
- * @param student
- * @returns {StudentWithGroups}
- */
-export function transformStudent(student: Student & { groups: Group[] }): StudentWithGroups {
-  const flattenedGroups = student.groups.reduce((acc, group) => {
-    const key = group.category.toLowerCase();
-    acc[key] = group.slug;
-    return acc;
-  }, {} as Record<string, string>);
-
-  return {
-    ...student,
-    ...flattenedGroups,
-  };
 }

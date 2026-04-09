@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
 import { z } from "zod";
 import { err, ok } from "@/globals/utils/api";
-import {
-  buildStudentQuery,
-  transformStudent,
-} from "@/globals/utils/queryBuilder";
+import { buildStudentQuery } from "@/globals/utils/queryBuilder";
 import { studentSchema } from "@/globals/schemas/studentSchema";
 import { respondWithError } from "@/globals/utils/httpError";
+import { flattenStudentGroups } from "@/globals/utils/students";
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,10 +92,10 @@ export async function GET(request: NextRequest) {
       orderBy: { lastName: "asc" },
     });
 
-    const students = rawStudents.map(transformStudent);
+    const students = rawStudents.map(flattenStudentGroups);
 
     return NextResponse.json(ok(students), { status: 200 });
   } catch (error) {
-    respondWithError(error)
+    respondWithError(error);
   }
 }
