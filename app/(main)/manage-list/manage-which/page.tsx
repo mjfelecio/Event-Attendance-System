@@ -2,6 +2,7 @@ import CollegeSelectionBoard from "@/features/manage-list/components/CollegeSele
 import HouseSelectionBoard from "@/features/manage-list/components/HouseSelectionBoard";
 import ShsSelectionBoard from "@/features/manage-list/components/ShsSelectionBoard";
 import { ManageListCategory } from "@/features/manage-list/types";
+import { redirect } from "next/navigation";
 
 type Props = {
   searchParams: Promise<{
@@ -18,16 +19,7 @@ const ManageWhichPage = async ({ searchParams }: Props) => {
     if (category === "SHS") return <ShsSelectionBoard />;
     if (category === "HOUSE") return <HouseSelectionBoard />;
 
-    return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-[0_16px_32px_rgba(15,23,42,0.08)]">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          ALL STUDENTS
-        </h1>
-        <p className="mt-3 text-sm text-slate-500">
-          Coming soon: list all students across college, senior high, and houses.
-        </p>
-      </div>
-    );
+    return redirect("/manage-list/manage-student?category=ALL")
   };
 
   return (

@@ -48,7 +48,7 @@ const ManageStudentPage = () => {
   // Dynamically extract the "item" slug based on the category's specific query key
   const itemSlug = config.queryKey
     ? (filters[config.queryKey] as string)
-    : undefined;
+    : undefined; 
 
   const backHref =
     category === "ALL"
