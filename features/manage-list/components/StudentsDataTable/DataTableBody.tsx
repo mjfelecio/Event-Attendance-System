@@ -14,7 +14,6 @@ import {
   DataTableFilteredEmptyState,
   DataTableSkeleton,
 } from "@/globals/components/shared/dataTable/DataTableStates";
-import DataTablePagination from "@/globals/components/shared/dataTable/DataTablePagination";
 import Pagination from "./Pagination";
 
 type Props<TData> = {
@@ -38,20 +37,27 @@ const DataTableBody = <TData,>({ table, isLoading }: Props<TData>) => {
   const hasFilters =
     table.getState().globalFilter || table.getState().columnFilters.length > 0;
 
+  const resetFilters = () => {
+    table.resetColumnFilters();
+    table.resetGlobalFilter();
+  };
+
   return (
     <div
       className={`flex flex-col justify-between flex-1 overflow-auto rounded-3xl border ${MIN_TABLE_HEIGHT}`}
     >
       {isLoading ? (
         <DataTableSkeleton />
+      ) : !hasRows ? (
+        hasFilters ? (
+          <DataTableFilteredEmptyState onClear={resetFilters} />
+        ) : (
+          <DataTableEmptyState
+            title="No students found"
+            description="Get started by adding a new student record to the system."
+          />
+        )
       ) : (
-        // ) : !hasRows ? (
-        // 	hasFilters ? (
-        // 		<DataTableFilteredEmptyState />
-        // 	) : (
-        // 		<DataTableEmptyState />
-        // 	)
-        // ) : (
         <Table>
           <TableHeader className="bg-slate-50 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-500 md:text-[0.68rem]">
             {table.getHeaderGroups().map((headerGroup) => (
