@@ -33,12 +33,14 @@ const DataTableHeader = <TData,>({
     null,
   );
 
-  const totalRows = table.getCoreRowModel().rows.length;
-  const visibleRowsCount = table.getPaginationRowModel().rows.length;
-
   const togglePopover = useCallback((type: typeof activePopover) => {
     setActivePopover((prev) => (prev === type ? null : type));
   }, []);
+
+  const totalRows = table.getCoreRowModel().rows.length;
+  const visibleRowsCount = table.getPaginationRowModel().rows.length;
+  const activeFilterCount = table.getState().columnFilters.length;
+  const isSearching = !!table.getState().globalFilter;
 
   return (
     <div className="p-6 gap-5 overflow-hidden flex flex-col relative rounded-3xl border border-slate-200 bg-white/95 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur">
@@ -65,7 +67,6 @@ const DataTableHeader = <TData,>({
           </div>
 
           {/* Right Header Badges */}
-          {/* TODO: Extract these into badge components */}
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
               Total: {totalRows}
@@ -73,16 +74,16 @@ const DataTableHeader = <TData,>({
             <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
               Visible: {visibleRowsCount}
             </span>
-            {/* {activeFilterCount > 0 ? (
+            {activeFilterCount > 0 ? (
               <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                 Filters: {activeFilterCount}
               </span>
-            ) : null} */}
-            {/* {isSearching ? (
+            ) : null}
+            {isSearching ? (
               <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                 Search Active
               </span>
-            ) : null} */}
+            ) : null}
           </div>
         </div>
         {/* End Top Header */}
@@ -121,10 +122,7 @@ const DataTableHeader = <TData,>({
                 </button>
               </StudentSortPopover>
 
-              <StudentFilterPopover
-                table={table}
-                options={filterOptions}
-              >
+              <StudentFilterPopover table={table} options={filterOptions}>
                 <button
                   type="button"
                   onClick={() => togglePopover("filter")}
