@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useStudentsV2 } from "@/globals/hooks/useStudents";
+import { useFetchStudents } from "@/globals/hooks/useStudents";
 import ManageStudentClient from "@/features/manage-list/components/ManageStudentClient";
 import { ManageListCategory } from "@/features/manage-list/types";
 
@@ -39,8 +39,7 @@ const ManageStudentPage = () => {
   const searchParams = useSearchParams();
   const filters = Object.fromEntries(searchParams.entries());
 
-  // Data fetching using our V2 hook (server-side filtered)
-  const { data: students, isLoading } = useStudentsV2(filters);
+  const { data: students, isLoading } = useFetchStudents(filters);
 
   // Derive Category State
   const category = (filters?.category as ManageListCategory) || "ALL";

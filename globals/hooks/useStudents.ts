@@ -21,28 +21,6 @@ const transformStudent = (
   updatedAt: new Date(e.updatedAt),
 });
 
-/** Fetches all students */
-const useStudents = (query?: string) => {
-  const { data: students, ...queryResult } = useQuery({
-    queryKey: queryKeys.students.all(),
-    queryFn: async (): Promise<Student[]> => {
-      const students = await fetchApi<StudentAPI[]>("/api/students");
-      return students.map(transformStudent);
-    },
-  });
-
-  // Memoize filtered and sorted results
-  const filteredStudents = useMemo(() => {
-    if (!students) return undefined;
-    return filterAndSortStudents(students, query);
-  }, [students, query]);
-
-  return {
-    ...queryResult,
-    data: filteredStudents,
-  };
-};
-
 /** Fetches all students included in an event */
 export const useEventStudents = (eventId?: string, query?: string) => {
   const { data: students, ...queryResult } = useQuery({
@@ -130,7 +108,7 @@ export const useStudentsStats = () => {
  * Fetches students based on active search filters.
  * @param filters - The parsed object from your querySchema (category, house, etc.)
  */
-export const useStudentsV2 = (filters: any = {}) => {
+export const useFetchStudents = (filters: any = {}) => {
   // Generate the query string from the filters object
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -192,5 +170,3 @@ export const useDeleteStudent = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.students.all() }),
   });
 };
-
-export default useStudents;
