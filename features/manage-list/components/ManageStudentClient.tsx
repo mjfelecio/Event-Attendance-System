@@ -8,7 +8,8 @@ import { StudentWithGroups } from "@/globals/types/students";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";
 import { StudentFormValues } from "@/globals/schemas/studentSchema";
-import { useSaveStudent } from "@/globals/hooks/useStudents";
+import { useDeleteStudent, useSaveStudent } from "@/globals/hooks/useStudents";
+import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
@@ -28,7 +29,9 @@ const ManageStudentClient = ({
   const [formData, setFormData] = useState<StudentWithGroups>();
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
 
-  const { mutateAsync } = useSaveStudent();
+  const { mutateAsync: saveStudent } = useSaveStudent();
+  const { mutateAsync: deleteStudent } = useDeleteStudent();
+  const confirm = useConfirm();
 
   const handleEdit = useCallback((data: StudentWithGroups) => {
     setFormData(data);
@@ -40,13 +43,28 @@ const ManageStudentClient = ({
     setIsStudentFormOpen(true);
   }, []);
 
-  const handleDelete = useCallback(() => {
-    toastSuccess("Deleting");
+  const handleDelete = useCallback(async (studentId: string) => {
+    if (!studentId) return;
+
+    const confirmed = await confirm({
+      title: "Delete this student?",
+      description:
+        "All data from this student will be removed. This is an irreversable action.",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await deleteStudent(studentId);
+      toastSuccess("Student deleted");
+    } catch (error) {
+      toastDanger(`Failed to delete: ${studentId}`);
+    }
   }, []);
 
   const handleSubmit = useCallback(async (data: StudentFormValues) => {
     try {
-      const student = await mutateAsync(data);
+      const student = await saveStudent(data);
 
       if (!student) {
         toastDanger("Failed to add student");

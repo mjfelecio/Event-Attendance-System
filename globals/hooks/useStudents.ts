@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Student, StudentAPI, StudentAPIWithGroups, StudentWithGroups } from "@/globals/types/students";
+import {
+  Student,
+  StudentAPI,
+  StudentAPIWithGroups,
+  StudentWithGroups,
+} from "@/globals/types/students";
 import { useMemo } from "react";
 import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
 import { fetchApi } from "@/globals/utils/api";
@@ -8,7 +13,9 @@ import { EventCategory } from "@prisma/client";
 import { StudentFormValues } from "../schemas/studentSchema";
 
 // Transform function to make sure that the dates are actually a Date object
-const transformStudent = (e: StudentAPI | StudentAPIWithGroups): StudentWithGroups => ({
+const transformStudent = (
+  e: StudentAPI | StudentAPIWithGroups,
+): StudentWithGroups => ({
   ...e,
   createdAt: new Date(e.createdAt),
   updatedAt: new Date(e.updatedAt),
@@ -45,7 +52,7 @@ export const useEventStudents = (eventId?: string, query?: string) => {
       if (!eventId) return;
 
       const students = await fetchApi<StudentAPI[]>(
-        `/api/events/${eventId}/students`
+        `/api/events/${eventId}/students`,
       );
       return students.map(transformStudent);
     },
@@ -98,7 +105,7 @@ export const useStudentFromEvent = ({
       if (!eventId || !studentId) return null;
 
       const student = await fetchApi<StudentAPI>(
-        `/api/events/${eventId}/students/${studentId}`
+        `/api/events/${eventId}/students/${studentId}`,
       );
       return transformStudent(student);
     },
@@ -110,9 +117,11 @@ export const useStudentFromEvent = ({
  */
 export const useStudentsStats = () => {
   return useQuery({
-    queryKey: ['stats', 'students'],
+    queryKey: ["stats", "students"],
     queryFn: async () => {
-      return fetchApi<Record<EventCategory, number>>(`/api/stats/student-counts`);
+      return fetchApi<Record<EventCategory, number>>(
+        `/api/stats/student-counts`,
+      );
     },
   });
 };
@@ -136,7 +145,9 @@ export const useStudentsV2 = (filters: any = {}, searchQuery?: string) => {
     // 2. Include queryString in the key so React Query refetches when filters change
     queryKey: [...queryKeys.students.all(), queryString],
     queryFn: async (): Promise<StudentWithGroups[]> => {
-      const url = queryString ? `/api/students?${queryString}` : "/api/students";
+      const url = queryString
+        ? `/api/students?${queryString}`
+        : "/api/students";
       const data = await fetchApi<StudentAPIWithGroups[]>(url);
       return data.map(transformStudent);
     },
@@ -174,6 +185,24 @@ export const useSaveStudent = () => {
 
     // TODO: Replace this with optimistic handling and manual adding of the data
     // Instead of revalidating the whole thing, which hits the backend
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.students.all() }),
+  });
+};
+
+/**
+ * Deletes a student
+ *
+ * @returns deleted Student
+ */
+export const useDeleteStudent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => {
+      return fetchApi<StudentWithGroups>(`/api/students/${id}`, {
+        method: "DELETE",
+      });
+    },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.students.all() }),
   });
