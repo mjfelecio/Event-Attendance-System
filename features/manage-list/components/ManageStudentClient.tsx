@@ -9,21 +9,24 @@ import StudentFormDrawer from "./StudentFormDrawer";
 import { StudentFormValues } from "@/globals/schemas/studentSchema";
 import { useDeleteStudent, useSaveStudent } from "@/globals/hooks/useStudents";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
+import { ManageListCategory } from "../types";
 
 interface ManageStudentClientProps {
-  label?: string;
-  item?: string;
+  category: ManageListCategory;
+  label: string;
+  item: string;
   categoryHeading: string;
   students: Student[];
   isLoading: boolean;
 }
 
 const ManageStudentClient = ({
+  category,
   label,
   item,
   categoryHeading,
   students,
-  isLoading
+  isLoading,
 }: ManageStudentClientProps) => {
   const [formData, setFormData] = useState<Student>();
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
@@ -89,6 +92,7 @@ const ManageStudentClient = ({
   return (
     <div className="flex w-full flex-col gap-6">
       <StudentsDataTable
+        category={category}
         columns={columns}
         data={students ?? []}
         isLoading={isLoading}

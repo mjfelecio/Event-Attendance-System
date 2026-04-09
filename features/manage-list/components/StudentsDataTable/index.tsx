@@ -9,11 +9,13 @@ import {
   getSortedRowModel,
   SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DataTableBody from "./DataTableBody";
 import DataTableHeader from "./DataTableHeader";
 import getDynamicFilters from "../../utils/getDynamicFilters";
+import { ManageListCategory } from "../../types";
 
 /**
  * Props for the application's standard DataTable component.
@@ -37,6 +39,8 @@ type DataTableProps<TData, TValue> = {
   groupSlug: string;
   /** Callback for adding a student */
   onAddStudent: () => void;
+  /** Manage List Category being displayed */
+  category: ManageListCategory;
 };
 
 /**
@@ -46,18 +50,38 @@ type DataTableProps<TData, TValue> = {
  * It encapsulates common table behavior such as sorting, filtering,
  * pagination, and global search to avoid reimplementation in each feature.
  */
-export function StudentsDataTable<TData, TValue>({
+function StudentsDataTable<TData, TValue>({
   columns,
   data,
   isLoading,
   categoryHeader,
   categorySubheader,
   groupSlug,
-  onAddStudent
+  onAddStudent,
+  category,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
+  useEffect(() => {
+    if (category === "COLLEGE") {
+      setColumnVisibility((prev) => ({
+        ...prev,
+        strand: false,
+        program: true,
+        department: true,
+      }));
+    } else if (category === "SHS") {
+      setColumnVisibility((prev) => ({
+        ...prev,
+        strand: true,
+        program: false,
+        department: false,
+      }));
+    }
+  }, [category]);
 
   const table = useReactTable({
     data,
@@ -66,6 +90,7 @@ export function StudentsDataTable<TData, TValue>({
       sorting,
       columnFilters,
       globalFilter,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
