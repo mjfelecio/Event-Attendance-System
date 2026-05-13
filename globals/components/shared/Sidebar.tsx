@@ -78,7 +78,7 @@ const Sidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const sidebarWidth = isExpanded ? "w-72" : "w-20";
+  const sidebarWidth = isExpanded ? "not-print:w-72" : "not-print:w-20";
   const isRouteActive = (route: string) =>
     pathname === route || pathname.startsWith(`${route}/`);
 
@@ -98,7 +98,7 @@ const Sidebar = () => {
     <div className={cn("shrink-0 transition-all duration-300", sidebarWidth)}>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r border-white/10 bg-slate-950/95 p-3 text-slate-100 shadow-[0_20px_60px_rgba(2,6,23,0.5)] backdrop-blur-xl print:hidden transition-all duration-300",
+          "print:hidden fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r border-white/10 bg-slate-950/95 p-3 text-slate-100 shadow-[0_20px_60px_rgba(2,6,23,0.5)] backdrop-blur-xl transition-all duration-300",
           sidebarWidth
         )}
       >

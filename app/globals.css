@@ -347,3 +347,33 @@ body {
     background: #dbeafe;
   }
 }
+
+@media print {
+  /* Remove scrolling containers */
+  * {
+    overflow: visible !important;
+  }
+
+  /* Ensure full page height */
+  html,
+  body {
+    height: auto !important;
+  }
+
+  /* Common app containers */
+  .overflow-auto,
+  .overflow-scroll,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* Remove fixed heights that cause clipped content */
+  .h-screen,
+  .max-h-screen,
+  .min-h-screen {
+    height: auto !important;
+    max-height: none !important;
+    min-height: auto !important;
+  }
+}
