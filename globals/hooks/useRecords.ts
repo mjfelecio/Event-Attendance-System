@@ -10,7 +10,7 @@ import { queryKeys } from "@/globals/utils/queryKeys";
  * Uses optimistic updates to immediately reflect the new record in the UI
  * before the server confirms the change.
  */
-export const useCreateRecord = (eventId: string) => {
+export const useCreateRecord = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -24,7 +24,7 @@ export const useCreateRecord = (eventId: string) => {
 
     /** Runs before the mutation request is sent */
     onMutate: async (newRecord) => {
-      const key = queryKeys.records.fromEvent(eventId);
+      const key = queryKeys.records.fromEvent(newRecord.eventId);
 
       // Cancel outgoing refetches to prevent overwriting optimistic state
       await queryClient.cancelQueries({ queryKey: key });
@@ -52,8 +52,8 @@ export const useCreateRecord = (eventId: string) => {
     },
 
     /** Rollback optimistic update if server request fails */
-    onError: (_err, _variables, context) => {
-      const key = queryKeys.records.fromEvent(eventId);
+    onError: (_err, variables, context) => {
+      const key = queryKeys.records.fromEvent(variables.eventId);
       if (context?.previousRecords) {
         queryClient.setQueryData(key, context.previousRecords);
       }
@@ -62,12 +62,12 @@ export const useCreateRecord = (eventId: string) => {
     /** Re-sync server state after success */
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.records.fromEvent(eventId),
+        queryKey: queryKeys.records.fromEvent(data.eventId),
         exact: true,
       });
 
       queryClient.invalidateQueries({
-        queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
+        queryKey: queryKeys.records.fromEventForStudent(data.eventId, data.studentId),
         exact: true,
       });
     },

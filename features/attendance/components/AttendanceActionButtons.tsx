@@ -40,7 +40,7 @@ const ACTION_BUTTONS: {
 
 const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
   const { mutateAsync: createRecord, isPending: isCreating } =
-    useCreateRecord(eventId);
+    useCreateRecord();
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
   const confirm = useConfirm();

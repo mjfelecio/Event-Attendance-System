@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
 const querySchema = z.object({
   // Single fetch params
-  id: z.string().optional(),
+  studentId: z.string().optional(),
   eventId: z.string().optional(),
 
   // Bulk filter params
@@ -78,15 +78,15 @@ const querySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  const searchParams = new URL(request.url).searchParams;
 
   try {
     const result = querySchema.parse(Object.fromEntries(searchParams));
 
-    const { id, eventId, ...filters } = result;
+    const { studentId, eventId, ...filters } = result;
 
     // Single Student Fetch (Scoped by Event or Absolute)
-    if (id) {
+    if (studentId) {
       let eventFilter = {};
 
       if (eventId) {
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 
       const rawStudent = await prisma.student.findFirst({
         where: {
-          id,
+          id: studentId,
           ...eventFilter,
         },
         include: { groups: true },

@@ -6,7 +6,7 @@ import { Student } from "../types/students";
 // UTILITY: Build student filter based on event criteria
 // ============================================================================
 export const buildEventStudentFilter = (
-  event: Event & { includedGroups: Group[] },
+  event: Event,
 ): Prisma.StudentWhereInput => {
   const where: Prisma.StudentWhereInput = {};
 

@@ -1,156 +1,115 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
+
 import Scanner from "@/features/attendance/components/Scanner";
-import { useStudentFromEvent } from "@/globals/hooks/useStudents";
 import ManualAttendanceSection from "@/features/attendance/components/ManualAttendanceSection";
-import { useCreateRecord } from "@/globals/hooks/useRecords";
-import { NewRecord } from "@/globals/types/records";
-import { Event } from "@/globals/types/events";
+
 import {
   toastDanger,
-  toastInfo,
   toastSuccess,
   toastWarning,
 } from "@/globals/components/shared/toasts";
-import { Student } from "@/globals/types/students";
 
-type ScannerSectionProps = {
+import { useCreateRecord } from "@/globals/hooks/useRecords";
+import { useStudentFromEvent } from "@/globals/hooks/useStudents";
+
+import { Event } from "@/globals/types/events";
+import { NewRecord } from "@/globals/types/records";
+import { Student } from "@/globals/types/students";
+import { fetchApi } from "@/globals/utils/api";
+
+type Props = {
   selectedEvent: Event | null;
 };
 
-/**
- * Empty state when no event is selected
- */
-const NoEventState = () => (
-  <div className="flex flex-col items-center justify-center h-[400px] shadow-sm border w-full rounded-lg p-8">
-    <h1 className="text-3xl font-bold text-gray-800 mb-2">No Event Selected</h1>
-    <p className="text-lg text-gray-500">
-      Select an event first to start attendance
-    </p>
-  </div>
-);
-
-const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
-  const [scannedValue, setScannedValue] = useState("");
+export default function AttendanceSection({ selectedEvent }: Props) {
   const [displayedStudent, setDisplayedStudent] = useState<Student | null>(
-    null
+    null,
   );
-  const [scanSource, setScanSource] = useState<"scan" | "">("");
 
-  const {
-    data: student,
-    isError: isStudentFetchingError,
-    error: studentFetchError,
-    isFetching,
-  } = useStudentFromEvent({
-    eventId: selectedEvent?.id,
-    studentId: scannedValue,
-  });
-
-  const { mutate: createAttendanceRecord, isPending: isSavingRecord } =
-    useCreateRecord(selectedEvent?.id || "");
-
-  const handleScanResult = useCallback((result: string) => {
-    if (!result) {
-      toastDanger("Invalid scan result");
-      return;
-    }
-
-    setScannedValue(result);
-    setScanSource("scan");
-  }, []);
+  const { mutateAsync: createRecord, isPending: isSavingRecord } =
+    useCreateRecord();
 
   /**
-   * Manual selection from details page
+   * MANUAL FLOW
    */
   const handleManualSelect = useCallback((student: Student) => {
     setDisplayedStudent(student);
-    setScanSource("");
   }, []);
 
-  useEffect(() => {
-    if (!scannedValue || isFetching) return;
+  const processScan = useCallback(
+    async (studentId: string) => {
+      if (!selectedEvent) {
+        toastDanger("No event selected.");
+        return;
+      }
 
-    if (scanSource !== "scan") return;
+      try {
+        const student = await fetchApi<Student>(
+          `/api/students?eventId=${selectedEvent.id}&studentId=${studentId}`,
+        );
 
-    // If fetch failed
-    if (studentFetchError) {
-      console.error("Student fetch error:", studentFetchError);
-    }
-
-    if (isStudentFetchingError || !student) {
-      toastDanger(`No student found with ID: ${scannedValue}`);
-      setScannedValue("");
-      setScanSource("");
-      return;
-    }
-
-    // Always show the fetched student
-    setDisplayedStudent(student);
-
-    // Only save if this came from a scan
-    if (scanSource !== "scan") return;
-
-    if (!selectedEvent) {
-      toastDanger("Failed to record attendance: No event selected");
-      setScannedValue("");
-      setScanSource("");
-      return;
-    }
-
-    const record: NewRecord = {
-      eventId: selectedEvent.id,
-      studentId: student.id,
-      method: "SCANNED",
-    };
-
-    createAttendanceRecord(record, {
-      onError: (error) => {
-        if (error.message.includes("already exists")) {
-          toastWarning("Student attendance was already recorded");
+        if (!student) {
+          toastDanger(`No student found with ID: ${studentId}`);
           return;
         }
-        toastWarning(`Attendance recording failed: ${error.message}`);
-        console.warn("Record save error:", error);
-      },
-      onSuccess: () => {
-        toastSuccess(
-          `Successfully recorded attendance for ${student.firstName} ${student.lastName}`
-        );
-      },
-    });
 
-    // Reset scan state
-    setScannedValue("");
-    setScanSource("");
-  }, [
-    student,
-    isFetching,
-    isStudentFetchingError,
-    studentFetchError,
-    scanSource,
-    scannedValue,
-    selectedEvent,
-    createAttendanceRecord,
-  ]);
+        setDisplayedStudent(student);
+
+        await createRecord({
+          eventId: selectedEvent.id,
+          studentId,
+          method: "SCANNED",
+        });
+
+        toastSuccess("Attendance recorded");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+
+        if (message.toLowerCase().includes("already exists")) {
+          toastWarning("Student attendance was already recorded.");
+        } else {
+          toastWarning(`Attendance failed: ${message}`);
+        }
+      }
+    },
+    [selectedEvent, createRecord],
+  );
+
+  /**
+   * Scanner entry point
+   */
+  const handleScan = useCallback(
+    (value: string) => {
+      processScan(value);
+    },
+    [processScan],
+  );
 
   if (!selectedEvent) {
-    return <NoEventState />;
+    return (
+      <div className="flex h-[400px] w-full flex-col items-center justify-center rounded-lg border p-8 shadow-sm">
+        <h1 className="mb-2 text-3xl font-bold text-gray-800">
+          No Event Selected
+        </h1>
+        <p className="text-lg text-gray-500">
+          Select an event first to start attendance.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-[600px] gap-4 border w-full rounded-lg p-4 shadow-sm bg-white">
-      <Scanner onRead={handleScanResult} isPending={isSavingRecord} />
+    <div className="flex h-[600px] w-full gap-4 rounded-lg border bg-white p-4 shadow-sm">
+      <Scanner onRead={handleScan} isPending={isSavingRecord} />
 
       <ManualAttendanceSection
         selectedEvent={selectedEvent}
         displayedStudent={displayedStudent}
-        isFetching={isFetching}
+        isFetching={false}
         onSelect={handleManualSelect}
       />
     </div>
   );
-};
-
-export default AttendanceSection;
+}
