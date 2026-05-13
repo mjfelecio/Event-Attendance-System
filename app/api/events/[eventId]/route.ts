@@ -30,7 +30,7 @@ const patchSchema = z.object({
     "SECTION",
     "YEAR",
   ]),
-  includedGroups: z.string().nullable().optional(),
+  includedGroups: z.array(z.string()).nullable().optional(),
   description: z.string().nullable().optional(),
   start: z.coerce.date(),
   end: z.coerce.date(),
@@ -140,7 +140,12 @@ export async function PATCH(
 
     const updated = await prisma.event.update({
       where: { id: eventId },
-      data,
+      data: {
+          ...data,
+          includedGroups: {
+            set: data.includedGroups?.map((g) => ({ id: g })),
+          },
+        },
     });
 
     return NextResponse.json(ok(updated), { status: 200 });
