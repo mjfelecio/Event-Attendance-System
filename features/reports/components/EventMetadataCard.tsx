@@ -4,10 +4,6 @@ import { capitalize } from "lodash";
 import React, { memo } from "react";
 
 const EventMetadataCard = ({ event }: { event: Event }) => {
-  const participantGroups = event.includedGroups
-    ? JSON.parse(event?.includedGroups)
-    : [];
-
   return (
     <section className="rounded-md border bg-muted/30 p-4 shadow-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6 text-sm">
@@ -29,12 +25,13 @@ const EventMetadataCard = ({ event }: { event: Event }) => {
           <div>
             <p className="text-muted-foreground mb-1">Participant Groups</p>
             <div className="flex flex-wrap gap-2 max-w-64 max-h-12 overflow-y-scroll">
-              {participantGroups.map((group: string) => (
-                <>
-                  <p className="text-xs font-medium bg-sky-100 rounded-2xl py-0.5 px-2">
-                    {group}
-                  </p>
-                </>
+              {event.includedGroups.map((group) => (
+                <p
+                  key={group.id}
+                  className="text-xs font-medium bg-sky-100 rounded-2xl py-0.5 px-2"
+                >
+                  {group.name}
+                </p>
               ))}
             </div>
           </div>

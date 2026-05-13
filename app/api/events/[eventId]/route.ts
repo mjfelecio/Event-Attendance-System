@@ -12,7 +12,9 @@ import {
 } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
 
-const submitSchema = z.object({ action: z.enum(["SUBMIT", "APPROVE", "REJECT"]) });
+const submitSchema = z.object({
+  action: z.enum(["SUBMIT", "APPROVE", "REJECT"]),
+});
 const rejectionSchema = z.object({ reason: z.string().min(1) });
 const patchSchema = z.object({
   title: z.string().min(1),
@@ -37,13 +39,16 @@ const patchSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
+  { params }: { params: { eventId: string } },
 ) {
   try {
     const user = await requireAuth();
     const { eventId } = await params;
 
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { includedGroups: true },
+    });
 
     if (!event) {
       return NextResponse.json(ok(null), { status: 404 });
@@ -59,7 +64,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { eventId: string } }
+  { params }: { params: { eventId: string } },
 ) {
   try {
     const user = await requireAuth();
@@ -82,7 +87,12 @@ export async function PATCH(
 
         const updated = await prisma.event.update({
           where: { id: eventId },
-          data: { status: "PENDING", reviewedById: null, rejectionReason: null, reviewedAt: null },
+          data: {
+            status: "PENDING",
+            reviewedById: null,
+            rejectionReason: null,
+            reviewedAt: null,
+          },
         });
 
         return NextResponse.json(ok(updated), { status: 200 });
@@ -141,7 +151,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { eventId: string } }
+  { params }: { params: { eventId: string } },
 ) {
   try {
     const user = await requireAuth();
@@ -162,9 +172,9 @@ export async function DELETE(
       return NextResponse.json(
         err(
           "Cannot delete this event because attendance has already been recorded.",
-          "EVENT_HAS_RECORDS"
+          "EVENT_HAS_RECORDS",
         ),
-        { status: 409 }
+        { status: 409 },
       );
     }
 

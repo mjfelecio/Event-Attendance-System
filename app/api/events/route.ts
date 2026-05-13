@@ -57,22 +57,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const rawEvents = await prisma.event.findMany({
+    const events = await prisma.event.findMany({
       where,
       include: {
-        includedGroups: {
-          select: {
-            id: true,
-          },
-        },
+        includedGroups: true,
       },
       orderBy: { start: "asc" },
     });
-
-    const events = rawEvents.map((event) => ({
-      ...event,
-      includedGroups: event.includedGroups.map((group) => group.id),
-    }));
 
     return NextResponse.json(ok(events), { status: 200 });
   } catch (error) {
