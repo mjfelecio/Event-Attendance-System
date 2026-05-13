@@ -29,6 +29,7 @@ const FIELDS_TO_VALIDATE: Record<Step, (keyof StudentFormValues)[]> = {
 interface Props {
   student?: Student;
   isOpen: boolean;
+  onViewQR: () => void;
   onClose: () => void;
   onSubmit: (validatedFormData: StudentFormValues) => void;
 }
@@ -38,6 +39,7 @@ export type Step = "personal" | "academic" | "groups";
 export default function StudentFormDrawer({
   student,
   isOpen,
+  onViewQR,
   onClose,
   onSubmit,
 }: Props) {
@@ -85,17 +87,20 @@ export default function StudentFormDrawer({
     onClose();
   }, []);
 
-  const handleNext = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent submission
+  const handleNext = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault(); // Prevent submission
 
-    // Validate the fields in each step
-    const isValid = await methods.trigger(FIELDS_TO_VALIDATE[step], {
-      shouldFocus: true,
-    });
-    if (!isValid) return;
+      // Validate the fields in each step
+      const isValid = await methods.trigger(FIELDS_TO_VALIDATE[step], {
+        shouldFocus: true,
+      });
+      if (!isValid) return;
 
-    setStep(step === "personal" ? "academic" : "groups");
-  }, [step]);
+      setStep(step === "personal" ? "academic" : "groups");
+    },
+    [step],
+  );
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
@@ -110,8 +115,9 @@ export default function StudentFormDrawer({
               <SheetTitle className="text-xl font-bold text-slate-800">
                 {isEdit ? "Edit Student Profile" : "Register New Student"}
               </SheetTitle>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex justify-between items-center gap-2 mt-2">
                 <StepIndicator current={step} />
+                <Button onClick={onViewQR}>View QR</Button>
               </div>
             </SheetHeader>
 

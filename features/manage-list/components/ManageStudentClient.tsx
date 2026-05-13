@@ -10,6 +10,7 @@ import { StudentFormValues } from "@/globals/schemas/studentSchema";
 import { useDeleteStudent, useSaveStudent } from "@/globals/hooks/useStudents";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 import { ManageListCategory } from "../types";
+import { StudentQrModal } from "./StudentQRModal";
 
 interface ManageStudentClientProps {
   category: ManageListCategory;
@@ -30,6 +31,7 @@ const ManageStudentClient = ({
 }: ManageStudentClientProps) => {
   const [formData, setFormData] = useState<Student>();
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
+  const [isStudentCodeOpen, setIsStudentCodeOpen] = useState(false);
 
   const { mutateAsync: saveStudent } = useSaveStudent();
   const { mutateAsync: deleteStudent } = useDeleteStudent();
@@ -106,8 +108,15 @@ const ManageStudentClient = ({
         key={formData?.id}
         student={formData}
         isOpen={isStudentFormOpen}
+        onViewQR={() => setIsStudentCodeOpen(true)}
         onClose={() => setIsStudentFormOpen(false)}
         onSubmit={handleSubmit}
+      />
+
+      <StudentQrModal
+        onOpenChange={setIsStudentCodeOpen}
+        open={isStudentCodeOpen && !!formData}
+        student={formData}
       />
     </div>
   );
