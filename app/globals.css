@@ -232,7 +232,10 @@ body {
     transition: background-color 0.18s ease;
   }
 
-  .calendar-shell .event-calendar .fc-daygrid-day:not(.fc-day-other):hover .fc-daygrid-day-frame {
+  .calendar-shell
+    .event-calendar
+    .fc-daygrid-day:not(.fc-day-other):hover
+    .fc-daygrid-day-frame {
     background: rgba(59, 130, 246, 0.06);
   }
 
@@ -334,8 +337,14 @@ body {
     height: 3rem;
   }
 
-  .calendar-shell .event-calendar .fc-timeGridWeek-view .fc-timegrid-slot-label-cushion,
-  .calendar-shell .event-calendar .fc-timeGridDay-view .fc-timegrid-slot-label-cushion {
+  .calendar-shell
+    .event-calendar
+    .fc-timeGridWeek-view
+    .fc-timegrid-slot-label-cushion,
+  .calendar-shell
+    .event-calendar
+    .fc-timeGridDay-view
+    .fc-timegrid-slot-label-cushion {
     color: #4b6587;
     font-size: 0.9rem;
     font-weight: 600;
@@ -375,5 +384,32 @@ body {
     height: auto !important;
     max-height: none !important;
     min-height: auto !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0.5in;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break-inside-avoid {
+    break-inside: avoid;
+  }
+
+  .print-table thead {
+    display: table-header-group;
+  }
+
+  .print-table tr {
+    break-inside: avoid;
   }
 }

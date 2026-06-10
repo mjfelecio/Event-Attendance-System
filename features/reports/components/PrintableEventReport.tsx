@@ -1,28 +1,13 @@
-"use client"
-
 import { capitalize } from "lodash";
 import { readableDate, readableTime } from "@/globals/utils/formatting";
-import { Prisma } from "@prisma/client";
 import { Fragment } from "react";
+import { EventWithGroupsAndCreator } from "@/globals/types/events";
+import { StudentWithRecords } from "@/globals/types/students";
 
 type EventStats = {
   present: number;
   eligible: number;
 };
-
-export type EventWithGroupsAndCreator = Prisma.EventGetPayload<{
-  include: {
-    includedGroups: true;
-    createdBy: true;
-  };
-}>;
-
-export type StudentWithRecords = Prisma.StudentGetPayload<{
-  include: {
-    records: true;
-    groups: true;
-  };
-}>;
 
 type GroupedStudentsBySection = Record<string, StudentWithRecords[]>;
 
@@ -44,38 +29,6 @@ export default function PrintableEventReport({
 
   return (
     <div className="mx-auto w-full max-w-4xl bg-white p-8 text-black print:max-w-none print:p-0">
-      {/* ==========================================================
-          PRINT STYLES
-      ========================================================== */}
-      <style jsx global>{`
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 0.5in;
-          }
-
-          body {
-            background: white !important;
-          }
-
-          .no-print {
-            display: none !important;
-          }
-
-          .print-break-inside-avoid {
-            break-inside: avoid;
-          }
-
-          .print-table thead {
-            display: table-header-group;
-          }
-
-          .print-table tr {
-            break-inside: avoid;
-          }
-        }
-      `}</style>
-
       {/* ==========================================================
           HEADER
       ========================================================== */}

@@ -1,4 +1,4 @@
-import { Group, Event as PrismaEvent } from "@prisma/client";
+import { Group, Prisma, Event as PrismaEvent } from "@prisma/client";
 import { eventSchema } from "@/globals/schemas";
 import z from "zod";
 
@@ -23,3 +23,11 @@ export type EventAPI = Omit<
 };
 
 export type EventForm = z.infer<typeof eventSchema>;
+
+export type EventWithGroupsAndCreator = Prisma.EventGetPayload<{
+  include: {
+    includedGroups: true;
+    createdBy: true;
+  };
+}>;
+

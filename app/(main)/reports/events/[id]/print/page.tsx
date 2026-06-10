@@ -1,7 +1,6 @@
-import PrintableEventReport, {
-  StudentWithRecords,
-} from "@/features/reports/components/PrintableEventReport";
+import PrintableEventReport from "@/features/reports/components/PrintableEventReport";
 import { prisma } from "@/globals/libs/prisma";
+import { StudentWithRecords } from "@/globals/types/students";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 
 type PrintPageProps = {
