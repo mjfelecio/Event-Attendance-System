@@ -25,6 +25,14 @@ export function readableDate(date: Date) {
   });
 }
 
+export function readableTime(date: Date) {
+  return date.toLocaleString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
 /**
  * Normalizes strings like "hotel-management", "YEAR_1", or "computerStudies"
  * into proper names like "Hotel Management", "Year 1", or "Computer Studies".

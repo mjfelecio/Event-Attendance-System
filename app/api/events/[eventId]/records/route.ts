@@ -46,7 +46,7 @@ export async function GET(
         studentId: r.studentId,
         fullName: fullName(s.firstName, s.middleName || "", s.lastName),
         schoolLevel: s.schoolLevel,
-        section: s.groups.find((g) => g.category === "SECTION")?.slug ?? "",
+        section: s.groups.find((g) => g.category === "SECTION") ?? null,
         timein: r.timein ? r.timein.toISOString() : null,
         timeout: r.timeout ? r.timeout.toISOString() : null,
       };

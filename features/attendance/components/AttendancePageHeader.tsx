@@ -14,6 +14,9 @@ import {
 } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 import TurnOnTimeoutMode from "@/features/attendance/components/TurnOnTimeoutMode";
+import Link from "next/link";
+import { MdReport } from "react-icons/md";
+import { IoDocument } from "react-icons/io5";
 
 type Props = {
   selectedEvent: Event | null;
@@ -80,19 +83,23 @@ const AttendancePageHeader: React.FC<Props> = ({
         </div>
 
         <div className="flex flex-row gap-4 items-center">
+          {/* View Report Button */}
+          <Link href={`/reports/events/${selectedEvent?.id}`} target="_blank">
+            <ButtonWithIcon
+              variant="ghost"
+              icon={IoDocument}
+              onClick={() => alert("Exporting attendance records...")}
+            >
+              View Report
+            </ButtonWithIcon>
+          </Link>
+
+          {/* Timeout Mode Button */}
           <TurnOnTimeoutMode
             key={selectedEvent?.id}
             eventId={selectedEvent?.id}
             isTimeout={selectedEvent?.isTimeout ?? false}
           />
-
-          {/* Export Button */}
-          <ButtonWithIcon
-            icon={PiExport}
-            onClick={() => alert("Exporting attendance records...")}
-          >
-            Export
-          </ButtonWithIcon>
         </div>
       </div>
 

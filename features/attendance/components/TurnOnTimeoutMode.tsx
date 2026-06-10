@@ -1,22 +1,23 @@
-"use client"
+"use client";
 
 import { Button } from "@/globals/components/shad-cn/button";
 import { useState } from "react";
 import useStartTimeoutMode from "@/features/attendance/hooks/useStartTimeoutMode";
+import { ClockIcon } from "lucide-react";
 
-interface Props {
+type Props = {
   eventId?: string;
   isTimeout: boolean;
-}
+};
 
 const TurnOnTimeoutMode = ({ eventId, isTimeout }: Props) => {
   const { mutate, isPending } = useStartTimeoutMode();
   const [activated, setActivated] = useState(isTimeout);
 
   const handleClick = () => {
-		if (!eventId) return
+    if (!eventId) return;
 
-		if (!confirm("This action cannot be undone")) return;
+    if (!confirm("This action cannot be undone")) return;
 
     mutate(eventId, {
       onSuccess: () => {
@@ -25,15 +26,35 @@ const TurnOnTimeoutMode = ({ eventId, isTimeout }: Props) => {
     });
   };
 
-	if (!eventId) return null;
+  if (!eventId) return null;
+
+  if (activated) {
+    return (
+      <div
+        className="
+          flex items-center gap-2
+          rounded-md
+          border
+          px-3 py-1
+          bg-amber-50
+          text-amber-800
+        "
+      >
+        <ClockIcon className="size-4" />
+        <span className="font-medium">Timeout Mode Active</span>
+      </div>
+    );
+  }
 
   return (
     <Button
-      variant={isTimeout ? "secondary" : "destructive"}
+      variant="outline"
+      className="border-amber-500 text-amber-700"
       disabled={activated || isPending}
       onClick={handleClick}
     >
-      {activated ? "Timeout Mode Active" : "Start Recording Timeout"}
+      <ClockIcon />
+      Start Timeout Mode
     </Button>
   );
 };

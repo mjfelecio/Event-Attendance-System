@@ -4,13 +4,14 @@ import { Button } from "@/globals/components/shad-cn/button";
 import { ArrowUpDown, FileText } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { AttendanceStatus } from "@/globals/types/records";
+import { Group } from "@prisma/client";
 
 function ViewRecordCell({ row }: { row: any }) {
   const { id: recordId } = row.original;
 
   const handleViewRecord = () => {
     // Navigate to printable record page
-    window.open(`/reports/record/${recordId}`, '_blank');
+    window.open(`/reports/record/${recordId}`, "_blank");
   };
 
   return (
@@ -30,19 +31,21 @@ function ViewRecordCell({ row }: { row: any }) {
 
 function StatusCell({ getValue }: { getValue: () => any }) {
   const Icon = ATTENDANCE_STATUS_ICONS.present;
-  
+
   const statusConfig: Record<AttendanceStatus, Record<any, any>> = {
     present: { color: "text-emerald-600", bg: "bg-emerald-50" },
     // EXCUSED: { color: "text-sky-600", bg: "bg-sky-50" },
     absent: { color: "text-red-600", bg: "bg-red-50" },
-		// LATE: {}
+    // LATE: {}
   };
 
   const config = statusConfig.present;
 
   return (
     <div className="flex justify-center">
-      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${config.bg}`}>
+      <div
+        className={`flex items-center gap-2 px-3 py-1 rounded-full ${config.bg}`}
+      >
         <Icon className={`h-4 w-4 ${config.color}`} />
         <span className={`text-sm font-medium ${config.color}`}>
           {"PRESENT"}
@@ -119,7 +122,9 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
       </div>
     ),
     cell: ({ getValue }) => (
-      <div className="text-center text-sm">{getValue() as string}</div>
+      <div className="text-center text-sm">
+        {(getValue() as Group | null)?.name || "N/A"}
+      </div>
     ),
     enableGlobalFilter: false,
   },

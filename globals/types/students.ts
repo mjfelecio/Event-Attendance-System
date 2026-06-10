@@ -1,4 +1,4 @@
-import { Group, Student as PrismaStudent, SchoolLevel } from "@prisma/client";
+import { Group, Prisma, Student as PrismaStudent, SchoolLevel } from "@prisma/client";
 
 // Extends student type with flatted groups
 export type Student = PrismaStudent & {
@@ -24,7 +24,14 @@ export type StudentAttendanceRecord = {
   studentId: string;
   fullName: string;
   schoolLevel: SchoolLevel;
-  section: string;
+  section: Group | null;
   timein: string | null; // Date UTC timestamp
   timeout: string | null; // Date UTC timestamp
 };
+
+export type StudentWithRecords = Prisma.StudentGetPayload<{
+  include: {
+    records: true;
+    groups: true;
+  };
+}>;

@@ -20,7 +20,7 @@ model Event {
 
   // Relations
   includedGroups Group[]  @relation("EventGroups")
-  Record         Record[]
+  records        Record[]
 
   createdById     String?
   createdBy       User?     @relation("EventCreator", fields: [createdById], references: [id])
@@ -45,8 +45,8 @@ model Student {
   schoolLevel SchoolLevel
 
   // Relations: Students can belong to multiple groups (House, Strand, etc.)
-  groups Group[]
-  Record Record[]
+  groups  Group[]
+  records Record[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
