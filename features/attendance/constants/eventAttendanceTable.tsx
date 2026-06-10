@@ -9,6 +9,7 @@ import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
+import { Group } from "@prisma/client";
 
 function ActionsCell({ row }: { row: any }) {
   const { id: recordId, eventId, studentId } = row.original;
@@ -151,7 +152,9 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
       </div>
     ),
     cell: ({ getValue }) => (
-      <div className="text-center">{getValue() as string}</div>
+      <div className="text-center">
+        {(getValue() as Group | null)?.name || "N/A"}
+      </div>
     ),
     enableGlobalFilter: false,
   },
