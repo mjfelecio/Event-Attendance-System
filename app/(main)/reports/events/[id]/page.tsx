@@ -15,6 +15,8 @@ import { useDataExport } from "@/globals/hooks/useDataExport";
 import { readableDate } from "@/globals/utils/formatting";
 import RecordsList from "@/features/reports/components/RecordsList";
 import EventMetadataCard from "@/features/reports/components/EventMetadataCard";
+import { Button } from "@/globals/components/shad-cn/button";
+import Link from "next/link";
 
 const EventReportsPage = () => {
   const { id } = useParams();
@@ -49,11 +51,17 @@ const EventReportsPage = () => {
           </p>
         </div>
 
-        <ExportButton
-          onExport={exportData}
-          isLoading={isExporting}
-          label="Export CSV"
-        />
+        <div className="flex gap-4">
+          <Link href={`/reports/events/${eventId}/print`} target="_blank">
+            <Button>Print Report</Button>
+          </Link>
+
+          <ExportButton
+            onExport={exportData}
+            isLoading={isExporting}
+            label="Export CSV"
+          />
+        </div>
       </section>
 
       {/* ================= Attendance Summary ================= */}
