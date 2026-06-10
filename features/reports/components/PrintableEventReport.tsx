@@ -1,16 +1,9 @@
-"use client";
+"use client"
 
 import { capitalize } from "lodash";
-
-import DataCard from "@/features/attendance/components/DataCard";
-import EventMetadataCard from "@/features/reports/components/EventMetadataCard";
-import { Event } from "@/globals/types/events";
-import { Record } from "@/globals/types/records";
 import { readableDate, readableTime } from "@/globals/utils/formatting";
-import { IoMdCheckmarkCircleOutline } from "react-icons/io";
-import { FaUserGroup } from "react-icons/fa6";
-import { VscPercentage } from "react-icons/vsc";
 import { Prisma } from "@prisma/client";
+import { Fragment } from "react";
 
 type EventStats = {
   present: number;
@@ -31,15 +24,17 @@ export type StudentWithRecords = Prisma.StudentGetPayload<{
   };
 }>;
 
+type GroupedStudentsBySection = Record<string, StudentWithRecords[]>;
+
 type PrintableEventReportProps = {
   event: EventWithGroupsAndCreator;
-  records: StudentWithRecords[];
+  groupedRecords: GroupedStudentsBySection;
   stats: EventStats;
 };
 
 export default function PrintableEventReport({
   event,
-  records,
+  groupedRecords,
   stats,
 }: PrintableEventReportProps) {
   const attendanceRate =
@@ -113,7 +108,8 @@ export default function PrintableEventReport({
         <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
           {event.location && (
             <div>
-              <span className="font-semibold">Location:</span> {event.location ?? "--"}
+              <span className="font-semibold">Location:</span>{" "}
+              {event.location ?? "--"}
             </div>
           )}
 
@@ -169,51 +165,65 @@ export default function PrintableEventReport({
           </thead>
 
           <tbody>
-            {records.length === 0 ? (
+            {Object.keys(groupedRecords).length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-3 py-6 text-center text-gray-500">
                   No attendance records found.
                 </td>
               </tr>
             ) : (
-              records.map((record, index) => {
-                const student = record;
-                const isPresent = record.records.length > 0;
-
-                const fullName = student
-                  ? [student.lastName, student.firstName, student.middleName]
-                      .filter(Boolean)
-                      .join(", ")
-                  : "Unknown Student";
-
-                const timeIn = isPresent ? record.records[0].timein : null;
-                const timeOut = isPresent ? record.records[0].timeout : null;
-
-                return (
-                  <tr
-                    key={record.id}
-                    className="border-b align-top print-break-inside-avoid"
-                  >
-                    <td className="px-3 py-2">{index + 1}</td>
-
-                    <td className="px-3 py-2 font-mono">{record.id}</td>
-
-                    <td className="px-3 py-2">{fullName}</td>
-
-                    <td className="px-3 py-2">
-                      {isPresent ? "Present" : "Absent"}
-                    </td>
-
-                    <td className="px-3 py-2">
-                      {timeIn ? readableTime(timeIn) : "—"}
-                    </td>
-
-                    <td className="px-3 py-2">
-                      {timeOut ? readableTime(timeOut) : "—"}
+              Object.entries(groupedRecords).map(([section, students]) => (
+                <Fragment key={section}>
+                  <tr className="bg-gray-100">
+                    <td colSpan={6} className="px-3 py-2 font-semibold">
+                      {section}
                     </td>
                   </tr>
-                );
-              })
+                  {students.map((student, index) => {
+                    const isPresent = student.records.length > 0;
+
+                    const fullName = student
+                      ? [
+                          student.lastName,
+                          student.firstName,
+                          student.middleName,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")
+                      : "Unknown Student";
+
+                    const timeIn = isPresent ? student.records[0].timein : null;
+                    const timeOut = isPresent
+                      ? student.records[0].timeout
+                      : null;
+
+                    return (
+                      <tr
+                        key={student.id}
+                        className="border-b align-top print-break-inside-avoid"
+                      >
+                        <td className="px-3 py-2">{index + 1}</td>
+
+                        <td className="px-3 py-2 font-mono">{student.id}</td>
+
+                        <td className="px-3 py-2">{fullName}</td>
+
+                        <td className="px-3 py-2">
+                          {isPresent ? "Present" : "Absent"}
+                        </td>
+
+                        <td className="px-3 py-2">
+                          {timeIn ? readableTime(timeIn) : "—"}
+                        </td>
+
+                        <td className="px-3 py-2">
+                          {timeOut ? readableTime(timeOut) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </Fragment>
+              ))
             )}
           </tbody>
         </table>

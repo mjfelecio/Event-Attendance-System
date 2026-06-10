@@ -1,4 +1,6 @@
-import PrintableEventReport from "@/features/reports/components/PrintableEventReport";
+import PrintableEventReport, {
+  StudentWithRecords,
+} from "@/features/reports/components/PrintableEventReport";
 import { prisma } from "@/globals/libs/prisma";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 
@@ -34,10 +36,22 @@ export default async function PrintPage({ params }: PrintPageProps) {
     (student) => !!student?.records?.length,
   ).length;
 
+  const groupedStudentsBySection = students.reduce<
+    Record<string, StudentWithRecords[]>
+  >((acc, student) => {
+    const section =
+      student.groups.find((g) => g.category === "SECTION")?.name ?? "Ungrouped";
+
+    acc[section] ??= [];
+    acc[section].push(student);
+
+    return acc;
+  }, {});
+
   return (
     <PrintableEventReport
       event={event}
-      records={students}
+      groupedRecords={groupedStudentsBySection ?? null}
       stats={{ eligible: eligibleCount, present: presentCount }}
     />
   );
