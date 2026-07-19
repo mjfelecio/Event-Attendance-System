@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Event, NewEvent } from "@/globals/types/events";
 import { EventCategory } from "@prisma/client";
+import { EXCLUDABLE_GROUP_TYPES } from "@/features/calendar/constants/categoryGroups";
 
 /**
  * Zod schema for event form validation
@@ -18,6 +19,14 @@ export const eventSchema = z
     location: z.string().nullable(),
     category: z.enum(EventCategory),
     includedGroups: z.array(z.string()).nullable(),
+    excludedGroups: z
+      .array(
+        z.object({
+          type: z.enum(EXCLUDABLE_GROUP_TYPES),
+          value: z.string().min(1),
+        })
+      )
+      .nullable(),
     start: z.date(),
     end: z.date(),
     description: z.string().nullable(),
@@ -88,6 +97,10 @@ export const formatEventPayload = (data: EventForm): Event | NewEvent => {
     includedGroups: data.includedGroups
       ? JSON.stringify(data.includedGroups)
       : null,
+    excludedGroups:
+      data.excludedGroups && data.excludedGroups.length > 0
+        ? JSON.stringify(data.excludedGroups)
+        : null,
     description: data.description,
     start,
     end,
@@ -105,6 +118,7 @@ const getDefaultValues = (): EventForm => {
     location: null,
     category: EventCategory.ALL,
     includedGroups: [],
+    excludedGroups: [],
     start,
     end,
     description: null,

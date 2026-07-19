@@ -31,7 +31,11 @@ import { Event } from "@/globals/types/events";
 import {
   CATEGORY_GROUPS,
   EVENT_CHOICES,
+  EXCLUDABLE_GROUP_TYPES,
+  type ExcludableGroupType,
 } from "@/features/calendar/constants/categoryGroups";
+import useStudents from "@/globals/hooks/useStudents";
+import { EventCategory } from "@prisma/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import CheckboxGroup from "@/globals/components/shared/CheckboxGroup";
@@ -79,7 +83,7 @@ const EventDrawer = ({
   const { mutateAsync: submitEvent, isPending: isSubmitting } = useSubmitEvent();
   const { mutateAsync: approveEvent, isPending: isApproving } = useApproveEvent();
 
-  // Parse includedGroups from JSON string to array for form population
+  // Parse includedGroups/excludedGroups from JSON strings for form population
   const initData = useMemo(
     () =>
       initialData
@@ -88,9 +92,31 @@ const EventDrawer = ({
             includedGroups: initialData.includedGroups
               ? JSON.parse(initialData.includedGroups)
               : null,
+            excludedGroups: initialData.excludedGroups
+              ? JSON.parse(initialData.excludedGroups)
+              : null,
           }
         : undefined,
     [initialData]
+  );
+
+  // Sections are derived from the actual students in the database - the
+  // school's section names (BSIT-2A, STEM-11A, ...) are never hardcoded.
+  const { data: allStudents } = useStudents();
+  const sectionChoices = useMemo(
+    () =>
+      [...new Set((allStudents ?? []).map((s) => s.section))].sort() as string[],
+    [allStudents]
+  );
+
+  /** Group value choices for a category or exclusion type. */
+  const choicesForType = (type: EventCategory | ExcludableGroupType): string[] =>
+    type === "SECTION"
+      ? sectionChoices
+      : CATEGORY_GROUPS[type as EventCategory]?.map((c) => c.value) ?? [];
+
+  const [exclusionType, setExclusionType] = useState<ExcludableGroupType | "">(
+    ""
   );
 
   const {
@@ -130,9 +156,7 @@ const EventDrawer = ({
       return;
     }
 
-    const allowedGroupValues = new Set(
-      CATEGORY_GROUPS[category].map((choice) => choice.value)
-    );
+    const allowedGroupValues = new Set(choicesForType(category));
     const validGroups = currentGroups.filter((group) =>
       allowedGroupValues.has(group)
     );
@@ -228,9 +252,18 @@ const EventDrawer = ({
           !isDirty &&
           (eventStatus === "PENDING" || eventStatus === "REJECTED");
 
-        const eventId = isDirectApprovalOnExistingEvent
-          ? existingId
-          : (await saveEvent(formatEventPayload(data))).id;
+        let eventId: string;
+        if (isDirectApprovalOnExistingEvent) {
+          eventId = existingId;
+        } else {
+          const saved = await saveEvent(formatEventPayload(data));
+          eventId = saved.id;
+          // Drafts must be submitted before approval - the API refuses to
+          // approve an unsubmitted draft directly.
+          if (saved.status === "DRAFT") {
+            await submitEvent({ id: eventId });
+          }
+        }
 
         await approveEvent({ id: eventId });
         toastSuccess("Event approved", "The event is now live.");
@@ -408,11 +441,7 @@ const EventDrawer = ({
                       <>
                         {field.value ? (
                           <CheckboxGroup
-                            choices={
-                              CATEGORY_GROUPS[category]?.map(
-                                (choice) => choice.value
-                              ) ?? []
-                            }
+                            choices={choicesForType(category)}
                             placeholder={`Selected ${category.toLowerCase()}s`}
                             selectedValues={field.value}
                             onSelect={(values) => field.onChange(values)}
@@ -428,6 +457,70 @@ const EventDrawer = ({
                   )}
                 </div>
               )}
+
+              {/* Cross-level group exclusions: remove specific narrower
+                  groups (a program, a section, a house, ...) from the
+                  event's audience regardless of category. */}
+              <div>
+                <Label className="mb-1 text-sm font-semibold text-slate-700">
+                  Excluded Groups (optional)
+                </Label>
+                <Controller
+                  name="excludedGroups"
+                  control={control}
+                  render={({ field }) => {
+                    const exclusions = field.value ?? [];
+                    const selectedOfType = exclusions
+                      .filter((e) => e.type === exclusionType)
+                      .map((e) => e.value);
+
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <ComboBox
+                          selectedValue={exclusionType}
+                          choices={EXCLUDABLE_GROUP_TYPES.map((t) => ({
+                            value: t,
+                            label: `${t.charAt(0)}${t.slice(1).toLowerCase()}s`,
+                          }))}
+                          placeholder="Pick a group type to exclude"
+                          searchFallbackMsg="No group type found"
+                          onSelect={(v) =>
+                            setExclusionType(v as ExcludableGroupType)
+                          }
+                        />
+
+                        {exclusionType ? (
+                          <CheckboxGroup
+                            choices={choicesForType(exclusionType)}
+                            placeholder={`Excluded ${exclusionType.toLowerCase()}s`}
+                            selectedValues={selectedOfType}
+                            onSelect={(values) =>
+                              field.onChange([
+                                ...exclusions.filter(
+                                  (e) => e.type !== exclusionType
+                                ),
+                                ...values.map((value) => ({
+                                  type: exclusionType,
+                                  value,
+                                })),
+                              ])
+                            }
+                          />
+                        ) : null}
+
+                        {exclusions.length > 0 ? (
+                          <p className="text-xs text-slate-500">
+                            Excluding:{" "}
+                            {exclusions
+                              .map((e) => `${e.value} (${e.type.toLowerCase()})`)
+                              .join(", ")}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  }}
+                />
+              </div>
 
               {/* Schedule Section */}
               <div>
