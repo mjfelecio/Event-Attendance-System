@@ -17,6 +17,7 @@ model Event {
   end             DateTime
   allDay          Boolean       @default(false)
   includedGroups  String?
+  excludedGroups  String? // JSON array of { type, value } pairs, see globals/utils/buildEventStudentFilter.ts
   status          EventStatus   @default(DRAFT)
   createdById     String?
   reviewedById    String?

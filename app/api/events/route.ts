@@ -30,12 +30,29 @@ const listQuerySchema = z.object({
   scope: eventScopeEnum.optional(),
 });
 
+const jsonArrayField = z
+  .string()
+  .nullable()
+  .optional()
+  .refine(
+    (v) => {
+      if (!v) return true;
+      try {
+        return Array.isArray(JSON.parse(v));
+      } catch {
+        return false;
+      }
+    },
+    { message: "Must be a JSON array." }
+  );
+
 const eventMutationSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1),
   location: z.string().nullable().optional(),
   category: eventCategoryEnum,
-  includedGroups: z.string().nullable().optional(),
+  includedGroups: jsonArrayField,
+  excludedGroups: jsonArrayField,
   description: z.string().nullable().optional(),
   start: z.coerce.date(),
   end: z.coerce.date(),
@@ -97,6 +114,7 @@ export async function POST(req: Request) {
       location: payload.location,
       category: payload.category,
       includedGroups: payload.includedGroups,
+      excludedGroups: payload.excludedGroups,
       description: payload.description,
       start: payload.start,
       end: payload.end,

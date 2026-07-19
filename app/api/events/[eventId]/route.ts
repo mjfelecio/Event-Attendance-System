@@ -14,6 +14,23 @@ import { respondWithError } from "@/globals/utils/httpError";
 
 const submitSchema = z.object({ action: z.enum(["SUBMIT", "APPROVE", "REJECT"]) });
 const rejectionSchema = z.object({ reason: z.string().min(1) });
+
+const jsonArrayField = z
+  .string()
+  .nullable()
+  .optional()
+  .refine(
+    (v) => {
+      if (!v) return true;
+      try {
+        return Array.isArray(JSON.parse(v));
+      } catch {
+        return false;
+      }
+    },
+    { message: "Must be a JSON array." }
+  );
+
 const patchSchema = z.object({
   title: z.string().min(1),
   location: z.string().nullable().optional(),
@@ -28,7 +45,8 @@ const patchSchema = z.object({
     "SECTION",
     "YEAR",
   ]),
-  includedGroups: z.string().nullable().optional(),
+  includedGroups: jsonArrayField,
+  excludedGroups: jsonArrayField,
   description: z.string().nullable().optional(),
   start: z.coerce.date(),
   end: z.coerce.date(),
@@ -91,7 +109,9 @@ export async function PATCH(
       requireRole(user, "ADMIN");
 
       if (action === "APPROVE") {
-        assertEventStatus(event, ["PENDING", "DRAFT", "REJECTED", "APPROVED"]);
+        // DRAFT is intentionally not approvable: drafts must be submitted
+        // first so the approval always reviews a finished event.
+        assertEventStatus(event, ["PENDING", "REJECTED", "APPROVED"]);
         const approved = await prisma.event.update({
           where: { id: eventId },
           data: {
