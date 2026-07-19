@@ -23,18 +23,25 @@ export async function GET(
     assertEventVisibility(event, user);
 
     // Eligible students based on event criteria
+    const eligibleFilter = buildEventStudentFilter(event);
     const eligibleStudentsCount = await prisma.student.count({
-      where: buildEventStudentFilter(event),
+      where: eligibleFilter,
     });
 
-    // Students who actually attended
+    // Students who actually attended, counted only among the currently
+    // eligible ones - otherwise a student who became inactive (or an event
+    // whose groups changed) could push attendance above 100%.
     const presentStudentsCount = await prisma.record.count({
       where: {
         eventId,
+        student: eligibleFilter,
       },
     });
 
-    const absentStudentsCount = eligibleStudentsCount - presentStudentsCount;
+    const absentStudentsCount = Math.max(
+      eligibleStudentsCount - presentStudentsCount,
+      0
+    );
 
     return NextResponse.json(
       ok({

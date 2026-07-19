@@ -42,6 +42,8 @@ export const useCreateRecord = (eventId: string) => {
           updatedAt: new Date(),
           timein: new Date(),
           timeout: null,
+          recordedById: null,
+          lastModifiedById: null,
         };
 
         queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
@@ -68,6 +70,12 @@ export const useCreateRecord = (eventId: string) => {
 
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
+        exact: true,
+      });
+
+      // Dashboard/report numbers depend on records - keep them fresh
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.events.statsFromEvent(eventId),
         exact: true,
       });
     },
@@ -102,14 +110,15 @@ export const useUpdateAttendanceRecord = (eventId: string) => {
 
       const existingRecord = previousRecords?.find((r) => r.id === recordId);
 
-      // Apply optimistic update
+      // Apply optimistic update - replace the row in place (appending would
+      // show the record twice until the refetch lands)
       if (previousRecords && existingRecord) {
-        const optimisticRecord: Record = {
-          ...existingRecord,
-          timeout: new Date(),
-        };
-
-        queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
+        queryClient.setQueryData(
+          key,
+          previousRecords.map((r) =>
+            r.id === recordId ? { ...r, timeout: new Date() } : r
+          )
+        );
       }
 
       // Return context for rollback in onError
@@ -133,6 +142,11 @@ export const useUpdateAttendanceRecord = (eventId: string) => {
 
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.events.statsFromEvent(eventId),
         exact: true,
       });
     },
@@ -189,6 +203,11 @@ export const useDeleteRecord = (eventId: string) => {
 
       queryClient.invalidateQueries({
         queryKey: queryKeys.records.fromEventForStudent(eventId, data.studentId),
+        exact: true,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.events.statsFromEvent(eventId),
         exact: true,
       });
     },
