@@ -1,6 +1,6 @@
 import { CalendarIcon, ClockIcon } from "lucide-react";
 import { Event } from "@/globals/types/events";
-import { upperCase } from "lodash";
+import { upperCase } from "@/globals/utils/text";
 
 type Props = {
   event: Event;

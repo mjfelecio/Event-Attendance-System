@@ -4,7 +4,7 @@ import AttendanceActionButtons from "@/features/attendance/components/Attendance
 import { Event } from "@/globals/types/events";
 import { memo } from "react";
 import AttendanceStatusCard from "@/features/attendance/components/AttendanceStatusCard";
-import { capitalize } from "lodash";
+import { capitalize } from "@/globals/utils/text";
 import { Record } from "@/globals/types/records";
 
 type DetailRowProps = {

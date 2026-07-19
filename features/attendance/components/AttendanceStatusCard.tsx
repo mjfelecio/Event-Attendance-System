@@ -1,6 +1,6 @@
 import { AttendanceStatus } from "@/globals/types/records";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
-import { capitalize } from "lodash";
+import { capitalize } from "@/globals/utils/text";
 
 type Props = {
   status: AttendanceStatus;

@@ -1,6 +1,6 @@
 import { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { EventCategory, YearLevel } from "@prisma/client";
-import { capitalize } from "lodash";
+import { capitalize } from "@/globals/utils/text";
 import {
   COLLEGE_PROGRAMS,
   DEPARTMENTS,

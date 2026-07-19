@@ -9,7 +9,7 @@ import React from "react";
 import { IconType } from "react-icons/lib";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { Button } from "@/globals/components/shad-cn/button";
-import { capitalize } from "lodash";
+import { capitalize } from "@/globals/utils/text";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 type Props = {

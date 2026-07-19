@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { capitalize } from "lodash";
+import { capitalize } from "@/globals/utils/text";
 import { FaUserGroup } from "react-icons/fa6";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { VscPercentage } from "react-icons/vsc";

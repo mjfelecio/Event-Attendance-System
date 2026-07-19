@@ -1,6 +1,6 @@
 import { Event } from "@/globals/types/events";
 import { readableDate } from "@/globals/utils/formatting";
-import { capitalize } from "lodash";
+import { capitalize } from "@/globals/utils/text";
 import React, { memo } from "react";
 
 const EventMetadataCard = ({ event }: { event: Event }) => {
