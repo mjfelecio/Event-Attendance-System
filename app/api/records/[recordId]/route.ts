@@ -53,19 +53,35 @@ export async function PATCH(
 
     const recordedAt = new Date();
 
-    // Time-in: first scan wins - never overwrite an existing time-in.
-    // Time-out: latest scan wins - the student's final scan-out is kept.
-    const toUpdate = record.event.isTimeout
-      ? { timeout: recordedAt }
-      : record.timein
-        ? {}
-        : { timein: recordedAt };
+    // Scan rules: exactly one scan each for time-in and time-out, and a
+    // time-out is only possible after a time-in.
+    if (record.event.isTimeout) {
+      if (!record.timein) {
+        return NextResponse.json(
+          err("Student has not timed in for this event.", "NO_TIME_IN"),
+          { status: 409 }
+        );
+      }
+
+      if (record.timeout) {
+        return NextResponse.json(ok(record), { status: 200 });
+      }
+
+      const updatedRecord = await prisma.record.update({
+        where: { id: record.id },
+        data: { timeout: recordedAt },
+      });
+
+      return NextResponse.json(ok(updatedRecord), { status: 200 });
+    }
+
+    if (record.timein) {
+      return NextResponse.json(ok(record), { status: 200 });
+    }
 
     const updatedRecord = await prisma.record.update({
       where: { id: record.id },
-      data: {
-        ...toUpdate,
-      },
+      data: { timein: recordedAt },
     });
 
     return NextResponse.json(ok(updatedRecord), { status: 200 });

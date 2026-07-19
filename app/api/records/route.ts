@@ -48,29 +48,50 @@ export async function POST(req: Request) {
       where: { eventId_studentId: { eventId, studentId } },
     });
 
+    // Scan rules: exactly one scan each for time-in and time-out, and a
+    // time-out is only possible after a time-in.
+    if (event.isTimeout) {
+      if (!existing || !existing.timein) {
+        return NextResponse.json(
+          err("Student has not timed in for this event.", "NO_TIME_IN"),
+          { status: 409 }
+        );
+      }
+
+      if (existing.timeout) {
+        // Already timed out - single scan, keep the first one.
+        return NextResponse.json(ok(existing), { status: 200 });
+      }
+
+      const updated = await prisma.record.update({
+        where: { id: existing.id },
+        data: { timeout: now },
+      });
+
+      return NextResponse.json(ok(updated), { status: 200 });
+    }
+
     if (!existing) {
       const created = await prisma.record.create({
         data: {
           eventId,
           studentId,
           method,
-          timein: event.isTimeout ? undefined : now,
-          timeout: event.isTimeout ? now : undefined,
+          timein: now,
         },
       });
 
       return NextResponse.json(ok(created), { status: 201 });
     }
 
-    // Time-in: first scan wins - never overwrite an existing time-in.
-    // Time-out: latest scan wins - the student's final scan-out is kept.
+    if (existing.timein) {
+      // Already timed in - single scan, keep the first one.
+      return NextResponse.json(ok(existing), { status: 200 });
+    }
+
     const updated = await prisma.record.update({
       where: { id: existing.id },
-      data: event.isTimeout
-        ? { timeout: now }
-        : existing.timein
-          ? {}
-          : { timein: now },
+      data: { timein: now },
     });
 
     return NextResponse.json(ok(updated), { status: 200 });

@@ -28,15 +28,11 @@ export async function POST(
     assertEventOwnership(existing, user);
     assertEventStatus(existing, "APPROVED");
 
-    // If already activated, just return success
-    if (existing.isTimeout) {
-      return NextResponse.json(ok(existing), { status: 200 });
-    }
-
+    // Toggle: scans switch between recording time-in and time-out.
     const updated = await prisma.event.update({
       where: { id: eventId },
       data: {
-        isTimeout: true,
+        isTimeout: !existing.isTimeout,
       },
     });
 

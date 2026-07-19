@@ -2,38 +2,44 @@
 
 import { Button } from "@/globals/components/shad-cn/button";
 import { useState } from "react";
-import useStartTimeoutMode from "@/features/attendance/hooks/useStartTimeoutMode";
+import useToggleTimeoutMode from "@/features/attendance/hooks/useStartTimeoutMode";
 
 interface Props {
   eventId?: string;
   isTimeout: boolean;
 }
 
+/**
+ * Toggles the event between time-in mode and time-out mode.
+ * Scans record a time-in while the mode is off, and a time-out while it is on.
+ */
 const TurnOnTimeoutMode = ({ eventId, isTimeout }: Props) => {
-  const { mutate, isPending } = useStartTimeoutMode();
+  const { mutate, isPending } = useToggleTimeoutMode();
   const [activated, setActivated] = useState(isTimeout);
 
   const handleClick = () => {
-		if (!eventId) return
-
-		if (!confirm("This action cannot be undone")) return;
+    if (!eventId) return;
 
     mutate(eventId, {
-      onSuccess: () => {
-        setActivated(true);
+      onSuccess: (updated) => {
+        setActivated(updated.isTimeout);
       },
     });
   };
 
-	if (!eventId) return null;
+  if (!eventId) return null;
 
   return (
     <Button
-      variant={isTimeout ? "secondary" : "destructive"}
-      disabled={activated || isPending}
+      variant={activated ? "secondary" : "destructive"}
+      disabled={isPending}
       onClick={handleClick}
     >
-      {activated ? "Timeout Mode Active" : "Start Recording Timeout"}
+      {isPending
+        ? "Switching..."
+        : activated
+          ? "Timeout Mode: ON (tap to record time-ins)"
+          : "Start Recording Timeout"}
     </Button>
   );
 };
