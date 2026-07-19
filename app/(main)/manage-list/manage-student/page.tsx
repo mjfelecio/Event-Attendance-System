@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import ManageStudentClient from "@/features/manage-list/components/ManageStudentClient";
 import { mapStudentsToRows } from "@/features/manage-list/utils/mapStudentToRow";
 import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
-import { getAuthSession } from "@/globals/utils/auth";
+import { getFreshAuthSession } from "@/globals/utils/auth";
 import { prisma } from "@/globals/libs/prisma";
 
 type ManageStudentPageProps = {
@@ -72,7 +72,7 @@ const filterByContext = (
 const ManageStudentPage = async ({ searchParams }: ManageStudentPageProps) => {
   // This page fetches student PII during server rendering - the client-side
   // layout gate never runs before that, so auth must be enforced right here.
-  const session = await getAuthSession();
+  const session = await getFreshAuthSession();
   if (!session || session.status !== "ACTIVE") {
     redirect("/login");
   }
