@@ -4,6 +4,11 @@ import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
 import { respondWithError } from "@/globals/utils/httpError";
 import { setAuthSession } from "@/globals/utils/auth";
+import {
+  hashPassword,
+  isHashedPassword,
+  verifyPassword,
+} from "@/globals/utils/password";
 import { loginSchema } from "@/features/auth/schema/loginSchema";
 
 export async function POST(req: Request) {
@@ -12,8 +17,16 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || user.password !== password) {
+    if (!user || !(await verifyPassword(password, user.password))) {
       return NextResponse.json(err("Invalid credentials."), { status: 401 });
+    }
+
+    // Transparently upgrade legacy plaintext rows to scrypt hashes.
+    if (!isHashedPassword(user.password)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: await hashPassword(password) },
+      });
     }
 
     if (user.status === "PENDING") {

@@ -2,7 +2,17 @@ import { SchoolLevel, StudentStatus } from "@prisma/client";
 import { Event } from "@/globals/types/events";
 import { Student } from "../types/students";
 
- 
+/** Safely parses the event's includedGroups JSON; malformed data yields []. */
+const parseIncludedGroups = (includedGroups: string | null): string[] => {
+  if (!includedGroups) return [];
+  try {
+    const parsed = JSON.parse(includedGroups);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 // ============================================================================
 // UTILITY: Build student filter based on event criteria
 // ============================================================================
@@ -10,6 +20,8 @@ export const buildEventStudentFilter = (event: Event): Record<string, any> => {
   const where: Record<string, any> = {
     status: StudentStatus.ACTIVE,
   };
+
+  const includedGroups = parseIncludedGroups(event.includedGroups);
 
   switch (event.category) {
     case "ALL":
@@ -24,33 +36,27 @@ export const buildEventStudentFilter = (event: Event): Record<string, any> => {
       break;
 
     case "DEPARTMENT":
-      const departments = JSON.parse(event.includedGroups || "[]");
-      where.departmentSlug = { in: departments };
+      where.departmentSlug = { in: includedGroups };
       break;
 
     case "STRAND":
-      const strands = JSON.parse(event.includedGroups || "[]");
-      where.shsStrand = { in: strands };
+      where.shsStrand = { in: includedGroups };
       break;
 
     case "HOUSE":
-      const houses = JSON.parse(event.includedGroups || "[]");
-      where.houseSlug = { in: houses };
+      where.houseSlug = { in: includedGroups };
       break;
 
     case "PROGRAM":
-      const programs = JSON.parse(event.includedGroups || "[]");
-      where.collegeProgram = { in: programs };
+      where.collegeProgram = { in: includedGroups };
       break;
-    
+
     case "SECTION":
-      const sections = JSON.parse(event.includedGroups || "[]");
-      where.section = { in: sections };
+      where.section = { in: includedGroups };
       break;
 
     case "YEAR":
-      const year = JSON.parse(event.includedGroups || "[]");
-      where.yearLevel = { in: year };
+      where.yearLevel = { in: includedGroups };
       break;
 
     default:

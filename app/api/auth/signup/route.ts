@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
 import { respondWithError } from "@/globals/utils/httpError";
+import { hashPassword } from "@/globals/utils/password";
 
 const signupSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
       data: {
         name,
         email,
-        password,
+        password: await hashPassword(password),
         role: "ORGANIZER",
         status: "PENDING",
       },

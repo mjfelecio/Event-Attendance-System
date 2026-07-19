@@ -1,22 +1,26 @@
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
+import { assertEventVisibility, requireAuth } from "@/globals/utils/auth";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
-import { handlePrismaError } from "@/globals/utils/prismaError";
+import { respondWithError } from "@/globals/utils/httpError";
 import { NextRequest, NextResponse } from "next/server";
 
 // Fetch a single student that is included in the event
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string; studentId: string } }
+  { params }: { params: Promise<{ eventId: string; studentId: string }> }
 ) {
-  const { eventId, studentId } = await params;
-
   try {
+    const user = await requireAuth();
+    const { eventId, studentId } = await params;
+
     const event = await prisma.event.findUnique({ where: { id: eventId } });
 
     if (!event) {
       return NextResponse.json(err("Event doesnt exist"), { status: 404 });
     }
+
+    assertEventVisibility(event, user);
 
     const studentFilter = buildEventStudentFilter(event);
 
@@ -32,8 +36,7 @@ export async function GET(
     }
 
     return NextResponse.json(ok(student), { status: 200 });
-  } catch (e) {
-    const { status, message } = handlePrismaError(e);
-    return NextResponse.json(err(message), { status });
+  } catch (error) {
+    return respondWithError(error);
   }
 }

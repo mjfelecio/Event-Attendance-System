@@ -62,22 +62,6 @@ export const useEventStudents = (eventId?: string, query?: string) => {
 };
 
 /**
- * Fetches a student through studentId
- */
-export const useStudent = (studentId?: string) => {
-  return useQuery({
-    queryKey: queryKeys.students.withId(studentId!),
-    enabled: !!studentId,
-    queryFn: async () => {
-      if (!studentId) return;
-
-      const student = await fetchApi<StudentAPI>(`/api/students/${studentId}`);
-      return transformStudent(student);
-    },
-  });
-};
-
-/**
  * Fetches a student that is included in the event through eventId and studentId
  *
  * @returns Student, null if they do not exist or is not included in the event

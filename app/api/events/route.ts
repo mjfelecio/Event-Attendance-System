@@ -42,8 +42,6 @@ const eventMutationSchema = z.object({
   allDay: z.boolean().optional().default(false),
 });
 
-const deleteSchema = z.object({ id: z.string().min(1) });
-
 export async function GET(req: NextRequest) {
   try {
     const user = await requireAuth();
@@ -111,21 +109,36 @@ export async function POST(req: Request) {
       });
 
       if (!existing) {
-        return NextResponse.json(ok(null), { status: 404 });
+        return NextResponse.json(err("Event not found."), { status: 404 });
       }
 
       assertEventOwnership(existing, user);
+
+      // Non-admins can only edit drafts and rejected events. Approved
+      // events are locked so content cannot change without re-review.
       const editableStatuses: Array<
         "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"
       > =
         user.role === "ADMIN"
           ? ["DRAFT", "PENDING", "APPROVED", "REJECTED"]
-          : ["DRAFT", "APPROVED", "REJECTED"];
+          : ["DRAFT", "REJECTED"];
       assertEventStatus(existing, editableStatuses);
+
+      // Editing a rejected event returns it to DRAFT (clearing the review)
+      // so the organizer can fix it and resubmit.
+      const rejectionReset =
+        user.role !== "ADMIN" && existing.status === "REJECTED"
+          ? {
+              status: "DRAFT" as const,
+              reviewedById: null,
+              reviewedAt: null,
+              rejectionReason: null,
+            }
+          : {};
 
       const updated = await prisma.event.update({
         where: { id: payload.id },
-        data: baseData,
+        data: { ...baseData, ...rejectionReset },
       });
 
       return NextResponse.json(ok(updated), { status: 200 });
@@ -147,36 +160,3 @@ export async function POST(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
-  try {
-    const user = await requireAuth();
-    const { id } = deleteSchema.parse(await req.json());
-
-    const existing = await prisma.event.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json(ok(null), { status: 404 });
-    }
-
-    assertEventOwnership(existing, user);
-
-    const attendanceCount = await prisma.record.count({
-      where: { eventId: existing.id },
-    });
-
-    if (attendanceCount > 0) {
-      return NextResponse.json(
-        err(
-          "Cannot delete this event because attendance has already been recorded.",
-          "EVENT_HAS_RECORDS"
-        ),
-        { status: 409 }
-      );
-    }
-
-    await prisma.event.delete({ where: { id } });
-
-    return NextResponse.json(ok(null), { status: 200 });
-  } catch (error) {
-    return respondWithError(error);
-  }
-}

@@ -7,6 +7,7 @@ import AddStudentDialog from "@/features/manage-list/components/AddStudentDialog
 import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
 import { useStudentTableControls } from "@/features/manage-list/hooks/useStudentTableControls";
 import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
+import { fetchApi } from "@/globals/utils/api";
 
 interface ManageStudentClientProps {
   category: ManageStudentContext["category"];
@@ -95,7 +96,7 @@ const ManageStudentClient = ({
     setSubmitError(null);
 
     try {
-      const response = await fetch("/api/students", {
+      const payload = await fetchApi<{ student: StudentRow }>("/api/students", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -103,12 +104,6 @@ const ManageStudentClient = ({
         body: JSON.stringify(normalizeFormData(data)),
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.message ?? "Failed to add student");
-      }
-
-      const payload = (await response.json()) as { student: StudentRow };
       setStudentRows((prev) => [payload.student, ...prev]);
     } catch (error) {
       console.error("Error adding student", error);
@@ -128,20 +123,17 @@ const ManageStudentClient = ({
     setSubmitError(null);
 
     try {
-      const response = await fetch(`/api/students/${editingStudent.studentNumber}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(normalizeFormData(data)),
-      });
+      const payload = await fetchApi<{ student: StudentRow }>(
+        `/api/students/${editingStudent.studentNumber}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(normalizeFormData(data)),
+        }
+      );
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.message ?? "Failed to update student");
-      }
-
-      const payload = (await response.json()) as { student: StudentRow };
       setStudentRows((prev) =>
         prev.map((row) =>
           row.studentNumber === payload.student.studentNumber ? payload.student : row
@@ -164,14 +156,9 @@ const ManageStudentClient = ({
     setSubmitError(null);
 
     try {
-      const response = await fetch(`/api/students/${student.studentNumber}`, {
+      await fetchApi<null>(`/api/students/${student.studentNumber}`, {
         method: "DELETE",
       });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.message ?? "Failed to delete student");
-      }
 
       setStudentRows((prev) => prev.filter((row) => row.studentNumber !== student.studentNumber));
     } catch (error) {

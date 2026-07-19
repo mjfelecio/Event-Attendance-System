@@ -13,6 +13,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import {
   isStudentInEvent,
 } from "@/globals/utils/buildEventStudentFilter";
+import { hashPassword } from "@/globals/utils/password";
 
 type ComboBoxValue = {
   value: string;
@@ -268,11 +269,13 @@ async function main() {
   await prisma.user.deleteMany();
 
   // Create users with deterministic credentials for testing
+  const defaultPassword = await hashPassword("password");
+
   const admin = await prisma.user.create({
     data: {
       name: "System Administrator",
       email: "admin@gmail.com",
-      password: "adminama123",
+      password: await hashPassword("adminama123"),
       role: "ADMIN",
       status: "ACTIVE",
     },
@@ -282,7 +285,7 @@ async function main() {
     data: {
       name: "Campus Organizer",
       email: "organizer@example.com",
-      password: "password",
+      password: defaultPassword,
       role: "ORGANIZER",
       status: "ACTIVE",
     },
@@ -292,7 +295,7 @@ async function main() {
     data: {
       name: faker.person.fullName(),
       email: faker.internet.email(),
-      password: "password",
+      password: defaultPassword,
       role: "ORGANIZER",
       status: "ACTIVE",
     },
@@ -302,7 +305,7 @@ async function main() {
     data: {
       name: faker.person.fullName(),
       email: faker.internet.email(),
-      password: "password",
+      password: defaultPassword,
       role: "ORGANIZER",
       status: "PENDING",
     },
@@ -312,7 +315,7 @@ async function main() {
     data: {
       name: faker.person.fullName(),
       email: faker.internet.email(),
-      password: "password",
+      password: defaultPassword,
       role: "ORGANIZER",
       status: "REJECTED",
       rejectionReason: "Missing organization requirements.",

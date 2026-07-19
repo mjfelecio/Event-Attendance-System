@@ -6,8 +6,9 @@ import {
   slugify,
 } from "@/features/manage-list/utils/mapStudentToRow";
 import { Prisma, SchoolLevel, StudentStatus, YearLevel } from "@prisma/client";
-import { z } from "zod";
 import { err, ok } from "@/globals/utils/api";
+import { requireAuth } from "@/globals/utils/auth";
+import { respondWithError } from "@/globals/utils/httpError";
 import { studentCreateSchema } from "@/features/manage-list/utils/studentSchemas";
 
 const isCollegeYearLevel = (yearLevel: YearLevel) =>
@@ -21,6 +22,7 @@ const isShsYearLevel = (yearLevel: YearLevel) =>
 
 export async function POST(request: Request) {
   try {
+    await requireAuth();
     const payload = await request.json();
     const data = studentCreateSchema.parse({
       ...payload,
@@ -101,38 +103,29 @@ export async function POST(request: Request) {
 
     return NextResponse.json(ok({ student: studentRow }), { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      // TODO: What is this issues object, I need to check how its used like
-      // Since this should conform to ok, err pattern for the NextResponse
-      // Like the other responses that I have modified
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
       return NextResponse.json(
-        { message: "Invalid student data.", issues: error.flatten() },
-        { status: 400 }
+        err("A student with that ID already exists.", "DUPLICATE"),
+        { status: 409 }
       );
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        return NextResponse.json(
-          err("A student with that ID already exists.", "DUPLICATE"),
-          { status: 409 }
-        );
-      }
-    }
-
-    console.error("Failed to create student", error);
-    return NextResponse.json(err("Failed to create student."), { status: 500 });
+    return respondWithError(error);
   }
 }
 
 // Fetch all students
 export async function GET() {
   try {
+    await requireAuth();
+
     const students = await prisma.student.findMany();
 
     return NextResponse.json(ok(students));
   } catch (error) {
-    console.error("Error fetching students:", error);
-    return NextResponse.json(err("Failed to fetch students"), { status: 500 });
+    return respondWithError(error);
   }
 }

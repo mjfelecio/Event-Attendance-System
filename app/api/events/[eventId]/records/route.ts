@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/globals/libs/prisma";
 import { StudentAttendanceRecord } from "@/globals/types/students";
-import { ok } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
 import { fullName } from "@/globals/utils/formatting";
 import { assertEventVisibility, requireAuth } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
@@ -10,7 +10,7 @@ import { respondWithError } from "@/globals/utils/httpError";
 // Fetch all attendance record of a specific event
 export async function GET(
   _req: Request,
-  { params }: { params: { eventId: string } },
+  { params }: { params: Promise<{ eventId: string }> },
 ) {
   try {
     const user = await requireAuth();
@@ -18,7 +18,7 @@ export async function GET(
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
     if (!event) {
-      return NextResponse.json(ok(null), { status: 404 });
+      return NextResponse.json(err("Event not found."), { status: 404 });
     }
 
     assertEventVisibility(event, user);

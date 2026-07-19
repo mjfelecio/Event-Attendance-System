@@ -13,7 +13,7 @@ const decisionSchema = z.object({
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { organizerId: string } }
+  { params }: { params: Promise<{ organizerId: string }> }
 ) {
   try {
     const user = await requireAuth();
