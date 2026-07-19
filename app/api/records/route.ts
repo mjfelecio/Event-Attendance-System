@@ -3,7 +3,11 @@ import { z } from "zod";
 
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
-import { requireAuth } from "@/globals/utils/auth";
+import {
+  assertEventStatus,
+  assertEventVisibility,
+  requireAuth,
+} from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 
@@ -15,7 +19,7 @@ const createRecordSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
 
     const { eventId, studentId, method } = createRecordSchema.parse(
       await req.json()
@@ -31,6 +35,10 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
+
+    // Attendance can only be recorded on approved events the user can see.
+    assertEventVisibility(event, user);
+    assertEventStatus(event, "APPROVED");
 
     const student = await prisma.student.findUnique({
       where: { id: studentId, ...buildEventStudentFilter(event) },
@@ -49,7 +57,8 @@ export async function POST(req: Request) {
     });
 
     // Scan rules: exactly one scan each for time-in and time-out, and a
-    // time-out is only possible after a time-in.
+    // time-out is only possible after a time-in. Writes are conditional
+    // (compare-and-set) so concurrent scans cannot overwrite the first one.
     if (event.isTimeout) {
       if (!existing || !existing.timein) {
         return NextResponse.json(
@@ -58,61 +67,81 @@ export async function POST(req: Request) {
         );
       }
 
-      if (existing.timeout) {
-        // Already timed out - single scan, keep the first one.
-        return NextResponse.json(ok(existing), { status: 200 });
+      if (!existing.timeout) {
+        await prisma.record.updateMany({
+          where: { id: existing.id, timeout: null },
+          data: { timeout: now, lastModifiedById: user.id },
+        });
       }
 
-      const updated = await prisma.record.update({
+      const current = await prisma.record.findUnique({
         where: { id: existing.id },
-        data: { timeout: now },
       });
-
-      return NextResponse.json(ok(updated), { status: 200 });
+      return NextResponse.json(ok(current), { status: 200 });
     }
 
     if (!existing) {
-      const created = await prisma.record.create({
-        data: {
-          eventId,
-          studentId,
-          method,
-          timein: now,
-        },
+      try {
+        const created = await prisma.record.create({
+          data: {
+            eventId,
+            studentId,
+            method,
+            timein: now,
+            recordedById: user.id,
+          },
+        });
+
+        return NextResponse.json(ok(created), { status: 201 });
+      } catch (createError: unknown) {
+        // Unique constraint hit: another scan created the record first -
+        // fall through and return that record untouched.
+        const code = (createError as { code?: string })?.code;
+        if (code !== "P2002") throw createError;
+      }
+    } else if (!existing.timein) {
+      await prisma.record.updateMany({
+        where: { id: existing.id, timein: null },
+        data: { timein: now, lastModifiedById: user.id },
       });
-
-      return NextResponse.json(ok(created), { status: 201 });
     }
 
-    if (existing.timein) {
-      // Already timed in - single scan, keep the first one.
-      return NextResponse.json(ok(existing), { status: 200 });
-    }
-
-    const updated = await prisma.record.update({
-      where: { id: existing.id },
-      data: { timein: now },
+    const current = await prisma.record.findUnique({
+      where: { eventId_studentId: { eventId, studentId } },
     });
-
-    return NextResponse.json(ok(updated), { status: 200 });
+    return NextResponse.json(ok(current), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }
 }
 
 /**
- * Fetches a record based on an eventId and a studentId
+ * Fetches attendance records scoped to an event the user is allowed to see.
+ * eventId is required; add studentId for a single student's record.
  */
 export async function GET(req: NextRequest) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
 
     const { searchParams } = new URL(req.url);
     const eventId = searchParams.get("eventId");
     const studentId = searchParams.get("studentId");
 
-    // Fetch a student record from a specific event
-    if (eventId && studentId) {
+    if (!eventId) {
+      return NextResponse.json(
+        err("eventId query parameter is required."),
+        { status: 400 }
+      );
+    }
+
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    if (!event) {
+      return NextResponse.json(err("Event not found."), { status: 404 });
+    }
+
+    assertEventVisibility(event, user);
+
+    if (studentId) {
       const record = await prisma.record.findUnique({
         where: { eventId_studentId: { eventId, studentId } },
       });
@@ -120,28 +149,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(ok(record), { status: 200 });
     }
 
-    // Fetch all records of an event
-    if (eventId) {
-      const records = await prisma.record.findMany({
-        where: { eventId: eventId },
-      });
+    const records = await prisma.record.findMany({
+      where: { eventId },
+    });
 
-      return NextResponse.json(ok(records), { status: 200 });
-    }
-
-    // Fetch all records of a student, from all events
-    if (studentId) {
-      const records = await prisma.record.findMany({
-        where: { studentId: studentId },
-      });
-
-      return NextResponse.json(ok(records), { status: 200 });
-    }
-
-    // When no searchParams is found, fetch all records
-    const allRecords = await prisma.record.findMany();
-
-    return NextResponse.json(ok(allRecords), { status: 200 });
+    return NextResponse.json(ok(records), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }

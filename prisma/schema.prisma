@@ -67,6 +67,12 @@ model Record {
   timein    DateTime?
   timeout   DateTime?
 
+  // Audit trail: who created the record and who last touched it
+  recordedById     String?
+  recordedBy       User?   @relation("RecordCreator", fields: [recordedById], references: [id])
+  lastModifiedById String?
+  lastModifiedBy   User?   @relation("RecordModifier", fields: [lastModifiedById], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -83,6 +89,8 @@ model User {
   rejectionReason String?
   createdEvents   Event[]    @relation("EventCreator")
   reviewedEvents  Event[]    @relation("EventReviewer")
+  createdRecords  Record[]   @relation("RecordCreator")
+  modifiedRecords Record[]   @relation("RecordModifier")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
