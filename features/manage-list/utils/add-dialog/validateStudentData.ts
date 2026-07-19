@@ -41,10 +41,6 @@ export const validateStudentData = (
     errors.collegeProgram = "Program is required";
   }
 
-  if (data.schoolLevel === "COLLEGE" && !data.department.trim()) {
-    errors.department = "Department is required";
-  }
-
   if (data.schoolLevel === "SHS" && data.department.trim()) {
     errors.department = "SHS students should not have a department";
   }

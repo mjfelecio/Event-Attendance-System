@@ -5,18 +5,11 @@ import {
   mapStudentToSource,
   slugify,
 } from "@/features/manage-list/utils/mapStudentToRow";
+import { departmentBySlug, programByCode } from "@/globals/constants/groups";
 import { err, ok } from "@/globals/utils/api";
 import { requireAuth } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
 import { studentUpdateSchema } from "@/features/manage-list/utils/studentSchemas";
-
-const createSlugPayload = (data: { department?: string; house?: string }) => {
-  const departmentSlug = data.department
-    ? slugify(data.department) ?? null
-    : null;
-  const houseSlug = data.house ? slugify(data.house) ?? null : null;
-  return { departmentSlug, houseSlug };
-};
 
 // Fetching a single student by id
 export async function GET(
@@ -53,16 +46,19 @@ export async function PATCH(
     const data = studentUpdateSchema.parse({ ...payload, id: studentId });
 
     const isCollege = data.schoolLevel === "COLLEGE";
-    const normalizedDepartment = isCollege ? data.department ?? null : null;
     const normalizedShsStrand =
       data.schoolLevel === "SHS" ? data.shsStrand ?? null : null;
     const normalizedCollegeProgram = isCollege
       ? data.collegeProgram ?? null
       : null;
-    const { departmentSlug, houseSlug } = createSlugPayload({
-      department: normalizedDepartment ?? undefined,
-      house: data.house ?? undefined,
-    });
+
+    // Department is derived from the program, never taken from the client.
+    const programDept = departmentBySlug(
+      programByCode(normalizedCollegeProgram)?.departmentSlug
+    );
+    const normalizedDepartment = isCollege ? programDept?.name ?? null : null;
+    const departmentSlug = isCollege ? programDept?.slug ?? null : null;
+    const houseSlug = data.house ? slugify(data.house) ?? null : null;
 
     const student = await prisma.student.update({
       where: { id: studentId },

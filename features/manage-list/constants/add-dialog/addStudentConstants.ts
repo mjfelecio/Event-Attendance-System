@@ -2,21 +2,37 @@ import {
   SelectOption,
   StudentFormData,
 } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
+import {
+  COLLEGE_PROGRAMS,
+  DEPARTMENTS,
+  HOUSES,
+  SHS_STRANDS,
+} from "@/globals/constants/groups";
 
 export const DEPARTMENT_OPTIONS: SelectOption[] = [
   { label: "Select department", value: "" },
-  { label: "Computer Studies", value: "Computer Studies" },
-  { label: "Business Administration", value: "Business Administration" },
-  { label: "Hotel Management", value: "Hotel Management" },
+  ...DEPARTMENTS.map((d) => ({ label: d.name, value: d.name })),
 ];
 
 export const HOUSE_OPTIONS: SelectOption[] = [
   { label: "Select house", value: "" },
-  { label: "Giallio", value: "Giallio" },
-  { label: "Azul", value: "Azul" },
-  { label: "Cahel", value: "Cahel" },
-  { label: "Roxxo", value: "Roxxo" },
-  { label: "Vierrdy", value: "Vierrdy" },
+  ...HOUSES.map((h) => ({ label: h.name, value: h.name })),
+];
+
+export const PROGRAM_OPTIONS: SelectOption[] = [
+  { label: "Select program", value: "" },
+  ...COLLEGE_PROGRAMS.map((p) => ({
+    label: `${p.code} — ${p.name}`,
+    value: p.code,
+  })),
+];
+
+export const STRAND_OPTIONS: SelectOption[] = [
+  { label: "Select strand", value: "" },
+  ...SHS_STRANDS.map((s) => ({
+    label: s.code === s.name ? s.code : `${s.code} — ${s.name}`,
+    value: s.code,
+  })),
 ];
 
 export const DEFAULT_FORM_STATE: StudentFormData = {

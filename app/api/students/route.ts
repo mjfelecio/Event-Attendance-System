@@ -6,6 +6,7 @@ import {
   slugify,
 } from "@/features/manage-list/utils/mapStudentToRow";
 import { Prisma, SchoolLevel, StudentStatus, YearLevel } from "@prisma/client";
+import { departmentBySlug, programByCode } from "@/globals/constants/groups";
 import { err, ok } from "@/globals/utils/api";
 import { requireAuth } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
@@ -45,12 +46,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (isCollege && !data.department) {
-      return NextResponse.json(err("College students require a department."), {
-        status: 400,
-      });
-    }
-
     if (isCollege && !isCollegeYearLevel(data.yearLevel)) {
       return NextResponse.json(
         err("College students must be from 1st to 4th year."),
@@ -65,13 +60,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const normalizedDepartment = isCollege ? data.department ?? null : null;
     const normalizedShsStrand = isShs ? data.shsStrand ?? null : null;
     const normalizedCollegeProgram = isCollege ? data.collegeProgram ?? null : null;
 
-    const departmentSlug = normalizedDepartment
-      ? slugify(normalizedDepartment) ?? null
-      : null;
+    // Department is derived from the program, never taken from the client.
+    // New programs without an assigned department yield null.
+    const programDept = departmentBySlug(
+      programByCode(normalizedCollegeProgram)?.departmentSlug
+    );
+    const normalizedDepartment = isCollege ? programDept?.name ?? null : null;
+    const departmentSlug = isCollege ? programDept?.slug ?? null : null;
     const houseSlug = data.house ? slugify(data.house) ?? null : null;
 
     const student = await prisma.student.create({

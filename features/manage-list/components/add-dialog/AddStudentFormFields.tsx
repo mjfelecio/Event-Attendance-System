@@ -1,6 +1,11 @@
 import { ChangeEvent } from "react";
 
-import { DEPARTMENT_OPTIONS, HOUSE_OPTIONS } from "@/features/manage-list/constants/add-dialog/addStudentConstants";
+import {
+  HOUSE_OPTIONS,
+  PROGRAM_OPTIONS,
+  STRAND_OPTIONS,
+} from "@/features/manage-list/constants/add-dialog/addStudentConstants";
+import { programByCode, departmentBySlug } from "@/globals/constants/groups";
 import { StudentFormData, StudentFormErrors, YearLevelOption } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
 
 type AddStudentFormFieldsProps = {
@@ -127,55 +132,56 @@ const AddStudentFormFields = ({
           <label htmlFor="shs-strand" className="text-sm font-semibold text-neutral-700">
             SHS Strand <span className="text-rose-500">*</span>
           </label>
-          <input
+          <select
             id="shs-strand"
-            type="text"
             value={formData.shsStrand}
             onChange={handleInputChange("shsStrand")}
             className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
-            placeholder="e.g., STEM, HUMSS, ABM"
-          />
+            disabled={isSubmitting}
+          >
+            {STRAND_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           {errors.shsStrand && <span className="text-xs text-rose-600">{errors.shsStrand}</span>}
         </div>
       ) : (
         <>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="department" className="text-sm font-semibold text-neutral-700">
-              Department <span className="text-rose-500">*</span>
+            <label htmlFor="college-program" className="text-sm font-semibold text-neutral-700">
+              College Program <span className="text-rose-500">*</span>
             </label>
             <select
-              id="department"
-              value={formData.department}
-              onChange={handleInputChange("department")}
+              id="college-program"
+              value={formData.collegeProgram}
+              onChange={(event) => {
+                const code = event.target.value;
+                onFieldChange("collegeProgram", code);
+                // Department follows the program automatically; new programs
+                // without an assigned department store no department at all.
+                const dept = departmentBySlug(programByCode(code)?.departmentSlug);
+                onFieldChange("department", dept?.name ?? "");
+              }}
               className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
               disabled={isSubmitting}
             >
-              {DEPARTMENT_OPTIONS.map((option) => (
+              {PROGRAM_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
             </select>
-            {errors.department && (
-              <span className="text-xs text-rose-600">{errors.department}</span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="college-program" className="text-sm font-semibold text-neutral-700">
-              College Program <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="college-program"
-              type="text"
-              value={formData.collegeProgram}
-              onChange={handleInputChange("collegeProgram")}
-              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-400/40"
-              placeholder="e.g., BSCS, BSIT, BSBA"
-            />
             {errors.collegeProgram && (
               <span className="text-xs text-rose-600">{errors.collegeProgram}</span>
             )}
+            <span className="text-xs text-neutral-500">
+              Department:{" "}
+              {formData.collegeProgram
+                ? formData.department || "None assigned yet (new program)"
+                : "—"}
+            </span>
           </div>
         </>
       )}

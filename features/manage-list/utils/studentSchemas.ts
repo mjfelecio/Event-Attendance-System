@@ -70,14 +70,6 @@ const baseStudentSchema = z
         });
       }
 
-      if (!hasDepartment) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Department is required for college students.",
-          path: ["department"],
-        });
-      }
-
       if (hasStrand) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
