@@ -4,10 +4,11 @@ import { EventResizeDoneArg } from "@fullcalendar/interaction";
 import { Event } from "@/globals/types/events";
 import { CALENDAR_CONFIG } from "@/features/calendar/constants/calendarConfig";
 import { findEventById } from "@/features/calendar/utils/calendar";
+import { toastDanger } from "@/globals/components/shared/toasts";
 
 export const useCalendarEvents = (
   data: Event[] | undefined,
-  saveEvent: (event: Event) => void,
+  saveEvent: (event: Event) => Promise<unknown>,
   onEditEvent?: (event: Event) => void
 ) => {
   const handleEventClick = useCallback(
@@ -44,13 +45,21 @@ export const useCalendarEvents = (
         allDay: info.event.allDay,
       };
 
-      saveEvent(updatedEvent);
+      try {
+        await saveEvent(updatedEvent);
+      } catch (error) {
+        info.revert();
+        toastDanger(
+          "Couldn't move event",
+          error instanceof Error ? error.message : undefined
+        );
+      }
     },
     [data, saveEvent]
   );
 
   const handleEventDrop = useCallback(
-    (info: EventDropArg) => {
+    async (info: EventDropArg) => {
       if (info.event.id === CALENDAR_CONFIG.DRAFT_EVENT_ID) {
         info.revert();
         return;
@@ -69,7 +78,15 @@ export const useCalendarEvents = (
         allDay: info.event.allDay,
       };
 
-      saveEvent(updatedEvent);
+      try {
+        await saveEvent(updatedEvent);
+      } catch (error) {
+        info.revert();
+        toastDanger(
+          "Couldn't move event",
+          error instanceof Error ? error.message : undefined
+        );
+      }
     },
     [data, saveEvent]
   );
