@@ -10,6 +10,7 @@ import {
   requireRole,
 } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
+import { validateEventGroups } from "@/globals/utils/eventValidation";
 
 const eventStatusEnum = z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]);
 const eventScopeEnum = z.enum(["visible", "mine"]);
@@ -46,18 +47,23 @@ const jsonArrayField = z
     { message: "Must be a JSON array." }
   );
 
-const eventMutationSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1),
-  location: z.string().nullable().optional(),
-  category: eventCategoryEnum,
-  includedGroups: jsonArrayField,
-  excludedGroups: jsonArrayField,
-  description: z.string().nullable().optional(),
-  start: z.coerce.date(),
-  end: z.coerce.date(),
-  allDay: z.boolean().optional().default(false),
-});
+const eventMutationSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().trim().min(1),
+    location: z.string().nullable().optional(),
+    category: eventCategoryEnum,
+    includedGroups: jsonArrayField,
+    excludedGroups: jsonArrayField,
+    description: z.string().nullable().optional(),
+    start: z.coerce.date(),
+    end: z.coerce.date(),
+    allDay: z.boolean().optional().default(false),
+  })
+  .refine((data) => data.end.getTime() >= data.start.getTime(), {
+    message: "End must be the same or after start.",
+    path: ["end"],
+  });
 
 export async function GET(req: NextRequest) {
   try {
@@ -108,6 +114,15 @@ export async function POST(req: Request) {
   try {
     const user = await requireAuth();
     const payload = eventMutationSchema.parse(await req.json());
+
+    const groupError = validateEventGroups(
+      payload.category,
+      payload.includedGroups,
+      payload.excludedGroups
+    );
+    if (groupError) {
+      return NextResponse.json(err(groupError), { status: 400 });
+    }
 
     const baseData = {
       title: payload.title,

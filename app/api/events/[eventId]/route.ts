@@ -11,6 +11,7 @@ import {
   requireRole,
 } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
+import { validateEventGroups } from "@/globals/utils/eventValidation";
 
 const submitSchema = z.object({ action: z.enum(["SUBMIT", "APPROVE", "REJECT"]) });
 const rejectionSchema = z.object({ reason: z.string().min(1) });
@@ -31,27 +32,32 @@ const jsonArrayField = z
     { message: "Must be a JSON array." }
   );
 
-const patchSchema = z.object({
-  title: z.string().min(1),
-  location: z.string().nullable().optional(),
-  category: z.enum([
-    "ALL",
-    "COLLEGE",
-    "SHS",
-    "DEPARTMENT",
-    "HOUSE",
-    "STRAND",
-    "PROGRAM",
-    "SECTION",
-    "YEAR",
-  ]),
-  includedGroups: jsonArrayField,
-  excludedGroups: jsonArrayField,
-  description: z.string().nullable().optional(),
-  start: z.coerce.date(),
-  end: z.coerce.date(),
-  allDay: z.boolean().optional().default(false),
-});
+const patchSchema = z
+  .object({
+    title: z.string().trim().min(1),
+    location: z.string().nullable().optional(),
+    category: z.enum([
+      "ALL",
+      "COLLEGE",
+      "SHS",
+      "DEPARTMENT",
+      "HOUSE",
+      "STRAND",
+      "PROGRAM",
+      "SECTION",
+      "YEAR",
+    ]),
+    includedGroups: jsonArrayField,
+    excludedGroups: jsonArrayField,
+    description: z.string().nullable().optional(),
+    start: z.coerce.date(),
+    end: z.coerce.date(),
+    allDay: z.boolean().optional().default(false),
+  })
+  .refine((data) => data.end.getTime() >= data.start.getTime(), {
+    message: "End must be the same or after start.",
+    path: ["end"],
+  });
 
 export async function GET(
   _req: NextRequest,
@@ -147,6 +153,16 @@ export async function PATCH(
     // Non-admins can only edit drafts and rejected events; approved events
     // are locked so content cannot change without re-review.
     const data = patchSchema.parse(payload);
+
+    const groupError = validateEventGroups(
+      data.category,
+      data.includedGroups,
+      data.excludedGroups
+    );
+    if (groupError) {
+      return NextResponse.json(err(groupError), { status: 400 });
+    }
+
     assertEventOwnership(event, user);
     assertEventStatus(
       event,

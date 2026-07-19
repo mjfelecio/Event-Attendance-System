@@ -34,12 +34,18 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 async function fetchSession(): Promise<AuthUser | null> {
-  const res = await fetch("/api/auth/session", { cache: "no-store" });
-  const json = await res.json();
-  if (!res.ok || !json.success) {
+  // Never throw - an unreachable server must resolve to "not logged in",
+  // otherwise the app hangs forever on "Checking access".
+  try {
+    const res = await fetch("/api/auth/session", { cache: "no-store" });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      return null;
+    }
+    return json.data;
+  } catch {
     return null;
   }
-  return json.data;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

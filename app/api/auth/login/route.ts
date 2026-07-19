@@ -10,10 +10,21 @@ import {
   verifyPassword,
 } from "@/globals/utils/password";
 import { loginSchema } from "@/features/auth/schema/loginSchema";
+import { clientKey, rateLimit } from "@/globals/utils/rateLimit";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = loginSchema.parse(await req.json());
+    const parsed = loginSchema.parse(await req.json());
+    const email = parsed.email.trim().toLowerCase();
+    const password = parsed.password;
+
+    // 10 attempts per client+account per 5 minutes
+    if (!rateLimit(`login:${clientKey(req)}:${email}`, 10, 5 * 60_000)) {
+      return NextResponse.json(
+        err("Too many login attempts. Try again in a few minutes."),
+        { status: 429 }
+      );
+    }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
