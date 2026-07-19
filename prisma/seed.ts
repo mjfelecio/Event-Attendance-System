@@ -23,8 +23,14 @@ import {
   SHS_STRANDS as STRAND_INFO,
 } from "@/globals/constants/groups";
 
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL is not set - refusing to seed an in-memory throwaway database."
+  );
+}
+
 const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || ":memory:",
+  url: process.env.DATABASE_URL,
 });
 const prisma = new PrismaClient({ adapter });
 
@@ -283,6 +289,14 @@ function generateStudent(index: number): Prisma.StudentCreateInput {
 
 // Main seeding function
 async function main() {
+  // The seed WIPES every table and installs well-known test credentials.
+  // Refuse to run against a production database unless explicitly forced.
+  if (process.env.NODE_ENV === "production" && process.env.SEED_FORCE !== "1") {
+    throw new Error(
+      "Refusing to seed in production: this deletes all data and creates test accounts. Set SEED_FORCE=1 to override."
+    );
+  }
+
   console.log("Starting database seed...");
 
   // Clear existing data

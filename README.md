@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Event Attendance System
 
-## Getting Started
+Web app for managing school events and tracking student attendance at ACLC
+College of Ormoc City. Organizers create events (scoped to departments,
+houses, strands, programs, sections, or year levels), submit them for admin
+approval, and record attendance by QR scan or manual entry with time-in /
+time-out tracking.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) + TypeScript
+- Prisma ORM over SQLite (`better-sqlite3` driver adapter)
+- TanStack Query + Table, shadcn/ui, FullCalendar
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. Install dependencies (pnpm via corepack)
+corepack pnpm install
+
+# 2. Environment - create .env in the project root:
+#    DATABASE_URL="file:./dev.db"
+#    AUTH_SECRET="<random string, 16+ chars - sign-in cookies are HMAC-signed with this>"
+#    Generate one with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 3. Create the database
+corepack pnpm db:migrate    # or: pnpm db:push for a quick sync
+
+# 4. (Optional) Seed sample data - WIPES all tables
+corepack pnpm db:seed
+
+# 5. Run
+corepack pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app refuses to boot without `DATABASE_URL`, and refuses to boot in
+production without a real `AUTH_SECRET`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Seeded test accounts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`db:seed` clears every table and creates (dev only - it refuses to run with
+`NODE_ENV=production` unless `SEED_FORCE=1`):
 
-## Learn More
+| Email | Password | Role |
+|---|---|---|
+| `admin@gmail.com` | `adminama123` | Admin |
+| `organizer@example.com` | `password` | Organizer (active) |
 
-To learn more about Next.js, take a look at the following resources:
+Plus sample students, events, and attendance records.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Key concepts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Roles**: organizers sign up → admin approves → they can create events.
+  Admins review events and organizer accounts.
+- **Event lifecycle**: `DRAFT → PENDING → APPROVED / REJECTED`. Editing a
+  rejected event returns it to draft for resubmission. Only approved events
+  accept attendance.
+- **Group vocabulary**: departments, programs, strands, and houses are
+  defined once in `globals/constants/groups.ts` - forms, event scoping,
+  and the seed all derive from it. Section names live on student rows.
+- **Scan rules**: one scan each for time-in and time-out (first wins);
+  time-out requires a prior time-in; events toggle between time-in and
+  time-out recording modes.
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Script | Purpose |
+|---|---|
+| `pnpm dev` / `pnpm build` / `pnpm start` | Next.js dev / production build / serve |
+| `pnpm db:migrate` | Apply migrations (dev) |
+| `pnpm db:generate` | Regenerate the Prisma client |
+| `pnpm db:seed` | Reset and seed the database (destructive) |
+| `pnpm db:studio` | Browse the database |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment notes
+
+- Set `DATABASE_URL` and a strong `AUTH_SECRET`; run `prisma migrate deploy`.
+- The SQLite file is the single source of truth - back it up.
+- Rate limiting is in-memory (single instance); use a shared store if you
+  ever scale horizontally.
+- No password-reset flow exists yet; an admin must edit the database to
+  recover an account.

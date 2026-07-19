@@ -6,11 +6,19 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
+  // Fail fast: a silent ":memory:" fallback would make a misconfigured
+  // deployment look functional while losing every write on restart.
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      "DATABASE_URL environment variable is not set. Add it to .env (e.g. DATABASE_URL=\"file:./dev.db\")."
+    );
+  }
+
   const adapter = new PrismaBetterSqlite3({
-    url: process.env.DATABASE_URL || ":memory:",
+    url: process.env.DATABASE_URL,
   });
-  
-  return new PrismaClient({ 
+
+  return new PrismaClient({
     adapter,
     // log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
