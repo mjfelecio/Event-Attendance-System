@@ -14,47 +14,14 @@ import {
   isStudentInEvent,
 } from "@/globals/utils/buildEventStudentFilter";
 import { hashPassword } from "@/globals/utils/password";
-
-type ComboBoxValue = {
-  value: string;
-  label: string;
-};
-
-export const CATEGORY_GROUPS: Record<EventCategory, ComboBoxValue[]> = {
-  ALL: [],
-  COLLEGE: [],
-  SHS: [],
-  DEPARTMENT: [
-    { value: "CS", label: "Computer Studies" },
-    { value: "HM", label: "Hotel Management" },
-    { value: "BA", label: "Business Administration" },
-  ],
-  HOUSE: [
-    { value: "AZUL", label: "Azul" },
-    { value: "ROXXO", label: "Roxxo" },
-    { value: "CAHEL", label: "Cahel" },
-    { value: "GIALLIO", label: "Giallio" },
-    { value: "VIERRDY", label: "Vierrdy" },
-  ],
-  PROGRAM: [
-    { value: "BSCS", label: "BSCS" },
-    { value: "BSIT", label: "BSIT" },
-    { value: "BSHM", label: "BSHM" },
-    { value: "WAD", label: "WAD" },
-  ],
-  YEAR: Object.keys(YearLevel).map((l) => ({
-    value: l,
-    label: l,
-  })),
-  SECTION: [
-    { value: "BSCS-2A", label: "BSCS-2A" },
-    { value: "BSIT-2B", label: "BSIT-2B" },
-  ],
-  STRAND: [
-    { value: "ANIMATION", label: "Animation" },
-    { value: "PROGRAMMING", label: "Programming" },
-  ],
-};
+import {
+  buildSectionName,
+  COLLEGE_PROGRAMS,
+  DEPARTMENTS,
+  departmentBySlug,
+  HOUSES as HOUSE_INFO,
+  SHS_STRANDS as STRAND_INFO,
+} from "@/globals/constants/groups";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || ":memory:",
@@ -73,15 +40,7 @@ const slugify = (value: string | null | undefined): string | undefined =>
     .replace(/(^-|-$)+/g, "");
 
 // Constants
-const SHS_STRANDS = ["STEM", "ABM", "HUMSS", "GAS"];
-const COLLEGE_PROGRAMS = ["BSCS", "BSIT", "BSHM", "BSBA"];
-const SECTIONS = ["A", "B", "C", "D", "E"];
-const DEPARTMENTS = [
-  "Computer Studies",
-  "Hotel Management",
-  "Business Administration",
-];
-const HOUSES = ["Cahel", "Roxxo", "Giallio", "Azul", "Vierdy"];
+const SECTION_LETTERS = ["A", "B", "C"];
 const EVENT_CATEGORIES: EventCategory[] = [
   "ALL",
   "COLLEGE",
@@ -174,10 +133,40 @@ const LOCATIONS = [
 ];
 
 // Data generation functions
+
+/** Pool of valid group values per event category - same vocabulary the app uses. */
+const groupPoolFor = (
+  category: EventCategory,
+  sectionPool: string[]
+): string[] => {
+  switch (category) {
+    case "DEPARTMENT":
+      return DEPARTMENTS.map((d) => d.slug);
+    case "HOUSE":
+      return HOUSE_INFO.map((h) => h.slug);
+    case "PROGRAM":
+      return COLLEGE_PROGRAMS.map((p) => p.code);
+    case "STRAND":
+      return STRAND_INFO.map((s) => s.code);
+    case "YEAR":
+      return Object.keys(YearLevel);
+    case "SECTION":
+      return sectionPool;
+    default:
+      return [];
+  }
+};
+
+const randomSubset = <T>(pool: T[], max: number): T[] => {
+  const count = Math.min(pool.length, 1 + Math.floor(Math.random() * max));
+  return [...pool].sort(() => Math.random() - 0.5).slice(0, count);
+};
+
 function generateEvent(
   organizerId: string,
   baseDate: Date,
   index: number,
+  sectionPool: string[],
 ): Prisma.EventCreateManyInput {
   const eventType = randomChoice(EVENT_CATEGORIES);
   const isAllDay = Math.random() < 0.3;
@@ -194,14 +183,35 @@ function generateEvent(
   }
 
   const title = randomChoice(EVENT_TITLES[eventType]);
-  const includedGroups = CATEGORY_GROUPS[eventType] || [];
+  const pool = groupPoolFor(eventType, sectionPool);
+  const includedGroups = pool.length > 0 ? randomSubset(pool, 3) : [];
+
+  // ~25% of events exclude one narrower group (cross-level exclusion)
+  let excludedGroups: string | null = null;
+  if (Math.random() < 0.25) {
+    const exclusionType = randomChoice([
+      "PROGRAM",
+      "HOUSE",
+      "STRAND",
+      "SECTION",
+    ] as const);
+    const exclusionPool = groupPoolFor(exclusionType, sectionPool).filter(
+      (v) => !includedGroups.includes(v)
+    );
+    if (exclusionPool.length > 0) {
+      excludedGroups = JSON.stringify([
+        { type: exclusionType, value: randomChoice(exclusionPool) },
+      ]);
+    }
+  }
 
   return {
     title,
     location: randomChoice(LOCATIONS),
     description: faker.lorem.sentence(),
     category: eventType,
-    includedGroups: JSON.stringify(includedGroups.map((g) => g.value)),
+    includedGroups: JSON.stringify(includedGroups),
+    excludedGroups,
     start: startDate,
     end: endDate,
     allDay: isAllDay,
@@ -209,6 +219,15 @@ function generateEvent(
     isTimeout: randomChoice([true, false]),
   };
 }
+
+const YEAR_NUMBER: Record<YearLevel, number> = {
+  YEAR_1: 1,
+  YEAR_2: 2,
+  YEAR_3: 3,
+  YEAR_4: 4,
+  GRADE_11: 11,
+  GRADE_12: 12,
+};
 
 function generateStudent(index: number): Prisma.StudentCreateInput {
   const schoolLevel = randomChoice([SchoolLevel.SHS, SchoolLevel.COLLEGE]);
@@ -222,9 +241,7 @@ function generateStudent(index: number): Prisma.StudentCreateInput {
           YearLevel.YEAR_4,
         ]);
 
-  const section = randomChoice(SECTIONS);
-  const department = randomChoice(DEPARTMENTS);
-  const house = randomChoice(HOUSES);
+  const house = randomChoice(HOUSE_INFO);
   const status =
     Math.random() < 0.9 ? StudentStatus.ACTIVE : StudentStatus.INACTIVE;
 
@@ -233,28 +250,35 @@ function generateStudent(index: number): Prisma.StudentCreateInput {
     lastName: faker.person.lastName(),
     firstName: faker.person.firstName(),
     middleName: Math.random() < 0.7 ? faker.person.firstName() : undefined,
-    section,
     yearLevel,
     schoolLevel,
     status,
     contactNumber: `09${faker.string.numeric(9)}`,
-    department,
-    departmentSlug: slugify(department),
-    house,
-    houseSlug: slugify(house),
+    house: house.name,
+    houseSlug: house.slug,
   };
 
+  const letter = randomChoice(SECTION_LETTERS);
+
   if (schoolLevel === SchoolLevel.SHS) {
+    const strand = randomChoice(STRAND_INFO);
     return {
       ...baseData,
-      shsStrand: randomChoice(SHS_STRANDS),
-    };
-  } else {
-    return {
-      ...baseData,
-      collegeProgram: randomChoice(COLLEGE_PROGRAMS),
+      shsStrand: strand.code,
+      section: buildSectionName(strand.code, YEAR_NUMBER[yearLevel], letter),
     };
   }
+
+  // Department follows the program (null for new programs without one)
+  const program = randomChoice(COLLEGE_PROGRAMS);
+  const dept = departmentBySlug(program.departmentSlug);
+  return {
+    ...baseData,
+    collegeProgram: program.code,
+    department: dept?.name ?? null,
+    departmentSlug: dept?.slug ?? null,
+    section: buildSectionName(program.code, YEAR_NUMBER[yearLevel], letter),
+  };
 }
 
 // Main seeding function
@@ -324,6 +348,23 @@ async function main() {
 
   console.log("Created admin and sample organizers (active/pending/rejected)");
 
+  // Create students first - events derive their SECTION groups from the
+  // sections that actually exist on students.
+  const studentsData = Array.from({ length: 100 }, (_, i) =>
+    generateStudent(i),
+  );
+
+  for (const student of studentsData) {
+    await prisma.student.upsert({
+      where: { id: student.id },
+      update: student,
+      create: student,
+    });
+  }
+  console.log(`Created ${studentsData.length} students`);
+
+  const sectionPool = [...new Set(studentsData.map((s) => s.section))];
+
   // Create events
   const baseDate = new Date("2025-01-01T00:00:00Z");
   const statusCycle: Array<"DRAFT" | "PENDING" | "APPROVED" | "REJECTED"> = [
@@ -338,7 +379,7 @@ async function main() {
   const createdEvents: Event[] = [];
 
   for (let i = 0; i < 18; i++) {
-    const baseData = generateEvent(primaryOrganizer.id, baseDate, i);
+    const baseData = generateEvent(primaryOrganizer.id, baseDate, i, sectionPool);
     const status = statusCycle[i % statusCycle.length];
 
     let reviewedById: string | null = null;
@@ -366,20 +407,6 @@ async function main() {
 
   console.log(`Created ${createdEvents.length} events`);
 
-  // Create students
-  const studentsData = Array.from({ length: 100 }, (_, i) =>
-    generateStudent(i),
-  );
-
-  for (const student of studentsData) {
-    await prisma.student.upsert({
-      where: { id: student.id },
-      update: student,
-      create: student,
-    });
-  }
-  console.log(`Created ${studentsData.length} students`);
-
   // Create attendance records
   const approvedEvents = createdEvents.filter((e) => e.status === "APPROVED");
   const allStudents = await prisma.student.findMany();
@@ -401,12 +428,20 @@ async function main() {
       recordDate.setDate(recordDate.getDate() + Math.random() * 2);
       recordDate.setHours(randomChoice([8, 9, 10, 13, 14, 15]), 0, 0, 0);
 
+      // Every record has a time-in; time-outs (when the event has entered
+      // timeout mode) come 1-3 hours later. Mirrors the scan rules: no
+      // time-out without a time-in.
+      const timeout =
+        event.isTimeout && Math.random() < 0.7
+          ? new Date(recordDate.getTime() + (1 + Math.random() * 2) * 3600_000)
+          : null;
+
       recordsData.push({
         eventId: event.id,
         studentId: student.id,
         method: randomChoice(methods),
         timein: recordDate,
-        timeout: event.isTimeout ? randomChoice([recordDate, null]) : null,
+        timeout,
       });
     }
   }
