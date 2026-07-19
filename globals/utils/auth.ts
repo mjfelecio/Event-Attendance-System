@@ -80,6 +80,7 @@ export async function requireAuth(): Promise<AuthSession> {
   if (!session) {
     throw new AuthError("Unauthorized", 401, "UNAUTHORIZED");
   }
+  assertActiveUser(session);
   return session;
 }
 
