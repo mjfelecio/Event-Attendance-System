@@ -101,6 +101,7 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
             recordId={record?.id}
             eventId={event.id}
             studentId={student.id}
+            isTimeout={event.isTimeout}
           />
         </div>
       </div>

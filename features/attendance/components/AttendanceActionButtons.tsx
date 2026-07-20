@@ -9,36 +9,46 @@ import React from "react";
 import { IconType } from "react-icons/lib";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { Button } from "@/globals/components/shad-cn/button";
-import { capitalize } from "@/globals/utils/text";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
 type Props = {
   eventId: string;
   studentId: string;
   recordId?: string;
+  /** When true, the event records time-outs, so the "present" action means Time Out. */
+  isTimeout?: boolean;
 };
 
-const ACTION_BUTTONS: {
-  action: "present" | "absent";
-  icon: IconType;
-  title: string;
-  color: string;
-}[] = [
-  {
-    action: "present",
-    icon: ATTENDANCE_STATUS_ICONS.present,
-    title: "Mark as Present",
-    color: "text-emerald-600",
-  },
-  {
-    action: "absent",
-    icon: ATTENDANCE_STATUS_ICONS.absent,
-    title: "Mark as Absent (Delete Record)",
-    color: "text-red-400",
-  },
-];
-
-const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
+const AttendanceActionButtons = ({
+  eventId,
+  studentId,
+  recordId,
+  isTimeout = false,
+}: Props) => {
+  // The "present" action records a time-in normally and a time-out while the
+  // event is in timeout mode, so its label must reflect the current mode.
+  const actionButtons: {
+    action: "present" | "absent";
+    icon: IconType;
+    label: string;
+    title: string;
+    color: string;
+  }[] = [
+    {
+      action: "present",
+      icon: ATTENDANCE_STATUS_ICONS.present,
+      label: isTimeout ? "Time Out" : "Time In",
+      title: isTimeout ? "Record time-out" : "Record time-in",
+      color: "text-emerald-600",
+    },
+    {
+      action: "absent",
+      icon: ATTENDANCE_STATUS_ICONS.absent,
+      label: "Absent",
+      title: "Mark as Absent (Delete Record)",
+      color: "text-red-400",
+    },
+  ];
   const { mutateAsync: createRecord, isPending: isCreating } =
     useCreateRecord(eventId);
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
@@ -91,7 +101,7 @@ const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
 
   return (
     <div className="flex flex-col gap-2 justify-center items-center">
-      {ACTION_BUTTONS.map(({ action, icon: Icon, title, color }) => {
+      {actionButtons.map(({ action, icon: Icon, label, title, color }) => {
         // Disable "absent" button if there's no record to delete
         const isDisabled = isLoading || (action === "absent" && !recordId);
 
@@ -107,7 +117,7 @@ const AttendanceActionButtons = ({ eventId, studentId, recordId }: Props) => {
             }`}
           >
             <Icon className={`w-5 h-5 ${color}`} />
-            {capitalize(action)}
+            {label}
           </Button>
         );
       })}
