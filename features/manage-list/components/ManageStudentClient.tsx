@@ -14,6 +14,8 @@ import type {
   StudentTableState,
 } from "@/features/manage-list/types";
 import { fetchApi } from "@/globals/utils/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/globals/utils/queryKeys";
 
 interface ManageStudentClientProps {
   label?: string;
@@ -35,6 +37,18 @@ const ManageStudentClient = ({
   pagination,
 }: ManageStudentClientProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Refresh both the server-rendered table AND the React Query student cache
+  // that StudentStatsBoard totals and EventDrawer section options read from,
+  // so they never disagree with the table after a mutation.
+  const refreshStudents = () => {
+    router.refresh();
+    // ["students"] with default prefix matching invalidates every student
+    // query (all, byId, fromEvent, ...).
+    queryClient.invalidateQueries({ queryKey: queryKeys.students.all() });
+  };
+
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -105,7 +119,7 @@ const ManageStudentClient = ({
         body: JSON.stringify(normalizeFormData(data)),
       });
 
-      router.refresh();
+      refreshStudents();
     } catch (error) {
       console.error("Error adding student", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to add student");
@@ -137,7 +151,7 @@ const ManageStudentClient = ({
 
       setIsEditDialogOpen(false);
       setEditingStudent(null);
-      router.refresh();
+      refreshStudents();
     } catch (error) {
       console.error("Error updating student", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to update student");
@@ -160,7 +174,7 @@ const ManageStudentClient = ({
       if (rows.length === 1 && pagination.page > 1) {
         setPage(pagination.page - 1);
       } else {
-        router.refresh();
+        refreshStudents();
       }
     } catch (error) {
       console.error("Error deleting student", error);
