@@ -204,7 +204,7 @@ const AddStudentFormFields = ({
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="house" className="text-sm font-semibold text-neutral-700">
-          House <span className="text-rose-500">*</span>
+          House <span className="text-xs font-normal text-neutral-400">(optional)</span>
         </label>
         <select
           id="house"

@@ -3,19 +3,20 @@ import { z } from "zod";
 
 const baseStudentSchema = z
   .object({
-    id: z.string().length(11).regex(/^\d+$/),
-    lastName: z.string().min(1),
-    firstName: z.string().min(1),
+    id: z.string().trim().length(11).regex(/^\d+$/),
+    // trim() runs before min() so whitespace-only values are rejected, not stored.
+    lastName: z.string().trim().min(1),
+    firstName: z.string().trim().min(1),
     middleName: z.string().trim().optional().nullable(),
     schoolLevel: z.nativeEnum(SchoolLevel),
     shsStrand: z.string().trim().optional().nullable(),
     collegeProgram: z.string().trim().optional().nullable(),
     department: z.string().trim().optional().nullable(),
     house: z.string().trim().optional().nullable(),
-    section: z.string().min(1),
+    section: z.string().trim().min(1),
     yearLevel: z.nativeEnum(YearLevel),
     status: z.nativeEnum(StudentStatus),
-    contactNumber: z.string().min(1),
+    contactNumber: z.string().trim().min(1),
   })
   .superRefine((data, ctx) => {
     const hasDepartment = Boolean(data.department && data.department.trim());

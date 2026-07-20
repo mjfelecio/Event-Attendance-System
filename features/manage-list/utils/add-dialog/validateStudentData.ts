@@ -53,9 +53,8 @@ export const validateStudentData = (
     errors.yearLevel = "SHS students must be Grade 11 or Grade 12";
   }
 
-  if (!data.house.trim()) {
-    errors.house = "House is required";
-  }
+  // House is optional (matches the server/DB, which allow null) - not every
+  // student is assigned to a house.
 
   if (!data.contactNumber.trim()) {
     errors.contactNumber = "Contact number is required";
