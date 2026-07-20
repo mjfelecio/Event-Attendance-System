@@ -74,7 +74,6 @@ const EventDrawer = ({
   const { user } = useAuth();
   const isOrganizer = user?.role === "ORGANIZER";
   const isAdmin = user?.role === "ADMIN";
-  const isOwner = initialData?.createdById === user?.id;
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const formScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -314,8 +313,11 @@ const EventDrawer = ({
   );
 
   const eventStatus = initialData?.status ?? "DRAFT";
+  // Organizers may only edit DRAFT or REJECTED events (server-enforced). An
+  // approved event is read-only for every organizer - including its owner -
+  // so the UI can't offer a "Save changes" the API would reject with 409.
   const isReadOnlyApprovedView =
-    isEdit && isOrganizer && !isOwner && eventStatus === "APPROVED";
+    isEdit && isOrganizer && eventStatus === "APPROVED";
   const isReadOnlyPendingView =
     isEdit && isOrganizer && eventStatus === "PENDING";
   const isReadOnlyView = isReadOnlyApprovedView || isReadOnlyPendingView;

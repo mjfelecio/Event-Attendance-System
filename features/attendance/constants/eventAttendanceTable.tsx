@@ -10,7 +10,7 @@ import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
-function ActionsCell({ row }: { row: any }) {
+function ActionsCell({ row, canManage }: { row: any; canManage: boolean }) {
   const { id: recordId, eventId, studentId } = row.original;
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);
@@ -48,26 +48,34 @@ function ActionsCell({ row }: { row: any }) {
 
   const isLoading = isDeleting || isUpdating;
 
+  // Deleting a record requires event ownership (server-enforced); recording
+  // attendance does not. Hide the delete control when the user can't manage.
+  const actions = [
+    {
+      id: "present",
+      icon: ATTENDANCE_STATUS_ICONS.present,
+      color: "text-emerald-600",
+      handler: handleRecordAttendance,
+      disabled: isLoading,
+      title: "Record attendance",
+    },
+    ...(canManage
+      ? [
+          {
+            id: "absent",
+            icon: ATTENDANCE_STATUS_ICONS.absent,
+            color: "text-red-400",
+            handler: handleDelete,
+            disabled: isLoading || !recordId,
+            title: "Mark as Absent (Delete Record)",
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="flex gap-2 justify-center items-center">
-      {[
-        {
-          id: "present",
-          icon: ATTENDANCE_STATUS_ICONS.present,
-          color: "text-emerald-600",
-          handler: handleRecordAttendance,
-          disabled: isLoading,
-          title: "Mark as Present",
-        },
-        {
-          id: "absent",
-          icon: ATTENDANCE_STATUS_ICONS.absent,
-          color: "text-red-400",
-          handler: handleDelete,
-          disabled: isLoading || !recordId,
-          title: "Mark as Absent (Delete Record)",
-        },
-      ].map(({ id, icon: Icon, color, handler, disabled, title }) => (
+      {actions.map(({ id, icon: Icon, color, handler, disabled, title }) => (
         <button
           key={id}
           onClick={handler}
@@ -84,7 +92,19 @@ function ActionsCell({ row }: { row: any }) {
   );
 }
 
-export const columns: ColumnDef<StudentAttendanceRecord>[] = [
+const formatTime = (value: string | null) =>
+  value
+    ? new Date(value).toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      })
+    : "N/A";
+
+export const getAttendanceColumns = (
+  canManage: boolean
+): ColumnDef<StudentAttendanceRecord>[] => [
   {
     accessorKey: "studentId",
     header: ({ column }) => (
@@ -168,18 +188,12 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
         </Button>
       </div>
     ),
-    accessorFn: (row) => {
-      return row.timein
-        ? new Date(row.timein).toLocaleString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })
-        : "N/A";
-    },
-    cell: ({ getValue }) => (
-      <div className="text-center">{getValue() as string}</div>
+    // Sort by the underlying timestamp, not the localized string (which would
+    // order "10:00 AM" before "2:00 PM").
+    accessorFn: (row) => (row.timein ? new Date(row.timein).getTime() : 0),
+    sortingFn: "basic",
+    cell: ({ row }) => (
+      <div className="text-center">{formatTime(row.original.timein)}</div>
     ),
     enableGlobalFilter: false,
   },
@@ -196,18 +210,10 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
         </Button>
       </div>
     ),
-    accessorFn: (row) => {
-      return row.timeout
-        ? new Date(row.timeout).toLocaleString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })
-        : "N/A";
-    },
-    cell: ({ getValue }) => (
-      <div className="text-center">{getValue() as string}</div>
+    accessorFn: (row) => (row.timeout ? new Date(row.timeout).getTime() : 0),
+    sortingFn: "basic",
+    cell: ({ row }) => (
+      <div className="text-center">{formatTime(row.original.timeout)}</div>
     ),
     enableGlobalFilter: false,
   },
@@ -232,6 +238,6 @@ export const columns: ColumnDef<StudentAttendanceRecord>[] = [
   {
     id: "actions",
     header: () => <div className="text-center">Actions</div>,
-    cell: ({ row }) => <ActionsCell row={row} />,
+    cell: ({ row }) => <ActionsCell row={row} canManage={canManage} />,
   },
 ];
