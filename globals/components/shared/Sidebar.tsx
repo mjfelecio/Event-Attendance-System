@@ -107,7 +107,7 @@ const Sidebar = () => {
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <Image
-                  src="/login/logo.png"
+                  src="/logos/school/logo.png"
                   alt="ACLC logo"
                   width={38}
                   height={38}
