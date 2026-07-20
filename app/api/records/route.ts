@@ -36,7 +36,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Attendance can only be recorded on approved events the user can see.
+    // Policy: attendance is writable on ANY approved event the user can see,
+    // with no start/end time-window restriction. This is intentional so
+    // organizers can set up early and make late corrections; approval is the
+    // only gate. (If a stricter window is ever wanted, add it here.)
     assertEventVisibility(event, user);
     assertEventStatus(event, "APPROVED");
 

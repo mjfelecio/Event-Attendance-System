@@ -23,6 +23,10 @@ const isShsYearLevel = (yearLevel: YearLevel) =>
 
 export async function POST(request: Request) {
   try {
+    // Policy: any active, authenticated user may manage the student roster
+    // (create/edit/delete) - intentionally broader than event-deletion and
+    // organizer-approval, which require ownership/admin. requireAuth already
+    // enforces active status.
     await requireAuth();
     const payload = await request.json();
     const data = studentCreateSchema.parse({
