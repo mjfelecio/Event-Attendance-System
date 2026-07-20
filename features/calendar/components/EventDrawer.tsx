@@ -34,7 +34,7 @@ import {
   EXCLUDABLE_GROUP_TYPES,
   type ExcludableGroupType,
 } from "@/features/calendar/constants/categoryGroups";
-import useStudents from "@/globals/hooks/useStudents";
+import { useStudentSections } from "@/globals/hooks/useStudents";
 import { EventCategory } from "@prisma/client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
@@ -101,12 +101,9 @@ const EventDrawer = ({
 
   // Sections are derived from the actual students in the database - the
   // school's section names (BSIT-2A, STEM-11A, ...) are never hardcoded.
-  const { data: allStudents } = useStudents();
-  const sectionChoices = useMemo(
-    () =>
-      [...new Set((allStudents ?? []).map((s) => s.section))].sort() as string[],
-    [allStudents]
-  );
+  // Distinct sections come from a lightweight endpoint, not a full-roster load.
+  const { data: sections } = useStudentSections();
+  const sectionChoices = useMemo(() => sections ?? [], [sections]);
 
   /** Group value choices for a category or exclusion type. */
   const choicesForType = (type: EventCategory | ExcludableGroupType): string[] =>

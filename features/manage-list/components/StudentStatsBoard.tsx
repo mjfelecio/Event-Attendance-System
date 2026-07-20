@@ -3,22 +3,10 @@
 import { useMemo } from "react";
 import StudentStatCard from "@/features/manage-list/components/StudentStatCard";
 import { STUDENT_STATS } from "@/features/manage-list/constants/stats";
-import useStudents from "@/globals/hooks/useStudents";
+import { useStudentStats } from "@/globals/hooks/useStudents";
 
 const StudentStatsBoard = () => {
-  const { data: students, isLoading } = useStudents();
-
-  const countsByCategory = useMemo(() => {
-    if (!students) return null;
-
-    return {
-      all: students.length,
-      college: students.filter((student) => student.schoolLevel === "COLLEGE")
-        .length,
-      shs: students.filter((student) => student.schoolLevel === "SHS").length,
-      house: students.filter((student) => Boolean(student.house?.trim())).length,
-    };
-  }, [students]);
+  const { data: countsByCategory, isLoading } = useStudentStats();
 
   const stats = useMemo(
     () =>

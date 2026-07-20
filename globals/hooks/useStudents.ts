@@ -91,4 +91,23 @@ export const useStudentFromEvent = ({
   });
 };
 
+/** Roster category counts, computed server-side (no full-roster download). */
+export const useStudentStats = () => {
+  return useQuery({
+    queryKey: queryKeys.students.stats(),
+    queryFn: () =>
+      fetchApi<{ all: number; college: number; shs: number; house: number }>(
+        "/api/students/stats"
+      ),
+  });
+};
+
+/** Distinct section names that exist on students (no full-roster download). */
+export const useStudentSections = () => {
+  return useQuery({
+    queryKey: queryKeys.students.sections(),
+    queryFn: () => fetchApi<string[]>("/api/students/sections"),
+  });
+};
+
 export default useStudents;

@@ -17,6 +17,8 @@ export const queryKeys = {
   },
   students: {
     all: () => ["students"] as const,
+    stats: () => ["students", "stats"] as const,
+    sections: () => ["students", "sections"] as const,
     withId: (studentId: string) => ["students", "byId", studentId] as const,
     fromEvent: (eventId: string, query = "") =>
       ["students", "fromEvent", eventId, query] as const,
