@@ -28,7 +28,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
-  logout: () => Promise<void>;
+  logout: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -89,9 +89,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { success: true };
   };
 
-  const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+  const logout = async (): Promise<boolean> => {
+    // Only clear local state if the server actually deleted the cookie -
+    // otherwise the browser still holds a valid session while the UI shows
+    // "logged out", which is worse than surfacing a failed logout.
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (!res.ok) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
     setUser(null);
+    return true;
   };
 
   const value = useMemo(
