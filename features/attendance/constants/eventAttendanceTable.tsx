@@ -1,4 +1,4 @@
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
 import {
@@ -10,7 +10,13 @@ import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
 
-function ActionsCell({ row, canManage }: { row: any; canManage: boolean }) {
+function ActionsCell({
+  row,
+  canManage,
+}: {
+  row: Row<StudentAttendanceRecord>;
+  canManage: boolean;
+}) {
   const { id: recordId, eventId, studentId } = row.original;
   const { mutateAsync: deleteRecord, isPending: isDeleting } =
     useDeleteRecord(eventId);

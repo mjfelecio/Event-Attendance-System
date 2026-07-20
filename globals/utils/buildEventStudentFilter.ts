@@ -71,7 +71,12 @@ export const parseExcludedGroups = (
 // ============================================================================
 // UTILITY: Build student filter based on event criteria
 // ============================================================================
+// This builds a dynamic Prisma where-fragment with heterogeneous shapes
+// (scalars, { in: [...] }, OR/AND arrays); `any` is intentional here so it
+// stays assignable to Prisma's generated where types at every call site.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const buildEventStudentFilter = (event: Event): Record<string, any> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: Record<string, any> = {
     status: StudentStatus.ACTIVE,
   };
