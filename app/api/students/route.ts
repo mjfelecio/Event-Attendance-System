@@ -115,12 +115,35 @@ export async function POST(request: Request) {
   }
 }
 
-// Fetch all students
-export async function GET() {
+// Fetch students. Supports optional `q` (name/id search) and `limit`; with
+// no params it returns the full roster so existing full-list callers (stats,
+// section derivation) keep working - a foundation for real pagination later.
+export async function GET(req: Request) {
   try {
     await requireAuth();
 
-    const students = await prisma.student.findMany();
+    const { searchParams } = new URL(req.url);
+    const q = searchParams.get("q")?.trim() ?? "";
+    const limitParam = Number(searchParams.get("limit"));
+    const take =
+      Number.isFinite(limitParam) && limitParam > 0
+        ? Math.min(limitParam, 500)
+        : undefined;
+
+    const students = await prisma.student.findMany({
+      where: q
+        ? {
+            OR: [
+              { firstName: { contains: q } },
+              { middleName: { contains: q } },
+              { lastName: { contains: q } },
+              { id: { contains: q } },
+            ],
+          }
+        : undefined,
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      ...(take ? { take } : {}),
+    });
 
     return NextResponse.json(ok(students));
   } catch (error) {

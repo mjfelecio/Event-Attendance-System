@@ -22,8 +22,31 @@ export async function GET(
 
     assertEventVisibility(event, user);
 
+    // Bounded, server-side name search for the attendance lookup so the client
+    // never downloads every eligible student. `limit` caps the result set.
+    const { searchParams } = new URL(req.url);
+    const q = searchParams.get("q")?.trim() ?? "";
+    const limit = Math.min(
+      Math.max(Number(searchParams.get("limit")) || 50, 1),
+      200
+    );
+
+    const where = buildEventStudentFilter(event);
+    if (q) {
+      // SQLite LIKE is case-insensitive for ASCII, so `contains` matches
+      // regardless of case without the (unsupported) `mode: "insensitive"`.
+      where.OR = [
+        { firstName: { contains: q } },
+        { middleName: { contains: q } },
+        { lastName: { contains: q } },
+        { id: { contains: q } },
+      ];
+    }
+
     const students = await prisma.student.findMany({
-      where: buildEventStudentFilter(event),
+      where,
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      take: limit,
     });
 
     return NextResponse.json(ok(students), { status: 200 });

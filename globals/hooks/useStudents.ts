@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
 import { fetchApi } from "@/globals/utils/api";
 import { queryKeys } from "@/globals/utils/queryKeys";
+import { useDebouncedValue } from "@/globals/hooks/useDebouncedValue";
 
 // Transform function to make sure that the dates are actually a Date object
 const transformStudent = (e: StudentAPI): Student => ({
@@ -34,30 +35,33 @@ const useStudents = (query?: string) => {
   };
 };
 
-/** Fetches all students included in an event */
+/**
+ * Fetches students included in an event, searched and bounded server-side.
+ * The name query is debounced so typing doesn't fire a request per keystroke,
+ * and the server caps the result set instead of shipping every eligible row.
+ */
 export const useEventStudents = (eventId?: string, query?: string) => {
+  const debouncedQuery = useDebouncedValue(query ?? "", 300);
+
   const { data: students, ...queryResult } = useQuery({
-    queryKey: queryKeys.students.fromEvent(eventId!),
+    queryKey: queryKeys.students.fromEvent(eventId!, debouncedQuery),
     enabled: !!eventId,
     queryFn: async () => {
-      if (!eventId) return;
+      if (!eventId) return [];
+
+      const params = new URLSearchParams({ limit: "50" });
+      if (debouncedQuery) params.set("q", debouncedQuery);
 
       const students = await fetchApi<StudentAPI[]>(
-        `/api/events/${eventId}/students`
+        `/api/events/${eventId}/students?${params.toString()}`
       );
       return students.map(transformStudent);
     },
   });
 
-  // Memoize filtered and sorted results
-  const filteredStudents = useMemo(() => {
-    if (!students) return undefined;
-    return filterAndSortStudents(students, query);
-  }, [students, query]);
-
   return {
     ...queryResult,
-    data: filteredStudents,
+    data: students,
   };
 };
 
