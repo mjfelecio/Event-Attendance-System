@@ -1,40 +1,46 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import StudentTable from "@/features/manage-list/components/StudentTable";
 import StudentManageToolbar from "@/features/manage-list/components/StudentManageToolbar";
 import AddStudentDialog from "@/features/manage-list/components/AddStudentDialog";
 import { StudentFormData } from "@/features/manage-list/types/add-dialog/AddStudentDialog.types";
 import { useStudentTableControls } from "@/features/manage-list/hooks/useStudentTableControls";
-import { ManageStudentContext, StudentRow } from "@/features/manage-list/types";
+import type {
+  StudentFilterOptions,
+  StudentPagination,
+  StudentRow,
+  StudentTableState,
+} from "@/features/manage-list/types";
 import { fetchApi } from "@/globals/utils/api";
 
 interface ManageStudentClientProps {
-  category: ManageStudentContext["category"];
   label?: string;
   item?: string;
   categoryHeading: string;
   rows: StudentRow[];
+  tableState: StudentTableState;
+  filterOptions: StudentFilterOptions;
+  pagination: StudentPagination;
 }
 
 const ManageStudentClient = ({
-  category,
   label,
   item,
   categoryHeading,
   rows,
+  tableState,
+  filterOptions,
+  pagination,
 }: ManageStudentClientProps) => {
+  const router = useRouter();
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
-  const [studentRows, setStudentRows] = useState(rows);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setStudentRows(rows);
-  }, [rows]);
 
   const {
     searchValue,
@@ -47,19 +53,14 @@ const ManageStudentClient = ({
     filters,
     updateFilter,
     clearFilters,
-    filterOptions,
-    availablePrograms,
-    availableSections,
-    availableLevels,
-    availableHouses,
-    visibleRows,
+    setPage,
+    setPageSize,
+    isPending,
   } = useStudentTableControls({
-    rows: studentRows,
-    resetKey: `${category}:${item ?? ""}:${label ?? ""}`,
+    state: tableState,
   });
 
-  const totalRows = studentRows.length;
-  const visibleRowsCount = visibleRows.length;
+  const visibleRowsCount = rows.length;
   const activeFilterCount = Object.values(filters).filter((value) => value !== "all").length;
   const isSearching = searchValue.trim().length > 0;
 
@@ -96,7 +97,7 @@ const ManageStudentClient = ({
     setSubmitError(null);
 
     try {
-      const payload = await fetchApi<{ student: StudentRow }>("/api/students", {
+      await fetchApi<{ student: StudentRow }>("/api/students", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -104,7 +105,7 @@ const ManageStudentClient = ({
         body: JSON.stringify(normalizeFormData(data)),
       });
 
-      setStudentRows((prev) => [payload.student, ...prev]);
+      router.refresh();
     } catch (error) {
       console.error("Error adding student", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to add student");
@@ -123,7 +124,7 @@ const ManageStudentClient = ({
     setSubmitError(null);
 
     try {
-      const payload = await fetchApi<{ student: StudentRow }>(
+      await fetchApi<{ student: StudentRow }>(
         `/api/students/${editingStudent.studentNumber}`,
         {
           method: "PATCH",
@@ -134,13 +135,9 @@ const ManageStudentClient = ({
         }
       );
 
-      setStudentRows((prev) =>
-        prev.map((row) =>
-          row.studentNumber === payload.student.studentNumber ? payload.student : row
-        )
-      );
       setIsEditDialogOpen(false);
       setEditingStudent(null);
+      router.refresh();
     } catch (error) {
       console.error("Error updating student", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to update student");
@@ -160,7 +157,11 @@ const ManageStudentClient = ({
         method: "DELETE",
       });
 
-      setStudentRows((prev) => prev.filter((row) => row.studentNumber !== student.studentNumber));
+      if (rows.length === 1 && pagination.page > 1) {
+        setPage(pagination.page - 1);
+      } else {
+        router.refresh();
+      }
     } catch (error) {
       console.error("Error deleting student", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to delete student");
@@ -194,27 +195,31 @@ const ManageStudentClient = ({
         updateFilter={updateFilter}
         clearFilters={clearFilters}
         departments={filterOptions.departments}
-        programs={availablePrograms}
-        sections={availableSections}
-        levels={availableLevels}
-        houses={availableHouses}
+        programs={filterOptions.programs}
+        sections={filterOptions.sections}
+        levels={filterOptions.levels}
+        houses={filterOptions.houses}
         isSortOpen={isSortOpen}
         setIsSortOpen={setIsSortOpen}
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
         onAddStudent={() => setIsAddDialogOpen(true)}
         onImportStudents={handleImportStudents}
-        totalRows={totalRows}
+        totalRows={pagination.selectionTotal}
+        matchingRows={pagination.totalRows}
         visibleRowsCount={visibleRowsCount}
         activeFilterCount={activeFilterCount}
         isSearching={isSearching}
       />
 
       <StudentTable
-        rows={visibleRows}
-        totalRows={totalRows}
+        rows={rows}
+        pagination={pagination}
         activeFilterCount={activeFilterCount}
         isSearching={isSearching}
+        isPending={isPending}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onEditStudent={handleEditStudent}
         onDeleteStudent={handleDeleteStudent}
       />

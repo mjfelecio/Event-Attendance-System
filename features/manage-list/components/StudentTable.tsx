@@ -1,5 +1,7 @@
 import { StudentRow } from "@/features/manage-list/types";
+import type { StudentPagination } from "@/features/manage-list/types";
 import StudentRowActions from "@/features/manage-list/components/StudentRowActions";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const tableHeaders = [
   "USN",
@@ -16,28 +18,56 @@ const tableHeaders = [
 
 interface StudentTableProps {
   rows: StudentRow[];
-  totalRows?: number;
+  pagination: StudentPagination;
   activeFilterCount?: number;
   isSearching?: boolean;
+  isPending?: boolean;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   onEditStudent?: (student: StudentRow) => void;
   onDeleteStudent?: (student: StudentRow) => void;
 }
 
 const StudentTable = ({
   rows,
-  totalRows,
+  pagination,
   activeFilterCount = 0,
   isSearching = false,
+  isPending = false,
+  onPageChange,
+  onPageSizeChange,
   onEditStudent,
   onDeleteStudent,
 }: StudentTableProps) => {
-  const visibleRowsCount = rows.length;
-  const total = totalRows ?? visibleRowsCount;
   const hasRefinedView = activeFilterCount > 0 || isSearching;
+  const firstRow =
+    pagination.totalRows === 0
+      ? 0
+      : (pagination.page - 1) * pagination.pageSize + 1;
+  const lastRow = Math.min(
+    pagination.page * pagination.pageSize,
+    pagination.totalRows
+  );
+  const pageNumbers = Array.from(
+    new Set([
+      1,
+      pagination.page - 1,
+      pagination.page,
+      pagination.page + 1,
+      pagination.totalPages,
+    ])
+  )
+    .filter((page) => page >= 1 && page <= pagination.totalPages)
+    .sort((a, b) => a - b);
 
   return (
     <div className="px-6 md:px-12">
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
+      <div
+        className={`overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.08)] transition-opacity ${
+          isPending ? "opacity-60" : "opacity-100"
+        }`}
+        aria-busy={isPending}
+      >
         <div className="overflow-x-auto">
           <table className="min-w-[1120px] w-full border-separate border-spacing-0 text-left text-xs text-slate-700 md:text-sm">
             <colgroup>
@@ -126,16 +156,84 @@ const StudentTable = ({
           </table>
         </div>
 
-        <div className="flex flex-col gap-1 border-t border-slate-200 bg-slate-50 px-5 py-4 text-xs text-slate-500 md:flex-row md:items-center md:justify-between md:text-sm">
-          <p>
-            Showing <span className="font-semibold text-slate-700">{visibleRowsCount}</span> of{" "}
-            <span className="font-semibold text-slate-700">{total}</span> students
-          </p>
-          <p>
-            {hasRefinedView
-              ? "Tip: clear some filters or search terms to widen results."
-              : "Tip: use Sort and Filter to quickly narrow large lists."}
-          </p>
+        <div className="flex flex-col gap-4 border-t border-slate-200 bg-slate-50 px-5 py-4 text-xs text-slate-500 lg:flex-row lg:items-center lg:justify-between md:text-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            <p>
+              Showing{" "}
+              <span className="font-semibold text-slate-700">
+                {firstRow}-{lastRow}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-slate-700">
+                {pagination.totalRows}
+              </span>{" "}
+              {hasRefinedView ? "matching " : ""}students
+            </p>
+            <label className="inline-flex items-center gap-2">
+              Rows
+              <select
+                value={pagination.pageSize}
+                onChange={(event) => onPageSizeChange(Number(event.target.value))}
+                disabled={isPending}
+                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+                aria-label="Rows per page"
+              >
+                {[25, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <nav className="flex items-center gap-1" aria-label="Student table pages">
+            <button
+              type="button"
+              onClick={() => onPageChange(pagination.page - 1)}
+              disabled={pagination.page <= 1 || isPending}
+              className="inline-flex size-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+
+            {pageNumbers.map((page, index) => {
+              const previousPage = pageNumbers[index - 1];
+              return (
+                <span key={page} className="contents">
+                  {previousPage && page - previousPage > 1 ? (
+                    <span className="px-1 text-slate-400" aria-hidden="true">
+                      ...
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => onPageChange(page)}
+                    disabled={isPending}
+                    aria-current={page === pagination.page ? "page" : undefined}
+                    className={`inline-flex size-8 items-center justify-center rounded-lg border text-xs font-semibold transition ${
+                      page === pagination.page
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-slate-300 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-700"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                </span>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => onPageChange(pagination.page + 1)}
+              disabled={pagination.page >= pagination.totalPages || isPending}
+              className="inline-flex size-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Next page"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </nav>
         </div>
       </div>
     </div>

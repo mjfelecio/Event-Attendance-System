@@ -16,6 +16,7 @@ interface StudentManageToolbarProps {
   label?: string;
   item?: string;
   totalRows: number;
+  matchingRows: number;
   visibleRowsCount: number;
   activeFilterCount: number;
   isSearching: boolean;
@@ -47,6 +48,7 @@ const StudentManageToolbar = ({
   label,
   item,
   totalRows,
+  matchingRows,
   visibleRowsCount,
   activeFilterCount,
   isSearching,
@@ -94,11 +96,16 @@ const StudentManageToolbar = ({
 
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
-                Total: {totalRows}
+                Selection: {totalRows}
               </span>
               <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                Visible: {visibleRowsCount}
+                This page: {visibleRowsCount}
               </span>
+              {activeFilterCount > 0 || isSearching ? (
+                <span className="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                  Matches: {matchingRows}
+                </span>
+              ) : null}
               {activeFilterCount > 0 ? (
                 <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                   Filters: {activeFilterCount}

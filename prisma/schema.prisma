@@ -69,6 +69,17 @@ model Student {
   @@index([status, shsStrand])
   @@index([status, section])
   @@index([status, yearLevel])
+
+  // Server-paginated roster: satisfy its three sort modes without a temp
+  // B-tree, plus the department/strand/house entry-point filters used by the
+  // selection boards. All trailing columns share the requested direction so
+  // SQLite can scan the same index forward or backward.
+  @@index([updatedAt, id])
+  @@index([lastName, firstName, id])
+  @@index([schoolLevel, yearLevel, lastName, firstName, id])
+  @@index([schoolLevel, departmentSlug, updatedAt, id])
+  @@index([schoolLevel, shsStrand, updatedAt, id])
+  @@index([houseSlug, updatedAt, id])
 }
 
 model Record {
