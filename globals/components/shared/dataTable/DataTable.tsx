@@ -213,7 +213,11 @@ export function DataTable<TData, TValue>({
 
   return (
     <div
-      className={`flex flex-col max-h-screen gap-4 border border-gray-300 w-full rounded-md p-4 pb-0 shadow-sm transition-opacity ${
+      // No overall height cap: the card grows with its content and the page
+      // scrolls, so a wrapping toolbar + viewport + pagination can never exceed
+      // a fixed card height and overflow on short/mobile screens. Only the
+      // viewport itself scrolls (see DataTableViewport).
+      className={`flex flex-col gap-4 border border-gray-300 w-full rounded-md p-4 pb-0 shadow-sm transition-opacity ${
         isPending ? "opacity-60" : "opacity-100"
       }`}
       aria-busy={isPending}
@@ -236,7 +240,11 @@ export function DataTable<TData, TValue>({
         emptyState={emptyState}
         filteredEmptyState={filteredEmptyState}
       />
-      <DataTablePagination table={table} disabled={isPending} />
+      {/* No pagination while loading or errored: "Page 1 of 1" and page-size
+          controls make no sense next to a skeleton or an error message. */}
+      {!isLoading && !isError && (
+        <DataTablePagination table={table} disabled={isPending} />
+      )}
     </div>
   );
 }

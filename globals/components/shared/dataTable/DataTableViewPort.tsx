@@ -38,7 +38,9 @@ type Props<TData> = {
   filteredEmptyState?: ReactNode;
 };
 
-const MIN_TABLE_HEIGHT = "min-h-[420px]";
+// Smaller floor on short/mobile screens so the viewport can shrink instead of
+// forcing the card past the viewport height; taller only from `sm` upward.
+const MIN_TABLE_HEIGHT = "min-h-[280px] sm:min-h-[420px]";
 
 /**
  * DataTableViewport
