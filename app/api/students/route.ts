@@ -124,11 +124,21 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.trim() ?? "";
-    const limitParam = Number(searchParams.get("limit"));
-    const take =
-      Number.isFinite(limitParam) && limitParam > 0
-        ? Math.min(limitParam, 500)
-        : undefined;
+
+    // An absent limit intentionally returns the full roster (metadata callers).
+    // A present-but-invalid limit is rejected rather than silently unbounded.
+    const rawLimit = searchParams.get("limit");
+    let take: number | undefined;
+    if (rawLimit !== null) {
+      const parsed = Number(rawLimit);
+      if (!Number.isInteger(parsed) || parsed <= 0) {
+        return NextResponse.json(
+          err("limit must be a positive integer."),
+          { status: 400 }
+        );
+      }
+      take = Math.min(parsed, 500);
+    }
 
     const students = await prisma.student.findMany({
       where: q

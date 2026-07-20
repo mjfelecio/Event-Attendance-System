@@ -72,9 +72,18 @@ export async function GET(req: NextRequest) {
       Object.fromEntries(new URL(req.url).searchParams)
     );
 
+    // Reject invalid status/scope instead of silently returning an unfiltered
+    // (broader) result than the caller asked for.
+    if (!query.success) {
+      return NextResponse.json(
+        err("Invalid status or scope parameter."),
+        { status: 400 }
+      );
+    }
+
     const where: Record<string, unknown> = {};
-    const statusFilter = query.success ? query.data.status : undefined;
-    const scopeFilter = query.success ? query.data.scope : undefined;
+    const statusFilter = query.data.status;
+    const scopeFilter = query.data.scope;
 
     if (user.role === "ADMIN") {
       if (statusFilter) {
