@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useParams } from "next/navigation";
-import { capitalize } from "@/globals/utils/text";
+import { capitalizeLabel } from "@/globals/utils/text";
 import { FaUserGroup } from "react-icons/fa6";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { VscPercentage } from "react-icons/vsc";
@@ -63,7 +63,7 @@ const EventReportsPage = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold">{event.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {readableDate(event.start)} • {capitalize(event.category)} Event
+            {readableDate(event.start)} • {capitalizeLabel(event.category)} Event
           </p>
         </div>
 

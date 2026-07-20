@@ -4,7 +4,9 @@ import AttendanceActionButtons from "@/features/attendance/components/Attendance
 import { Event } from "@/globals/types/events";
 import { memo } from "react";
 import AttendanceStatusCard from "@/features/attendance/components/AttendanceStatusCard";
-import { capitalize } from "@/globals/utils/text";
+import { capitalizeLabel } from "@/globals/utils/text";
+import { fullName } from "@/globals/utils/formatting";
+import { labelForGroup } from "@/globals/constants/groups";
 import { Record } from "@/globals/types/records";
 
 type DetailRowProps = {
@@ -76,8 +78,7 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
     department,
   } = student;
 
-  const middleInitial = middleName?.[0] ? `${middleName[0]}.` : "";
-  const fullNameDisplay = `${firstName} ${middleInitial} ${lastName}`.trim();
+  const fullNameDisplay = fullName(firstName, middleName ?? "", lastName);
   const isCollege = schoolLevel === "COLLEGE";
   const isSHS = schoolLevel === "SHS";
   // program or strand + year + section letter
@@ -122,7 +123,7 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
         <div className="grid grid-cols-2 gap-4">
           <DetailRow
             label="Type"
-            value={`${capitalize(schoolLevel)} Student`}
+            value={`${capitalizeLabel(schoolLevel)} Student`}
           />
           {isCollege && (
             <DetailRow label="Program" value={collegeProgram || "N/A"} />
@@ -130,7 +131,7 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
           {isSHS && <DetailRow label="Strand" value={shsStrand || "N/A"} />}
           <DetailRow
             label="Year & Section"
-            value={`${yearLevel} - ${section}`}
+            value={`${labelForGroup("YEAR", yearLevel)} - ${section}`}
           />
           <DetailRow label="Department" value={department || "N/A"} />
           <DetailRow label="House" value={house || "N/A"} />

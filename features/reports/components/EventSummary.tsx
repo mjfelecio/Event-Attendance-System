@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { capitalize } from "@/globals/utils/text";
+import { capitalizeLabel } from "@/globals/utils/text";
 import { FaUserGroup } from "react-icons/fa6";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { VscPercentage } from "react-icons/vsc";
@@ -58,7 +58,7 @@ const EventSummary = ({ selectedEvent }: Props) => {
           <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
           <p className="text-sm text-muted-foreground">
             {readableDate(selectedEvent.start)} •{" "}
-            {capitalize(selectedEvent.category)} Event
+            {capitalizeLabel(selectedEvent.category)} Event
           </p>
         </div>
 

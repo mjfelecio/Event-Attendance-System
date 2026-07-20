@@ -1,6 +1,6 @@
 import { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import { EventCategory, YearLevel } from "@prisma/client";
-import { capitalize } from "@/globals/utils/text";
+import { capitalizeLabel } from "@/globals/utils/text";
 import {
   COLLEGE_PROGRAMS,
   DEPARTMENTS,
@@ -10,7 +10,7 @@ import {
 
 export const EVENT_CHOICES: ComboBoxValue[] = Object.values(EventCategory).map((l) => ({
   value: l,
-  label: `${capitalize(l)} Event`,
+  label: `${capitalizeLabel(l)} Event`,
 }));
 
 // Empty arrays means that the category itself is the group

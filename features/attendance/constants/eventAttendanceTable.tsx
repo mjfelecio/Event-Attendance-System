@@ -113,7 +113,7 @@ export const getAttendanceColumns = (
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Student Id
+          Student ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       </div>

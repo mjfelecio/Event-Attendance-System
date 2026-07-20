@@ -1,6 +1,6 @@
 import { Event } from "@/globals/types/events";
 import { readableDate } from "@/globals/utils/formatting";
-import { capitalize } from "@/globals/utils/text";
+import { capitalizeLabel } from "@/globals/utils/text";
 import { labelForGroup } from "@/globals/constants/groups";
 import {
   parseExcludedGroups,
@@ -88,7 +88,7 @@ const EventMetadataCard = ({ event }: { event: Event }) => {
 
         <div>
           <p className="text-muted-foreground">Event Type</p>
-          <p className="font-medium">{capitalize(event.category)} Event</p>
+          <p className="font-medium">{capitalizeLabel(event.category)} Event</p>
         </div>
       </div>
     </section>
