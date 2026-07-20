@@ -26,7 +26,8 @@ export const queryKeys = {
   records: {
     all: () => ["records"] as const,
     withId: (id: string) => ["records", "byId", id] as const,
-    fromEvent: (eventId: string) => ["records", "fromEvent", eventId] as const,
+    fromEvent: (eventId: string, includeAbsent = false) =>
+      ["records", "fromEvent", eventId, includeAbsent] as const,
     fromStudent: (studentId: string) =>
       ["records", "fromStudent", studentId] as const,
     fromEventForStudent: (eventId: string, studentId: string) =>

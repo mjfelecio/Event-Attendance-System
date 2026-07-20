@@ -5,11 +5,16 @@ import { StudentAttendanceRecord } from "@/globals/types/students";
 import { err, ok } from "@/globals/utils/api";
 import { fullName } from "@/globals/utils/formatting";
 import { assertEventVisibility, requireAuth } from "@/globals/utils/auth";
+import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 import { respondWithError } from "@/globals/utils/httpError";
 
-// Fetch all attendance record of a specific event
+// Fetch attendance for an event.
+// - default: students who have a record (present rows), for the live table.
+// - ?includeAbsent=true: every currently-eligible student with present/absent
+//   status, so a report's rows and its present/absent totals always agree
+//   (both derived from the same current-eligibility set).
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ eventId: string }> },
 ) {
   try {
@@ -23,13 +28,15 @@ export async function GET(
 
     assertEventVisibility(event, user);
 
+    const includeAbsent =
+      new URL(req.url).searchParams.get("includeAbsent") === "true";
+
     const recordsWithStudent = await prisma.record.findMany({
       where: { eventId },
       select: {
         id: true,
         eventId: true,
         studentId: true,
-        createdAt: true,
         timein: true,
         timeout: true,
         student: {
@@ -46,24 +53,64 @@ export async function GET(
 
     type RecordWithStudent = (typeof recordsWithStudent)[number];
 
-    const records: StudentAttendanceRecord[] = recordsWithStudent.map(
-      (r: RecordWithStudent) => ({
-        id: r.id,
-        eventId: r.eventId,
-        studentId: r.studentId,
-        fullName: fullName(
-          r.student.firstName,
-          r.student.middleName || "",
-          r.student.lastName,
-        ),
-        schoolLevel: r.student.schoolLevel,
-        section: r.student.section,
-        timein: r.timein ? new Date(r.timein).toString() : null,
-        timeout: r.timeout ? new Date(r.timeout).toString() : null,
-      }),
+    if (!includeAbsent) {
+      const records: StudentAttendanceRecord[] = recordsWithStudent.map(
+        (r: RecordWithStudent) => ({
+          id: r.id,
+          eventId: r.eventId,
+          studentId: r.studentId,
+          fullName: fullName(
+            r.student.firstName,
+            r.student.middleName || "",
+            r.student.lastName,
+          ),
+          schoolLevel: r.student.schoolLevel,
+          section: r.student.section,
+          timein: r.timein ? new Date(r.timein).toString() : null,
+          timeout: r.timeout ? new Date(r.timeout).toString() : null,
+          status: "present",
+        }),
+      );
+
+      return NextResponse.json(ok(records), { status: 200 });
+    }
+
+    // Report view: start from every currently-eligible student and mark each
+    // present (has record) or absent (none). Records for students who are no
+    // longer eligible are intentionally excluded so rows match the stats.
+    const recordByStudent = new Map(
+      recordsWithStudent.map((r) => [r.studentId, r] as const),
     );
 
-    return NextResponse.json(ok(records), { status: 200 });
+    const eligibleStudents = await prisma.student.findMany({
+      where: buildEventStudentFilter(event),
+      select: {
+        id: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        schoolLevel: true,
+        section: true,
+      },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    });
+
+    const rows: StudentAttendanceRecord[] = eligibleStudents.map((s) => {
+      const record = recordByStudent.get(s.id);
+      return {
+        id: record?.id ?? s.id,
+        eventId,
+        studentId: s.id,
+        fullName: fullName(s.firstName, s.middleName || "", s.lastName),
+        schoolLevel: s.schoolLevel,
+        section: s.section,
+        timein: record?.timein ? new Date(record.timein).toString() : null,
+        timeout: record?.timeout ? new Date(record.timeout).toString() : null,
+        status: record ? "present" : "absent",
+      };
+    });
+
+    return NextResponse.json(ok(rows), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }

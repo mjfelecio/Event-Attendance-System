@@ -16,6 +16,8 @@ export type StudentAttendanceRecord = {
   section: string;
   timein: string | null; // Date UTC timestamp
   timeout: string | null; // Date UTC timestamp
+  /** "present" when the eligible student has a record, "absent" otherwise. */
+  status: "present" | "absent";
 };
 
 export type StudentAPI = Omit<Student, "createdAt" | "updatedAt"> & {

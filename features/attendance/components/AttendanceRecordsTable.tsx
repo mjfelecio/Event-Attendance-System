@@ -15,7 +15,7 @@ const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
   const { user } = useAuth();
   const { data, isLoading, isError } = useAllRecordsFromEvent(
     selectedEvent?.id,
-    true
+    { live: true }
   );
   const records = useMemo(() => data ?? [], [data]);
 

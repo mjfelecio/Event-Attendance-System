@@ -224,15 +224,19 @@ export const useDeleteRecord = (eventId: string) => {
  *   keeps a passive device fresh. Leave false (report pages) so completed
  *   events don't poll - `enabled: !!eventId` only means an id exists.
  */
-export const useAllRecordsFromEvent = (eventId?: string, live = false) => {
+export const useAllRecordsFromEvent = (
+  eventId?: string,
+  { live = false, includeAbsent = false }: { live?: boolean; includeAbsent?: boolean } = {},
+) => {
   return useQuery({
-    queryKey: queryKeys.records.fromEvent(eventId!),
+    queryKey: queryKeys.records.fromEvent(eventId!, includeAbsent),
     enabled: !!eventId,
     queryFn: async () => {
       if (!eventId) return null;
 
+      const suffix = includeAbsent ? "?includeAbsent=true" : "";
       return fetchApi<StudentAttendanceRecord[]>(
-        `/api/events/${eventId}/records`,
+        `/api/events/${eventId}/records${suffix}`,
       );
     },
     ...(live
