@@ -76,8 +76,7 @@ type DataTableProps<TData, TValue> = {
 
   /**
    * Renders the built-in toolbar (title + optional search). Defaults to true.
-   * Set false when the feature supplies its own external toolbar (Manage List),
-   * so titles and search boxes are never duplicated.
+   * Ignored when `toolbar` is supplied.
    */
   showToolbar?: boolean;
 
@@ -87,11 +86,25 @@ type DataTableProps<TData, TValue> = {
   /** Extra content rendered at the trailing edge of the built-in toolbar. */
   toolbarTrailing?: ReactNode;
 
+  /**
+   * A feature-specific toolbar rendered in the shared card, in place of the
+   * built-in one. Lets a feature (Manage List) keep its own controls while
+   * living inside the same table shell, so the whole card looks unified rather
+   * than a separate toolbar card floating above the table.
+   */
+  toolbar?: ReactNode;
+
   /** Custom empty state (no data, no active refinement). */
   emptyState?: ReactNode;
 
   /** Custom empty state shown when a search/filter yields nothing. */
   filteredEmptyState?: ReactNode;
+
+  /** Whether the data failed to load. Shows the error state inside the card. */
+  isError?: boolean;
+
+  /** Custom error state; falls back to a shared default when omitted. */
+  errorState?: ReactNode;
 
   /**
    * Derives a stable row id from the row data (e.g. a student number) instead
@@ -123,8 +136,11 @@ export function DataTable<TData, TValue>({
   showToolbar = true,
   showSearch = true,
   toolbarTrailing,
+  toolbar,
   emptyState,
   filteredEmptyState,
+  isError = false,
+  errorState,
   getRowId,
   manual,
 }: DataTableProps<TData, TValue>) {
@@ -202,17 +218,20 @@ export function DataTable<TData, TValue>({
       }`}
       aria-busy={isPending}
     >
-      {showToolbar && (
-        <DataTableToolbar
-          title={title}
-          table={table}
-          showSearch={showSearch && !isManual}
-          trailing={toolbarTrailing}
-        />
-      )}
+      {toolbar ??
+        (showToolbar ? (
+          <DataTableToolbar
+            title={title}
+            table={table}
+            showSearch={showSearch && !isManual}
+            trailing={toolbarTrailing}
+          />
+        ) : null)}
       <DataTableViewport
         table={table}
         isLoading={isLoading}
+        isError={isError}
+        errorState={errorState}
         isFiltered={manual?.isFiltered}
         emptyState={emptyState}
         filteredEmptyState={filteredEmptyState}

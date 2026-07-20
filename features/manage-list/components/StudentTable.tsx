@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { ReactNode, useMemo } from "react";
 import type { SortingState } from "@tanstack/react-table";
 
 import DataTable from "@/globals/components/shared/dataTable/DataTable";
@@ -13,6 +13,17 @@ import type {
   StudentSortField,
 } from "@/features/manage-list/types";
 
+/**
+ * The only header-sortable columns, mapped to the fields the students API can
+ * order by. Anything a future column might send that isn't here is ignored
+ * (falls back to the default sort) rather than being cast blindly to a
+ * StudentSortField the server doesn't understand.
+ */
+const SORTABLE_FIELD_BY_COLUMN_ID: Record<string, StudentSortField> = {
+  lastName: "lastName",
+  yearLevel: "yearLevel",
+};
+
 interface StudentTableProps {
   rows: StudentRow[];
   pagination: StudentPagination;
@@ -21,6 +32,8 @@ interface StudentTableProps {
   activeFilterCount?: number;
   isSearching?: boolean;
   isPending?: boolean;
+  /** Feature toolbar rendered inside the shared table card. */
+  toolbar?: ReactNode;
   /** Requests a 1-based server page. */
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
@@ -49,6 +62,7 @@ const StudentTable = ({
   activeFilterCount = 0,
   isSearching = false,
   isPending = false,
+  toolbar,
   onPageChange,
   onPageSizeChange,
   onSortChange,
@@ -73,15 +87,16 @@ const StudentTable = ({
 
   const handleSortingChange = (next: SortingState) => {
     const first = next[0];
-    if (!first) {
-      // Sort removed -> fall back to the default (most recently modified first).
+    const field = first
+      ? SORTABLE_FIELD_BY_COLUMN_ID[first.id]
+      : undefined;
+    if (!first || !field) {
+      // Sort removed or an unmapped column -> fall back to the default
+      // (most recently modified first) instead of forwarding an unknown field.
       onSortChange("updatedAt", "desc");
       return;
     }
-    onSortChange(
-      first.id as StudentSortField,
-      first.desc ? "desc" : "asc"
-    );
+    onSortChange(field, first.desc ? "desc" : "asc");
   };
 
   const isFiltered = activeFilterCount > 0 || isSearching;
@@ -92,7 +107,7 @@ const StudentTable = ({
         columns={columns}
         data={rows}
         isLoading={false}
-        showToolbar={false}
+        toolbar={toolbar}
         getRowId={(row) => row.studentNumber}
         emptyState={
           <DataTableEmptyState

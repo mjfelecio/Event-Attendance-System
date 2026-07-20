@@ -24,15 +24,16 @@ import {
   SHS_STRANDS,
 } from "@/globals/constants/groups";
 import { prisma } from "@/globals/libs/prisma";
+import { PAGE_SIZE_OPTIONS } from "@/globals/components/shared/dataTable/config";
 import { getFreshAuthSession } from "@/globals/utils/auth";
 
 type ManageStudentPageProps = {
   searchParams: Promise<ManageStudentContext>;
 };
 
-// Must stay a superset of the shared PAGE_SIZE_OPTIONS the table selector
-// exposes; a size the server rejects here silently snaps back to the default.
-const PAGE_SIZES = [10, 25, 50, 100] as const;
+// One source of truth: the server accepts exactly the sizes the shared table
+// selector exposes, so no option can silently snap back to the default.
+const PAGE_SIZES = PAGE_SIZE_OPTIONS;
 const COLLEGE_YEARS = [
   YearLevel.YEAR_1,
   YearLevel.YEAR_2,

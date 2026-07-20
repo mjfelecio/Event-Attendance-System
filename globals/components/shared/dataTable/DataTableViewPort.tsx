@@ -12,6 +12,7 @@ import {
 } from "@/globals/components/shad-cn/table";
 import {
   DataTableEmptyState,
+  DataTableErrorState,
   DataTableFilteredEmptyState,
   DataTableSkeleton,
 } from "./DataTableStates";
@@ -21,6 +22,10 @@ type Props<TData> = {
   table: TableType<TData>;
   /** Whether the data is still loading */
   isLoading: boolean;
+  /** Whether the data failed to load */
+  isError?: boolean;
+  /** Custom error state; falls back to the shared default when omitted. */
+  errorState?: ReactNode;
   /**
    * Overrides how the empty state is chosen. Client mode infers "refined" from
    * TanStack's own filter state; manual/server mode must pass it explicitly
@@ -45,6 +50,8 @@ const MIN_TABLE_HEIGHT = "min-h-[420px]";
 const DataTableViewport = <TData,>({
   table,
   isLoading,
+  isError,
+  errorState,
   isFiltered,
   emptyState,
   filteredEmptyState,
@@ -63,6 +70,8 @@ const DataTableViewport = <TData,>({
     >
       {isLoading ? (
         <DataTableSkeleton />
+      ) : isError ? (
+        errorState ?? <DataTableErrorState />
       ) : !hasRows ? (
         hasFilters ? (
           filteredEmptyState ?? <DataTableFilteredEmptyState />
