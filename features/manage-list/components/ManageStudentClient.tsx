@@ -66,6 +66,7 @@ const ManageStudentClient = ({
     setSortField,
     sortDirection,
     setSortDirection,
+    setSort,
     resetSort,
     filters,
     updateFilter,
@@ -235,11 +236,14 @@ const ManageStudentClient = ({
       <StudentTable
         rows={rows}
         pagination={pagination}
+        sortField={sortField}
+        sortDirection={sortDirection}
         activeFilterCount={activeFilterCount}
         isSearching={isSearching}
         isPending={isPending}
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
+        onSortChange={setSort}
         onEditStudent={handleEditStudent}
         onDeleteStudent={handleDeleteStudent}
       />

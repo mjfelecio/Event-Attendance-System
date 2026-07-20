@@ -1,5 +1,6 @@
 "use client";
 
+import { ReactNode } from "react";
 import { flexRender, Table as TableType } from "@tanstack/react-table";
 import {
   Table,
@@ -20,6 +21,16 @@ type Props<TData> = {
   table: TableType<TData>;
   /** Whether the data is still loading */
   isLoading: boolean;
+  /**
+   * Overrides how the empty state is chosen. Client mode infers "refined" from
+   * TanStack's own filter state; manual/server mode must pass it explicitly
+   * because search and filters live in the URL, not the table instance.
+   */
+  isFiltered?: boolean;
+  /** Custom empty state (no data, no active refinement). */
+  emptyState?: ReactNode;
+  /** Custom empty state shown when a search/filter yields nothing. */
+  filteredEmptyState?: ReactNode;
 };
 
 const MIN_TABLE_HEIGHT = "min-h-[420px]";
@@ -27,14 +38,24 @@ const MIN_TABLE_HEIGHT = "min-h-[420px]";
 /**
  * DataTableViewport
  *
- * Renders the actual table markup (headers, rows, and cells).
- * Separated to keep the main DataTable component focused on orchestration
- * rather than rendering details.
+ * Renders the actual table markup (headers, rows, and cells) plus the loading
+ * and empty states. Kept separate so DataTable stays focused on orchestration.
+ * This is the single table shell shared by every feature, client or server.
  */
-const DataTableViewport = <TData,>({ table, isLoading }: Props<TData>) => {
+const DataTableViewport = <TData,>({
+  table,
+  isLoading,
+  isFiltered,
+  emptyState,
+  filteredEmptyState,
+}: Props<TData>) => {
   const hasRows = table.getRowModel().rows.length > 0;
   const hasFilters =
-    table.getState().globalFilter || table.getState().columnFilters.length > 0;
+    isFiltered ??
+    Boolean(
+      table.getState().globalFilter ||
+        table.getState().columnFilters.length > 0
+    );
 
   return (
     <div
@@ -44,9 +65,9 @@ const DataTableViewport = <TData,>({ table, isLoading }: Props<TData>) => {
         <DataTableSkeleton />
       ) : !hasRows ? (
         hasFilters ? (
-          <DataTableFilteredEmptyState />
+          filteredEmptyState ?? <DataTableFilteredEmptyState />
         ) : (
-          <DataTableEmptyState />
+          emptyState ?? <DataTableEmptyState />
         )
       ) : (
         <Table>

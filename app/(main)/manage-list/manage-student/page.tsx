@@ -30,7 +30,9 @@ type ManageStudentPageProps = {
   searchParams: Promise<ManageStudentContext>;
 };
 
-const PAGE_SIZES = [25, 50, 100] as const;
+// Must stay a superset of the shared PAGE_SIZE_OPTIONS the table selector
+// exposes; a size the server rejects here silently snaps back to the default.
+const PAGE_SIZES = [10, 25, 50, 100] as const;
 const COLLEGE_YEARS = [
   YearLevel.YEAR_1,
   YearLevel.YEAR_2,
