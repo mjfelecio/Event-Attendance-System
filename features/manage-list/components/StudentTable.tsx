@@ -2,6 +2,7 @@ import { StudentRow } from "@/features/manage-list/types";
 import type { StudentPagination } from "@/features/manage-list/types";
 import StudentRowActions from "@/features/manage-list/components/StudentRowActions";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { StudentStatus } from "@prisma/client";
 
 const tableHeaders = [
   "USN",
@@ -13,8 +14,16 @@ const tableHeaders = [
   "House",
   "Section",
   "Year Level",
+  "Status",
   "Actions",
 ];
+
+const STATUS_BADGE: Record<StudentStatus, string> = {
+  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  INACTIVE: "bg-slate-100 text-slate-600 border-slate-200",
+  GRADUATED: "bg-sky-50 text-sky-700 border-sky-200",
+  DROPPED: "bg-rose-50 text-rose-700 border-rose-200",
+};
 
 interface StudentTableProps {
   rows: StudentRow[];
@@ -71,16 +80,17 @@ const StudentTable = ({
         <div className="overflow-x-auto">
           <table className="min-w-[1120px] w-full border-separate border-spacing-0 text-left text-xs text-slate-700 md:text-sm">
             <colgroup>
-              <col style={{ width: "18%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "10%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "9%" }} />
               <col style={{ width: "10%" }} />
               <col style={{ width: "9%" }} />
-              <col style={{ width: "9%" }} />
+              <col style={{ width: "8%" }} />
               <col style={{ width: "7%" }} />
               <col style={{ width: "7%" }} />
-              <col style={{ width: "6%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "4%" }} />
             </colgroup>
             <thead className="bg-slate-50 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-slate-500 md:text-[0.68rem]">
               <tr>
@@ -141,6 +151,15 @@ const StudentTable = ({
                     </td>
                     <td className="border-b border-slate-200 px-4 py-3 text-center text-xs text-slate-700 md:px-5 md:text-sm">
                       {row.yearLevelLabel}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3 text-center md:px-5">
+                      <span
+                        className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                          STATUS_BADGE[row.status] ?? STATUS_BADGE.INACTIVE
+                        }`}
+                      >
+                        {row.status}
+                      </span>
                     </td>
                     <td className="border-b border-slate-200 px-4 py-3 text-center text-xs md:px-5 md:text-sm">
                       <StudentRowActions
