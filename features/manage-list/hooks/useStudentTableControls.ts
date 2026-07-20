@@ -100,6 +100,19 @@ export const useStudentTableControls = ({
   const resetSort = () =>
     updateQuery({ sort: undefined, direction: undefined, page: undefined });
 
+  // Clickable column headers toggle field and direction together; commit both
+  // in one URL update so the header and the Sort popover stay on the same
+  // controlled state without an intermediate double navigation.
+  const setSort = (
+    field: StudentSortField,
+    direction: StudentSortDirection
+  ) =>
+    updateQuery({
+      sort: field === "updatedAt" ? undefined : field,
+      direction: direction === "desc" ? undefined : direction,
+      page: undefined,
+    });
+
   const updateFilter = (key: keyof StudentFilterState, value: string) => {
     const updates: QueryUpdates = {
       [key]: value === "all" ? undefined : value,
@@ -141,6 +154,7 @@ export const useStudentTableControls = ({
     setSortField,
     sortDirection: state.sortDirection,
     setSortDirection,
+    setSort,
     resetSort,
     filters: state.filters,
     updateFilter,

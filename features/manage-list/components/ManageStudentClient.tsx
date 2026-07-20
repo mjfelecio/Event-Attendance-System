@@ -66,6 +66,7 @@ const ManageStudentClient = ({
     setSortField,
     sortDirection,
     setSortDirection,
+    setSort,
     resetSort,
     filters,
     updateFilter,
@@ -200,48 +201,52 @@ const ManageStudentClient = ({
           {submitError}
         </div>
       )}
-      <StudentManageToolbar
-        categoryHeading={categoryHeading}
-        label={label}
-        item={item}
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
-        sortField={sortField}
-        setSortField={setSortField}
-        sortDirection={sortDirection}
-        setSortDirection={setSortDirection}
-        resetSort={resetSort}
-        filters={filters}
-        updateFilter={updateFilter}
-        clearFilters={clearFilters}
-        departments={filterOptions.departments}
-        programs={filterOptions.programs}
-        sections={filterOptions.sections}
-        levels={filterOptions.levels}
-        houses={filterOptions.houses}
-        isSortOpen={isSortOpen}
-        setIsSortOpen={setIsSortOpen}
-        isFilterOpen={isFilterOpen}
-        setIsFilterOpen={setIsFilterOpen}
-        onAddStudent={() => setIsAddDialogOpen(true)}
-        onImportStudents={handleImportStudents}
-        totalRows={pagination.selectionTotal}
-        matchingRows={pagination.totalRows}
-        visibleRowsCount={visibleRowsCount}
-        activeFilterCount={activeFilterCount}
-        isSearching={isSearching}
-      />
-
       <StudentTable
         rows={rows}
         pagination={pagination}
+        sortField={sortField}
+        sortDirection={sortDirection}
         activeFilterCount={activeFilterCount}
         isSearching={isSearching}
         isPending={isPending}
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
+        onSortChange={setSort}
         onEditStudent={handleEditStudent}
         onDeleteStudent={handleDeleteStudent}
+        toolbar={
+          <StudentManageToolbar
+            categoryHeading={categoryHeading}
+            label={label}
+            item={item}
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
+            sortField={sortField}
+            setSortField={setSortField}
+            sortDirection={sortDirection}
+            setSortDirection={setSortDirection}
+            resetSort={resetSort}
+            filters={filters}
+            updateFilter={updateFilter}
+            clearFilters={clearFilters}
+            departments={filterOptions.departments}
+            programs={filterOptions.programs}
+            sections={filterOptions.sections}
+            levels={filterOptions.levels}
+            houses={filterOptions.houses}
+            isSortOpen={isSortOpen}
+            setIsSortOpen={setIsSortOpen}
+            isFilterOpen={isFilterOpen}
+            setIsFilterOpen={setIsFilterOpen}
+            onAddStudent={() => setIsAddDialogOpen(true)}
+            onImportStudents={handleImportStudents}
+            totalRows={pagination.selectionTotal}
+            matchingRows={pagination.totalRows}
+            visibleRowsCount={visibleRowsCount}
+            activeFilterCount={activeFilterCount}
+            isSearching={isSearching}
+          />
+        }
       />
 
       <AddStudentDialog
