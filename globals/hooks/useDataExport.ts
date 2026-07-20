@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { fetchApi } from "@/globals/utils/api";
-import { jsonToCSV } from "react-papaparse";
 
 type ExportFormat = "csv";
 
@@ -61,6 +60,8 @@ export function useDataExport<T>({
 
       const response = await fetchApi<T[]>(apiUrl);
 
+      // Loaded on demand so the CSV library stays out of every page bundle
+      const { jsonToCSV } = await import("react-papaparse");
       const csv = jsonToCSV(escapeCsvFormulas(response));
       const blob = new Blob([csv], {
         type: "text/csv;charset=utf-8;",

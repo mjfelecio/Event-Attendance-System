@@ -1,11 +1,19 @@
 "use client";
 
 import Calendar from "@/features/calendar/components/Calendar";
-import EventDrawer from "@/features/calendar/components/EventDrawer";
 import EventsContainer from "@/features/calendar/components/EventsContainer";
 import { Event } from "@/globals/types/events";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
+
+// The 700+ line drawer pulls in react-hook-form, zod, the date pickers and
+// the checkbox/combobox stack. It's only shown after a create/edit action,
+// so keep it out of the calendar's initial bundle.
+const EventDrawer = dynamic(
+  () => import("@/features/calendar/components/EventDrawer"),
+  { ssr: false }
+);
 
 /**
  * CalendarPage Component
