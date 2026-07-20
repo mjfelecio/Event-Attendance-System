@@ -24,11 +24,15 @@ type DataTablePaginationProps<TData> = {
 function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
+  const rowCount = table.getFilteredRowModel().rows.length;
+  // getPageCount() is 0 for an empty table; clamp so we never show "Page 1 of 0".
+  const pageCount = Math.max(table.getPageCount(), 1);
+  const currentPage = rowCount === 0 ? 0 : table.getState().pagination.pageIndex + 1;
+
   return (
     <div className="flex items-center justify-between px-2 pt-2 pb-4">
       <div className="text-muted-foreground flex-1 text-sm">
-        {table.getFilteredSelectedRowModel().rows.length} of{" "}
-        {table.getFilteredRowModel().rows.length} row(s) selected.
+        {rowCount} row{rowCount === 1 ? "" : "s"}
       </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
@@ -52,8 +56,7 @@ function DataTablePagination<TData>({
           </Select>
         </div>
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page {currentPage} of {pageCount}
         </div>
         <div className="flex items-center space-x-2">
           <Button
