@@ -228,6 +228,13 @@ export const useAllRecordsFromEvent = (eventId?: string) => {
         `/api/events/${eventId}/records`,
       );
     },
+    // Live attendance: poll so scans from another device appear here without a
+    // manual refresh. staleTime marks data eligible for refetch but doesn't
+    // trigger one; with focus refetch off, only this interval keeps a passive
+    // second device fresh. Foreground-only to avoid background battery drain.
+    staleTime: 5_000,
+    refetchInterval: 8_000,
+    refetchIntervalInBackground: false,
   });
 };
 

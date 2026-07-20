@@ -111,6 +111,12 @@ export const useStatsOfEvent = (eventId?: string) => {
 
       return fetchApi<EventStats>(`/api/events/${eventId}/stats`);
     },
+    // Live attendance: poll so a second device's scans show up here without a
+    // manual refresh. staleTime alone can't do this - with focus refetch off,
+    // a passive tab has no trigger. Foreground-only to avoid background drain.
+    staleTime: 5_000,
+    refetchInterval: 8_000,
+    refetchIntervalInBackground: false,
   });
 };
 
