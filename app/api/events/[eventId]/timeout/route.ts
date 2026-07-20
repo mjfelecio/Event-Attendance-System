@@ -7,19 +7,28 @@ import {
 } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+// Explicit desired state instead of a blind toggle: two concurrent requests
+// that both intend "time-out" now converge on the same value instead of
+// cancelling each other out. `isTimeout` is optional for backward compat -
+// omitting it falls back to a single compare-and-set toggle.
+const bodySchema = z.object({ isTimeout: z.boolean().optional() });
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const user = await requireAuth();
-    const { eventId }  = await params;
+    const { eventId } = await params;
+
+    const raw = await req.json().catch(() => ({}));
+    const { isTimeout } = bodySchema.parse(raw);
 
     const existing = await prisma.event.findUnique({
       where: { id: eventId },
     });
-
 
     if (!existing) {
       return NextResponse.json(err("No event found"), { status: 404 });
@@ -28,14 +37,16 @@ export async function POST(
     assertEventOwnership(existing, user);
     assertEventStatus(existing, "APPROVED");
 
-    // Toggle: scans switch between recording time-in and time-out.
-    const updated = await prisma.event.update({
-      where: { id: eventId },
-      data: {
-        isTimeout: !existing.isTimeout,
-      },
+    const desired = isTimeout ?? !existing.isTimeout;
+
+    // Compare-and-set: only flip when still in the state we based `desired` on,
+    // so simultaneous requests can't stomp each other.
+    await prisma.event.updateMany({
+      where: { id: eventId, isTimeout: !desired },
+      data: { isTimeout: desired },
     });
 
+    const updated = await prisma.event.findUnique({ where: { id: eventId } });
     return NextResponse.json(ok(updated), { status: 200 });
   } catch (error) {
     return respondWithError(error);

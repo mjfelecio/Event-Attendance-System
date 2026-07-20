@@ -10,10 +10,12 @@ import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import DataCard from "@/features/attendance/components/DataCard";
 import {
   useFetchApprovedEvents,
+  useFetchEvent,
   useStatsOfEvent,
 } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
 import TurnOnTimeoutMode from "@/features/attendance/components/TurnOnTimeoutMode";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 type Props = {
   selectedEvent: Event | null;
@@ -24,7 +26,15 @@ const AttendancePageHeader: React.FC<Props> = ({
   selectedEvent,
   onChangeEvent,
 }) => {
+  const { user } = useAuth();
   const { data: events, isLoading: isEventsLoading } = useFetchApprovedEvents();
+  // Live copy of the selected event so timeout-mode changes from another
+  // device show up here instead of relying on the stale selection object.
+  const { data: liveEvent } = useFetchEvent(selectedEvent?.id, true);
+  const currentEvent = liveEvent ?? selectedEvent;
+  const canManageEvent =
+    !!currentEvent &&
+    (user?.role === "ADMIN" || currentEvent.createdById === user?.id);
   const {
     data: eventStats,
     isLoading: isStatsLoading,
@@ -81,16 +91,14 @@ const AttendancePageHeader: React.FC<Props> = ({
 
         <div className="flex flex-row gap-4 items-center">
           <TurnOnTimeoutMode
-            key={selectedEvent?.id}
-            eventId={selectedEvent?.id}
-            isTimeout={selectedEvent?.isTimeout ?? false}
+            eventId={currentEvent?.id}
+            isTimeout={currentEvent?.isTimeout ?? false}
+            canToggle={canManageEvent}
           />
 
-          {/* Export Button */}
-          <ButtonWithIcon
-            icon={PiExport}
-            onClick={() => alert("Exporting attendance records...")}
-          >
+          {/* Export is not implemented yet - disabled rather than shown as a
+              working control (see deferred export PR). */}
+          <ButtonWithIcon icon={PiExport} disabled title="Export coming soon">
             Export
           </ButtonWithIcon>
         </div>

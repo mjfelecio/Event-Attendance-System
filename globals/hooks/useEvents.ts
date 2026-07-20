@@ -169,9 +169,13 @@ export const useFetchApprovedEvents = () => {
 };
 
 /**
- * Fetches an event through its id
+ * Fetches an event through its id.
+ *
+ * @param live When true (the attendance screen), poll so event mode changes
+ *   (isTimeout) made on another device are reflected here. Leave false
+ *   elsewhere so it doesn't poll needlessly.
  */
-export const useFetchEvent = (eventId?: string) => {
+export const useFetchEvent = (eventId?: string, live = false) => {
   return useQuery({
     queryKey: queryKeys.events.withId(eventId!),
     queryFn: async () => {
@@ -179,6 +183,13 @@ export const useFetchEvent = (eventId?: string) => {
       return transformEvent(event);
     },
     enabled: !!eventId,
+    ...(live
+      ? {
+          staleTime: 5_000,
+          refetchInterval: 8_000,
+          refetchIntervalInBackground: false,
+        }
+      : {}),
   });
 };
 
