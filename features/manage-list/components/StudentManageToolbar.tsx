@@ -130,10 +130,14 @@ const StudentManageToolbar = ({
                 Add
               </button>
 
+              {/* Import isn't implemented yet - disabled rather than shown as
+                  a working control (see deferred import PR). */}
               <button
                 type="button"
                 onClick={onImportStudents}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-800"
+                disabled
+                title="Import coming soon"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-600 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Upload className="size-4" strokeWidth={1.6} />
                 Import

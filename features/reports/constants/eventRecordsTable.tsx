@@ -1,32 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
-import { ArrowUpDown, FileText } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { AttendanceStatus } from "@/globals/types/records";
-
-function ViewRecordCell({ row }: { row: any }) {
-  const { id: recordId } = row.original;
-
-  const handleViewRecord = () => {
-    // Navigate to printable record page
-    window.open(`/reports/record/${recordId}`, '_blank');
-  };
-
-  return (
-    <div className="flex justify-center">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleViewRecord}
-        className="gap-2"
-      >
-        <FileText className="h-4 w-4" />
-        View
-      </Button>
-    </div>
-  );
-}
 
 function StatusCell({ getValue }: { getValue: () => unknown }) {
   const status: AttendanceStatus = getValue() === "absent" ? "absent" : "present";
@@ -188,10 +165,4 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: StatusCell,
     enableGlobalFilter: false,
   },
-  // {
-  //   id: "view",
-  //   header: () => <div className="text-center">Details</div>,
-  //   cell: ({ row }) => <ViewRecordCell row={row} />,
-  //   enableSorting: false,
-  // },
 ];

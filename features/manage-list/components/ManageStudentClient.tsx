@@ -182,10 +182,9 @@ const ManageStudentClient = ({
     }
   };
 
-  const handleImportStudents = () => {
-    console.log('Import students clicked');
-    // TODO: Implement import functionality
-  };
+  // Import is not implemented yet; the toolbar button is disabled. Kept as a
+  // no-op so the prop contract stays intact until the import feature lands.
+  const handleImportStudents = () => {};
 
   return (
     <div className="flex w-full flex-col gap-6">
