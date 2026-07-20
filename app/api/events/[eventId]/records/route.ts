@@ -31,8 +31,12 @@ export async function GET(
     const includeAbsent =
       new URL(req.url).searchParams.get("includeAbsent") === "true";
 
+    // Scope records to currently-eligible students so the present rows match
+    // the header/summary stats (which also count present among current
+    // eligibility). A student who became inactive or left the event's group
+    // drops from both, keeping counts and visible rows consistent.
     const recordsWithStudent = await prisma.record.findMany({
-      where: { eventId },
+      where: { eventId, student: buildEventStudentFilter(event) },
       select: {
         id: true,
         eventId: true,

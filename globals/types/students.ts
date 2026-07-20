@@ -2,7 +2,9 @@ import { Student as PrismaStudent, SchoolLevel } from "@prisma/client";
 
 export type Student = PrismaStudent;
 
-export type NewStudent = Omit<Student, "id" | "created_at" | "updated_at">;
+// Prisma fields are camelCase; the old snake_case omit silently kept
+// createdAt/updatedAt on NewStudent.
+export type NewStudent = Omit<Student, "id" | "createdAt" | "updatedAt">;
 
 /**
  * A record with its corresponding student data attached

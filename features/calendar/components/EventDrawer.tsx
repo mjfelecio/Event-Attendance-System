@@ -33,6 +33,7 @@ import {
   EVENT_CHOICES,
   EXCLUDABLE_GROUP_TYPES,
   type ExcludableGroupType,
+  type ExcludedGroup,
 } from "@/features/calendar/constants/categoryGroups";
 import { useStudentSections } from "@/globals/hooks/useStudents";
 import { EventCategory } from "@prisma/client";
@@ -42,6 +43,17 @@ import CheckboxGroup from "@/globals/components/shared/CheckboxGroup";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import { useAuth } from "@/globals/contexts/AuthContext";
 import { ConfirmDialog } from "@/globals/components/shared/ConfirmModal";
+
+/** Parses a JSON-array string for form population; malformed data -> null. */
+const safeJsonParse = <T,>(json: string | null | undefined): T[] | null => {
+  if (!json) return null;
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? (parsed as T[]) : null;
+  } catch {
+    return null;
+  }
+};
 
 type EventDrawerProps = {
   isOpen: boolean;
@@ -82,18 +94,17 @@ const EventDrawer = ({
   const { mutateAsync: submitEvent, isPending: isSubmitting } = useSubmitEvent();
   const { mutateAsync: approveEvent, isPending: isApproving } = useApproveEvent();
 
-  // Parse includedGroups/excludedGroups from JSON strings for form population
+  // Parse includedGroups/excludedGroups from JSON strings for form population.
+  // Malformed legacy JSON must not crash the drawer - fall back to null.
   const initData = useMemo(
     () =>
       initialData
         ? {
             ...initialData,
-            includedGroups: initialData.includedGroups
-              ? JSON.parse(initialData.includedGroups)
-              : null,
-            excludedGroups: initialData.excludedGroups
-              ? JSON.parse(initialData.excludedGroups)
-              : null,
+            includedGroups: safeJsonParse<string>(initialData.includedGroups),
+            excludedGroups: safeJsonParse<ExcludedGroup>(
+              initialData.excludedGroups
+            ),
           }
         : undefined,
     [initialData]
@@ -351,8 +362,8 @@ const EventDrawer = ({
             </DrawerTitle>
             {isReadOnlyApprovedView ? (
               <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-center text-sm text-indigo-700">
-                Approved event (view only). Only the event creator or an admin
-                can edit this event.
+                Approved event (view only). Only an admin can edit an approved
+                event.
               </p>
             ) : isReadOnlyPendingView ? (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-700">

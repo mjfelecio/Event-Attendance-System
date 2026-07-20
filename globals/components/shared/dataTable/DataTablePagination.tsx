@@ -25,9 +25,13 @@ function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
   const rowCount = table.getFilteredRowModel().rows.length;
-  // getPageCount() is 0 for an empty table; clamp so we never show "Page 1 of 0".
+  // getPageCount() is 0 for an empty table; clamp so we never show "Page 1 of 0"
+  // or "Page 0 of N" - an empty table reads as "Page 1 of 1".
   const pageCount = Math.max(table.getPageCount(), 1);
-  const currentPage = rowCount === 0 ? 0 : table.getState().pagination.pageIndex + 1;
+  const currentPage = Math.min(
+    table.getState().pagination.pageIndex + 1,
+    pageCount
+  );
 
   return (
     <div className="flex items-center justify-between px-2 pt-2 pb-4">

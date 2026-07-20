@@ -111,9 +111,17 @@ export async function GET(req: NextRequest) {
     const events = await prisma.event.findMany({
       where,
       orderBy: { start: "asc" },
+      include: { createdBy: { select: { name: true } } },
     });
 
-    return NextResponse.json(ok(events), { status: 200 });
+    // Expose organizerName so list-driven UI (reports summary, dashboard)
+    // needn't show a raw user id.
+    const withOrganizer = events.map(({ createdBy, ...event }) => ({
+      ...event,
+      organizerName: createdBy?.name ?? null,
+    }));
+
+    return NextResponse.json(ok(withOrganizer), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }

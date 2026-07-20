@@ -19,6 +19,7 @@ import {
 import { useAuth } from "@/globals/contexts/AuthContext";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import { cn } from "@/globals/libs/shad-cn";
+import { toastDanger } from "@/globals/components/shared/toasts";
 
 type NavigationItem = {
   text: string;
@@ -83,8 +84,14 @@ const Sidebar = () => {
     pathname === route || pathname.startsWith(`${route}/`);
 
   const handleLogout = async () => {
-    await logout();
-    router.replace("/login");
+    // Only navigate away if the server actually cleared the session; otherwise
+    // surface the failure rather than showing a logged-out UI over a live cookie.
+    const ok = await logout();
+    if (ok) {
+      router.replace("/login");
+    } else {
+      toastDanger("Couldn't sign out. Please try again.");
+    }
   };
 
   const initials = (user?.name ?? "Organizer")

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { fetchApi } from "@/globals/utils/api";
+import { toastDanger } from "@/globals/components/shared/toasts";
 
 type ExportFormat = "csv";
 
@@ -72,6 +73,12 @@ export function useDataExport<T>({
         .split("T")[0]}.csv`;
 
       downloadFile(blob, datedFilename);
+    } catch (error) {
+      // Surface failures instead of letting the rejection escape unhandled.
+      toastDanger(
+        "Export failed",
+        error instanceof Error ? error.message : undefined
+      );
     } finally {
       setIsExporting(false);
     }
