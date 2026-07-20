@@ -26,12 +26,15 @@ const transformEvent = (e: EventAPI): Event => ({
 export const useSaveEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (event: Event | NewEvent) => {
-      return fetchApi<Event>("/api/events", {
+    mutationFn: async (event: Event | NewEvent) => {
+      // The API returns string dates; transform so the resolved value is a
+      // real Event (Date objects), matching what the type promises.
+      const saved = await fetchApi<EventAPI>("/api/events", {
         method: "POST",
         body: JSON.stringify(event),
         headers: { "Content-Type": "application/json" },
       });
+      return transformEvent(saved);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
@@ -42,8 +45,8 @@ const useEventAction = (action: "SUBMIT" | "APPROVE" | "REJECT") => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { id: string; reason?: string }) => {
-      return fetchApi<Event>(`/api/events/${payload.id}`, {
+    mutationFn: async (payload: { id: string; reason?: string }) => {
+      const updated = await fetchApi<EventAPI>(`/api/events/${payload.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
@@ -52,6 +55,7 @@ const useEventAction = (action: "SUBMIT" | "APPROVE" | "REJECT") => {
             : { action }
         ),
       });
+      return transformEvent(updated);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
