@@ -22,44 +22,11 @@ export const useCreateRecord = (eventId: string) => {
       });
     },
 
-    /** Runs before the mutation request is sent */
-    onMutate: async (newRecord) => {
-      const key = queryKeys.records.fromEvent(eventId);
-
-      // Cancel outgoing refetches to prevent overwriting optimistic state
-      await queryClient.cancelQueries({ queryKey: key });
-
-      // Snapshot current cache state so we can rollback if needed
-      const previousRecords =
-        queryClient.getQueryData<(Record | NewRecord)[]>(key);
-
-      // Apply optimistic update
-      if (previousRecords) {
-        const optimisticRecord: Record = {
-          ...newRecord,
-          id: `temp-${Date.now()}`, // Temporary client-only ID
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          timein: new Date(),
-          timeout: null,
-          recordedById: null,
-          lastModifiedById: null,
-        };
-
-        queryClient.setQueryData(key, [...previousRecords, optimisticRecord]);
-      }
-
-      // Return context for rollback in onError
-      return { previousRecords };
-    },
-
-    /** Rollback optimistic update if server request fails */
-    onError: (_err, _variables, context) => {
-      const key = queryKeys.records.fromEvent(eventId);
-      if (context?.previousRecords) {
-        queryClient.setQueryData(key, context.previousRecords);
-      }
-    },
+    // No optimistic write here: the attendance-records cache holds enriched
+    // StudentAttendanceRecord rows (fullName/schoolLevel/section) which this
+    // mutation's input can't reconstruct - appending a raw record corrupted
+    // the row and duplicated it in timeout mode. The success invalidation
+    // below refetches immediately, and the live table also polls.
 
     /** Re-sync server state after success */
     onSuccess: (data) => {
