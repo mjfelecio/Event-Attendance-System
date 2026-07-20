@@ -67,7 +67,10 @@ export async function GET(
     const user = await requireAuth();
     const { eventId } = await params;
 
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { createdBy: { select: { name: true } } },
+    });
 
     if (!event) {
       return NextResponse.json(err("Event not found."), { status: 404 });
@@ -75,7 +78,12 @@ export async function GET(
 
     assertEventVisibility(event, user);
 
-    return NextResponse.json(ok(event), { status: 200 });
+    // Expose the organizer's display name so the UI needn't show a raw user id.
+    const { createdBy, ...rest } = event;
+    return NextResponse.json(
+      ok({ ...rest, organizerName: createdBy?.name ?? null }),
+      { status: 200 }
+    );
   } catch (error) {
     return respondWithError(error);
   }

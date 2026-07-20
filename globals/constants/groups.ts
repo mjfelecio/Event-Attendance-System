@@ -119,3 +119,36 @@ export const buildSectionName = (
   yearOrGrade: number,
   letter: string
 ) => `${groupCode}-${yearOrGrade}${letter}`;
+
+const YEAR_LABELS: Record<string, string> = {
+  YEAR_1: "1st Year",
+  YEAR_2: "2nd Year",
+  YEAR_3: "3rd Year",
+  YEAR_4: "4th Year",
+  GRADE_11: "Grade 11",
+  GRADE_12: "Grade 12",
+};
+
+/**
+ * Human-readable label for a stored group value, given the group type.
+ * Falls back to the raw value for anything unmapped (e.g. section names).
+ */
+export const labelForGroup = (
+  type: string,
+  value: string
+): string => {
+  switch (type) {
+    case "DEPARTMENT":
+      return DEPARTMENTS.find((d) => d.slug === value)?.name ?? value;
+    case "HOUSE":
+      return HOUSES.find((h) => h.slug === value)?.name ?? value;
+    case "PROGRAM":
+      return COLLEGE_PROGRAMS.find((p) => p.code === value)?.code ?? value;
+    case "STRAND":
+      return SHS_STRANDS.find((s) => s.code === value)?.code ?? value;
+    case "YEAR":
+      return YEAR_LABELS[value] ?? value;
+    default:
+      return value;
+  }
+};
