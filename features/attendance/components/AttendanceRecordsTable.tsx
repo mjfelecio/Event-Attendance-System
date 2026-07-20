@@ -11,7 +11,7 @@ type Props = {
 };
 
 const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
-  const { data, isLoading } = useAllRecordsFromEvent(selectedEvent?.id);
+  const { data, isLoading } = useAllRecordsFromEvent(selectedEvent?.id, true);
   const records = useMemo(() => data ?? [], [data]);
 
   if (!selectedEvent) return null;

@@ -102,7 +102,13 @@ export const useStartTimeoutMode = () => {
  *
  * @returns EventStats
  */
-export const useStatsOfEvent = (eventId?: string) => {
+/**
+ * @param live When true (the attendance screen), poll so a second device's
+ *   scans appear without a manual refresh. Leave false (report pages) so
+ *   completed events don't poll needlessly. `enabled: !!eventId` only means an
+ *   id exists, not that attendance is active - hence the explicit flag.
+ */
+export const useStatsOfEvent = (eventId?: string, live = false) => {
   return useQuery({
     queryKey: queryKeys.events.statsFromEvent(eventId!),
     enabled: !!eventId,
@@ -111,12 +117,13 @@ export const useStatsOfEvent = (eventId?: string) => {
 
       return fetchApi<EventStats>(`/api/events/${eventId}/stats`);
     },
-    // Live attendance: poll so a second device's scans show up here without a
-    // manual refresh. staleTime alone can't do this - with focus refetch off,
-    // a passive tab has no trigger. Foreground-only to avoid background drain.
-    staleTime: 5_000,
-    refetchInterval: 8_000,
-    refetchIntervalInBackground: false,
+    ...(live
+      ? {
+          staleTime: 5_000,
+          refetchInterval: 8_000,
+          refetchIntervalInBackground: false,
+        }
+      : {}),
   });
 };
 

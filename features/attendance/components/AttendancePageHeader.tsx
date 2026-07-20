@@ -29,7 +29,7 @@ const AttendancePageHeader: React.FC<Props> = ({
     data: eventStats,
     isLoading: isStatsLoading,
     isError: isStatsError,
-  } = useStatsOfEvent(selectedEvent?.id);
+  } = useStatsOfEvent(selectedEvent?.id, true);
 
   // Compute attendance rate
   const attendanceRate = useMemo(() => {
