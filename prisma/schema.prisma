@@ -33,6 +33,9 @@ model Event {
 
   @@index([status])
   @@index([createdById])
+  // The common list query filters by status and orders by start; the composite
+  // lets the index satisfy both and drop the temp B-tree sort.
+  @@index([status, start])
 }
 
 model Student {
@@ -55,6 +58,17 @@ model Student {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Every event-scoping filter is `status = ACTIVE AND <group column> IN (...)`,
+  // so each group column gets a composite index led by status. Measured with
+  // EXPLAIN QUERY PLAN: without these, all filters full-scan the table.
+  @@index([status, schoolLevel])
+  @@index([status, departmentSlug])
+  @@index([status, houseSlug])
+  @@index([status, collegeProgram])
+  @@index([status, shsStrand])
+  @@index([status, section])
+  @@index([status, yearLevel])
 }
 
 model Record {
