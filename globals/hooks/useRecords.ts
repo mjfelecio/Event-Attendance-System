@@ -30,9 +30,10 @@ export const useCreateRecord = (eventId: string) => {
 
     /** Re-sync server state after success */
     onSuccess: (data) => {
+      // Prefix invalidation so BOTH the live present-only table and the
+      // includeAbsent report variant refresh (not just the exact false key).
       queryClient.invalidateQueries({
-        queryKey: queryKeys.records.fromEvent(eventId),
-        exact: true,
+        queryKey: queryKeys.records.fromEventPrefix(eventId),
       });
 
       queryClient.invalidateQueries({
@@ -50,10 +51,8 @@ export const useCreateRecord = (eventId: string) => {
 };
 
 /**
- * Updates an attendance record.
- *
- * Uses optimistic updates to immediately reflect the new record in the UI
- * before the server confirms the change.
+ * Records the "present" action on an existing record (time-in or time-out
+ * depending on the event's mode).
  */
 export const useUpdateAttendanceRecord = (eventId: string) => {
   const queryClient = useQueryClient();
@@ -65,46 +64,17 @@ export const useUpdateAttendanceRecord = (eventId: string) => {
       });
     },
 
-    /** Runs before the mutation request is sent */
-    onMutate: async (recordId) => {
-      const key = queryKeys.records.fromEvent(eventId);
-
-      // Cancel outgoing refetches to prevent overwriting optimistic state
-      await queryClient.cancelQueries({ queryKey: key });
-
-      // Snapshot current cache state so we can rollback if needed
-      const previousRecords = queryClient.getQueryData<Record[]>(key);
-
-      const existingRecord = previousRecords?.find((r) => r.id === recordId);
-
-      // Apply optimistic update - replace the row in place (appending would
-      // show the record twice until the refetch lands)
-      if (previousRecords && existingRecord) {
-        queryClient.setQueryData(
-          key,
-          previousRecords.map((r) =>
-            r.id === recordId ? { ...r, timeout: new Date() } : r
-          )
-        );
-      }
-
-      // Return context for rollback in onError
-      return { previousRecords };
-    },
-
-    /** Rollback optimistic update if server request fails */
-    onError: (_err, _variables, context) => {
-      const key = queryKeys.records.fromEvent(eventId);
-      if (context?.previousRecords) {
-        queryClient.setQueryData(key, context.previousRecords);
-      }
-    },
+    // No optimistic write: whether this sets a time-in, a time-out, or nothing
+    // depends on the event's server-side mode, and the cache holds enriched
+    // StudentAttendanceRecord rows this mutation's input can't reconstruct.
+    // The success invalidation below refetches; the live table also polls.
 
     /** Re-sync server state after success */
     onSuccess: (data) => {
+      // Prefix invalidation so BOTH the live present-only table and the
+      // includeAbsent report variant refresh (not just the exact false key).
       queryClient.invalidateQueries({
-        queryKey: queryKeys.records.fromEvent(eventId),
-        exact: true,
+        queryKey: queryKeys.records.fromEventPrefix(eventId),
       });
 
       queryClient.invalidateQueries({
@@ -163,9 +133,10 @@ export const useDeleteRecord = (eventId: string) => {
     },
 
     onSuccess: (data) => {
+      // Prefix invalidation so BOTH the live present-only table and the
+      // includeAbsent report variant refresh (not just the exact false key).
       queryClient.invalidateQueries({
-        queryKey: queryKeys.records.fromEvent(eventId),
-        exact: true,
+        queryKey: queryKeys.records.fromEventPrefix(eventId),
       });
 
       queryClient.invalidateQueries({

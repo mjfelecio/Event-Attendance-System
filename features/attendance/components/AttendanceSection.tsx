@@ -51,6 +51,15 @@ const AttendanceSection = ({ selectedEvent }: ScannerSectionProps) => {
   const { mutate: createAttendanceRecord, isPending: isSavingRecord } =
     useCreateRecord(selectedEvent?.id || "");
 
+  // Reset the displayed student and any pending scan when the event changes,
+  // so a student from the previous event can't linger (and be acted on) here.
+  const eventId = selectedEvent?.id;
+  useEffect(() => {
+    setDisplayedStudent(null);
+    setScannedValue("");
+    setScanSource("");
+  }, [eventId]);
+
   const handleScanResult = useCallback((result: string) => {
     if (!result) {
       toastDanger("Invalid scan result");

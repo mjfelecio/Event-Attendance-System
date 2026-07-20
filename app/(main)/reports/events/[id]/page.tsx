@@ -32,7 +32,9 @@ const EventReportsPage = () => {
   } = useStatsOfEvent(eventId);
 
   const { isExporting, exportData } = useDataExport({
-    apiUrl: `/api/events/${eventId}/records`,
+    // includeAbsent so the CSV matches the on-screen report (present + absent),
+    // not just the present rows.
+    apiUrl: `/api/events/${eventId}/records?includeAbsent=true`,
     filename: "attendance_records",
   });
 

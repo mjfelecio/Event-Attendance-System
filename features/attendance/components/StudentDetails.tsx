@@ -8,6 +8,7 @@ import { capitalizeLabel } from "@/globals/utils/text";
 import { fullName } from "@/globals/utils/formatting";
 import { labelForGroup } from "@/globals/constants/groups";
 import { Record } from "@/globals/types/records";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 type DetailRowProps = {
   label: string;
@@ -61,6 +62,10 @@ type Props = {
 };
 
 const StudentDetails = ({ event, student, record, isLoading }: Props) => {
+  const { user } = useAuth();
+  const canManage =
+    user?.role === "ADMIN" || event.createdById === user?.id;
+
   if (isLoading) return <LoadingState />;
   if (!student) return <EmptyState />;
 
@@ -103,6 +108,7 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
             eventId={event.id}
             studentId={student.id}
             isTimeout={event.isTimeout}
+            canManage={canManage}
           />
         </div>
       </div>

@@ -10,7 +10,6 @@ import ComboBox, { ComboBoxValue } from "@/globals/components/shared/ComboBox";
 import DataCard from "@/features/attendance/components/DataCard";
 import {
   useFetchApprovedEvents,
-  useFetchEvent,
   useStatsOfEvent,
 } from "@/globals/hooks/useEvents";
 import { Event } from "@/globals/types/events";
@@ -18,6 +17,7 @@ import TurnOnTimeoutMode from "@/features/attendance/components/TurnOnTimeoutMod
 import { useAuth } from "@/globals/contexts/AuthContext";
 
 type Props = {
+  // Already the live event (the page derives it from useFetchEvent).
   selectedEvent: Event | null;
   onChangeEvent: (event: Event) => void;
 };
@@ -28,10 +28,7 @@ const AttendancePageHeader: React.FC<Props> = ({
 }) => {
   const { user } = useAuth();
   const { data: events, isLoading: isEventsLoading } = useFetchApprovedEvents();
-  // Live copy of the selected event so timeout-mode changes from another
-  // device show up here instead of relying on the stale selection object.
-  const { data: liveEvent } = useFetchEvent(selectedEvent?.id, true);
-  const currentEvent = liveEvent ?? selectedEvent;
+  const currentEvent = selectedEvent;
   const canManageEvent =
     !!currentEvent &&
     (user?.role === "ADMIN" || currentEvent.createdById === user?.id);

@@ -17,6 +17,8 @@ type Props = {
   recordId?: string;
   /** When true, the event records time-outs, so the "present" action means Time Out. */
   isTimeout?: boolean;
+  /** Whether the user may delete records (event owner or admin). */
+  canManage?: boolean;
 };
 
 const AttendanceActionButtons = ({
@@ -24,9 +26,11 @@ const AttendanceActionButtons = ({
   studentId,
   recordId,
   isTimeout = false,
+  canManage = false,
 }: Props) => {
   // The "present" action records a time-in normally and a time-out while the
   // event is in timeout mode, so its label must reflect the current mode.
+  // Deleting (Absent) requires event ownership, matching the records table.
   const actionButtons: {
     action: "present" | "absent";
     icon: IconType;
@@ -41,13 +45,17 @@ const AttendanceActionButtons = ({
       title: isTimeout ? "Record time-out" : "Record time-in",
       color: "text-emerald-600",
     },
-    {
-      action: "absent",
-      icon: ATTENDANCE_STATUS_ICONS.absent,
-      label: "Absent",
-      title: "Mark as Absent (Delete Record)",
-      color: "text-red-400",
-    },
+    ...(canManage
+      ? [
+          {
+            action: "absent" as const,
+            icon: ATTENDANCE_STATUS_ICONS.absent,
+            label: "Absent",
+            title: "Mark as Absent (Delete Record)",
+            color: "text-red-400",
+          },
+        ]
+      : []),
   ];
   const { mutateAsync: createRecord, isPending: isCreating } =
     useCreateRecord(eventId);
