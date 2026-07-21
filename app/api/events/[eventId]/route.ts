@@ -11,6 +11,7 @@ import {
   requireRole,
 } from "@/globals/utils/auth";
 import { respondWithError } from "@/globals/utils/httpError";
+import { validateEventGroupIds } from "@/globals/utils/eventGroups";
 
 const submitSchema = z.object({
   action: z.enum(["SUBMIT", "APPROVE", "REJECT"]),
@@ -153,6 +154,15 @@ export async function PATCH(
     // Non-admins can only edit drafts and rejected events; approved events
     // are locked so content cannot change without re-review.
     const data = patchSchema.parse(payload);
+
+    // Reject group ids that don't exist or don't match the event category.
+    const groupError = await validateEventGroupIds(
+      data.category,
+      data.includedGroups,
+    );
+    if (groupError) {
+      return NextResponse.json(err(groupError), { status: 400 });
+    }
 
     assertEventOwnership(event, user);
     assertEventStatus(

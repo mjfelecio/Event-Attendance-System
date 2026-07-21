@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
+import { err, ok } from "@/globals/utils/api";
+import { requireAuth } from "@/globals/utils/auth";
 import { flattenStudentGroups } from "@/globals/utils/students";
 import { respondWithError } from "@/globals/utils/httpError";
 
@@ -8,25 +10,25 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-
   try {
+    // Student records are PII; reads require an authenticated, active user.
+    await requireAuth();
+    const { id } = await params;
+
     const rawStudent = await prisma.student.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
       include: { groups: true },
     });
 
     if (!rawStudent) {
-      throw Error("Student not found");
+      return NextResponse.json(err("Student not found."), { status: 404 });
     }
 
-    const student = flattenStudentGroups(rawStudent);
-
-    return NextResponse.json(student);
+    return NextResponse.json(ok(flattenStudentGroups(rawStudent)), {
+      status: 200,
+    });
   } catch (error) {
-    respondWithError(error);
+    return respondWithError(error);
   }
 }
 
@@ -34,12 +36,14 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-
   try {
+    // Deleting a student is a roster mutation; gate it behind auth.
+    await requireAuth();
+    const { id } = await params;
+
     await prisma.student.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+    return NextResponse.json(ok(null), { status: 200 });
   } catch (error) {
-    respondWithError(error);
+    return respondWithError(error);
   }
 }

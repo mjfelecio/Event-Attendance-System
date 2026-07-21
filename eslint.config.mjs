@@ -1,21 +1,25 @@
-import { defineConfig, globalIgnores } from 'eslint/config'
-import nextVitals from 'eslint-config-next/core-web-vitals'
-import prettier from 'eslint-config-prettier/flat'
- 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  prettier,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    '.next/**',
-    'out/**',
-    'build/**',
-    'next-env.d.ts',
-    // Generated output and SQL that ESLint has nothing useful to say about.
-    'graphify-out/**',
-    'prisma/migrations/**',
-  ]),
-])
- 
-export default eslintConfig
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "graphify-out/**",
+      "prisma/migrations/**",
+      "next-env.d.ts",
+    ],
+  },
+];
+
+export default eslintConfig;

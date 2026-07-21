@@ -12,6 +12,7 @@ import {
 import { respondWithError } from "@/globals/utils/httpError";
 import { eventSchema } from "@/globals/schemas";
 import { toDate } from "@/globals/utils/events";
+import { validateEventGroupIds } from "@/globals/utils/eventGroups";
 
 const eventStatusEnum = z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]);
 const eventScopeEnum = z.enum(["visible", "mine"]);
@@ -69,11 +70,19 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         includedGroups: true,
+        createdBy: { select: { name: true } },
       },
       orderBy: { start: "asc" },
     });
 
-    return NextResponse.json(ok(events), { status: 200 });
+    // Expose organizerName so list-driven UI (dashboard, reports summary)
+    // needn't show a raw user id.
+    const withOrganizer = events.map(({ createdBy, ...event }) => ({
+      ...event,
+      organizerName: createdBy?.name ?? null,
+    }));
+
+    return NextResponse.json(ok(withOrganizer), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }
@@ -89,6 +98,16 @@ export async function POST(req: Request) {
       start: toDate(rawData.start),
       end: toDate(rawData.end),
     });
+
+    // Reject group ids that don't exist or don't match the event category,
+    // so a crafted request can't scope an event to another category's groups.
+    const groupError = await validateEventGroupIds(
+      payload.category,
+      payload.includedGroups,
+    );
+    if (groupError) {
+      return NextResponse.json(err(groupError), { status: 400 });
+    }
 
     const baseData = {
       title: payload.title,

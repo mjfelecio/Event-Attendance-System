@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Scanner from "@/features/attendance/components/Scanner";
 import ManualAttendanceSection from "@/features/attendance/components/ManualAttendanceSection";
@@ -30,6 +30,13 @@ export default function AttendanceSection({ selectedEvent }: Props) {
 
   const { mutateAsync: createRecord, isPending: isSavingRecord } =
     useCreateRecord(selectedEvent?.id ?? "");
+
+  // Clear the displayed student when the event changes, so a student from the
+  // previous event can't linger (and be acted on) under a different event.
+  const selectedEventId = selectedEvent?.id;
+  useEffect(() => {
+    setDisplayedStudent(null);
+  }, [selectedEventId]);
 
   /**
    * MANUAL FLOW

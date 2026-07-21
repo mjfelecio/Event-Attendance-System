@@ -88,8 +88,10 @@ export default function EventDrawer({
   const isReadOnlyView = isReadOnlyApprovedView || isReadOnlyPendingView;
 
   const canSubmit = isOrganizer && eventStatus === "DRAFT";
+  // Drafts are not approvable: the API requires them to be submitted first,
+  // so only offer approval for events actually awaiting a decision.
   const canApprove =
-    isAdmin && ["DRAFT", "PENDING", "REJECTED"].includes(eventStatus);
+    isAdmin && ["PENDING", "REJECTED"].includes(eventStatus);
   const isBusy =
     isSaving || isSubmitting || isApproving || isDeleting || isLoadingGroups;
 

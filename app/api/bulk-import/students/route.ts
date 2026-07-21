@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
+import { requireAuth } from "@/globals/utils/auth";
 import { studentSchema } from "@/globals/schemas/studentSchema";
 import { z } from "zod";
 import { respondWithError } from "@/globals/utils/httpError";
@@ -9,6 +10,8 @@ const bulkSchema = z.array(studentSchema);
 
 export async function POST(request: Request) {
   try {
+    // Bulk roster upsert is a privileged write; require an authenticated user.
+    await requireAuth();
     const body = await request.json();
     const parseResult = bulkSchema.safeParse(body);
 
@@ -99,6 +102,6 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("BULK_IMPORT_ERROR", error);
-    respondWithError(error);
+    return respondWithError(error);
   }
 }
