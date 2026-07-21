@@ -3,10 +3,7 @@ import PrintableEventReport from "@/features/reports/components/PrintableEventRe
 import { prisma } from "@/globals/libs/prisma";
 import { StudentWithRecords } from "@/globals/types/students";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
-import {
-  assertEventVisibility,
-  getFreshAuthSession,
-} from "@/globals/utils/auth";
+import { getFreshAuthSession } from "@/globals/utils/auth";
 
 type PrintPageProps = {
   params: Promise<{
@@ -38,8 +35,20 @@ export default async function PrintPage({ params }: PrintPageProps) {
   }
 
   // Organizers may only print reports for events they can see (own or
-  // approved); admins may print any.
-  assertEventVisibility(event, user);
+  // approved); admins may print any. Render a clean message instead of
+  // throwing (this is a page, not an API route with an error handler).
+  const canView =
+    user.role === "ADMIN" ||
+    event.createdById === user.id ||
+    event.status === "APPROVED";
+
+  if (!canView) {
+    return (
+      <div className="p-8 text-center text-gray-600">
+        You do not have access to this report.
+      </div>
+    );
+  }
 
   const students = await prisma.student.findMany({
     where: { ...buildEventStudentFilter(event) },
