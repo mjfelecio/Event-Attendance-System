@@ -50,6 +50,19 @@ export async function POST(request: Request) {
     // Create a lookup map for speed: slug -> id
     const groupMap = new Map(foundGroups.map((g) => [g.slug, g.id]));
 
+    // Reject the whole batch if any referenced group slug is unknown, instead
+    // of silently dropping it and importing a student missing its groups.
+    const unknownSlugs = allSlugs.filter((slug) => !groupMap.has(slug));
+    if (unknownSlugs.length > 0) {
+      return NextResponse.json(
+        err(
+          `Unknown group(s): ${unknownSlugs.join(", ")}. Fix the file and re-import.`,
+          "UNKNOWN_GROUPS",
+        ),
+        { status: 400 },
+      );
+    }
+
     // Process the transaction
     const results = await prisma.$transaction(
       students.map((data) => {

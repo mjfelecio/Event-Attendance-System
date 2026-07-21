@@ -4,7 +4,12 @@ import { FieldGroup, FieldSet } from "@/globals/components/shad-cn/field";
 import { useFormContext } from "react-hook-form";
 import { StudentFormValues } from "@/globals/schemas/studentSchema";
 
-const PersonalInfoSection = () => {
+type Props = {
+  /** Editing an existing student: the ID is the primary key and must not change. */
+  isEdit?: boolean;
+};
+
+const PersonalInfoSection = ({ isEdit = false }: Props) => {
   const {
     register,
     formState: { errors },
@@ -23,6 +28,12 @@ const PersonalInfoSection = () => {
           placeholder="2026XXXXXX"
           {...register("id")}
           error={errors.id?.message}
+          // The ID is the primary key; changing it on edit would upsert a new
+          // student instead of updating this one, so lock it when editing.
+          disabled={isEdit}
+          description={
+            isEdit ? "Student ID can't be changed after creation." : undefined
+          }
         />
 
         <div className="grid grid-cols-2 gap-4">

@@ -105,7 +105,9 @@ const DataTableBody = <TData,>({
         </Table>
       )}
 
-      <Pagination table={table} />
+      {/* No pagination while loading or errored - page controls next to a
+          skeleton or an error message are misleading. */}
+      {!isLoading && !isError && <Pagination table={table} />}
     </div>
   );
 };
