@@ -30,9 +30,17 @@ export async function GET(req: NextRequest) {
       Object.fromEntries(new URL(req.url).searchParams),
     );
 
+    // Reject invalid status/scope instead of silently returning an unfiltered
+    // (broader) result than the caller asked for.
+    if (!query.success) {
+      return NextResponse.json(err("Invalid status or scope parameter."), {
+        status: 400,
+      });
+    }
+
     const where: Record<string, unknown> = {};
-    const statusFilter = query.success ? query.data.status : undefined;
-    const scopeFilter = query.success ? query.data.scope : undefined;
+    const statusFilter = query.data.status;
+    const scopeFilter = query.data.scope;
 
     if (user.role === "ADMIN") {
       if (statusFilter) {
@@ -103,18 +111,34 @@ export async function POST(req: Request) {
       }
 
       assertEventOwnership(existing, user);
+
+      // Non-admins can only edit drafts and rejected events. Approved events
+      // are locked so content cannot change without re-review.
       const editableStatuses: Array<
         "DRAFT" | "PENDING" | "APPROVED" | "REJECTED"
       > =
         user.role === "ADMIN"
           ? ["DRAFT", "PENDING", "APPROVED", "REJECTED"]
-          : ["DRAFT", "APPROVED", "REJECTED"];
+          : ["DRAFT", "REJECTED"];
       assertEventStatus(existing, editableStatuses);
+
+      // Editing a rejected event returns it to DRAFT (clearing the review) so
+      // the organizer can fix it and resubmit.
+      const rejectionReset =
+        user.role !== "ADMIN" && existing.status === "REJECTED"
+          ? {
+              status: "DRAFT" as const,
+              reviewedById: null,
+              reviewedAt: null,
+              rejectionReason: null,
+            }
+          : {};
 
       const updated = await prisma.event.update({
         where: { id: payload.id },
         data: {
           ...baseData,
+          ...rejectionReset,
           includedGroups: {
             set: baseData.includedGroups.map((g) => ({ id: g })),
           },

@@ -4,30 +4,34 @@ import { Event } from "@/globals/types/events";
 type Props = {
   event: Event;
   onClick: () => void;
+  isSelected?: boolean;
 };
 
-const EventCard = ({ event, onClick }: Props) => {
+const EventCard = ({ event, onClick, isSelected = false }: Props) => {
   const isPast = new Date(event.end ?? event.start) < new Date();
-  
-  const startDate = new Date(event.start).toLocaleDateString('en-US', { 
-    weekday: 'short', 
-    month: 'short', 
-    day: 'numeric' 
+
+  const startDate = new Date(event.start).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
   });
-  
-  const timeDisplay = event.allDay 
-    ? "All day" 
-    : new Date(event.start).toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+
+  const timeDisplay = event.allDay
+    ? "All day"
+    : new Date(event.start).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
       });
 
   return (
-    <div 
+    <div
       onClick={onClick}
-      className={`flex gap-3 p-2.5 rounded-lg transition-all cursor-pointer hover:shadow-sm ${
-        isPast 
-          ? 'bg-gray-50 border-gray-200 text-gray-500' 
+      aria-current={isSelected ? "true" : undefined}
+      className={`flex gap-3 p-2.5 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
+        isSelected
+          ? 'border-indigo-500 ring-2 ring-indigo-200 bg-indigo-50/40'
+          : isPast
+          ? 'bg-gray-50 border-gray-200 text-gray-500'
           : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
       }`}
     >

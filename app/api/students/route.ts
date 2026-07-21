@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/globals/libs/prisma";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { err, ok } from "@/globals/utils/api";
+import { requireAuth } from "@/globals/utils/auth";
 import { buildStudentQuery } from "@/globals/utils/queryBuilder";
 import { studentSchema } from "@/globals/schemas/studentSchema";
 import { respondWithError } from "@/globals/utils/httpError";
@@ -10,6 +12,11 @@ import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter
 
 export async function POST(request: NextRequest) {
   try {
+    // Policy: any active, authenticated user may manage the student roster
+    // (create/edit/delete) - intentionally broader than event-deletion and
+    // organizer-approval, which require ownership/admin. requireAuth already
+    // enforces active status.
+    await requireAuth();
     const payload = await request.json();
     const validatedData = studentSchema.parse(payload);
 
@@ -60,6 +67,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(ok(student), { status: 200 });
   } catch (error) {
+    // A repeat student ID is a user error, not a 500.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        err("A student with that ID already exists.", "DUPLICATE"),
+        { status: 409 }
+      );
+    }
+
     return respondWithError(error);
   }
 }
@@ -81,6 +99,8 @@ export async function GET(request: NextRequest) {
   const searchParams = new URL(request.url).searchParams;
 
   try {
+    // Roster reads carry student PII, so they are authenticated too.
+    await requireAuth();
     const result = querySchema.parse(Object.fromEntries(searchParams));
 
     const { studentId, eventId, ...filters } = result;

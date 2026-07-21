@@ -75,9 +75,11 @@ const SignupPage = () => {
       const json = await res.json();
 
       if (!res.ok || !json.success) {
+        // The API returns { success:false, message } - reading json.error here
+        // meant duplicate-email/rate-limit/validation messages never showed.
         setError(
-          typeof json.error === "string"
-            ? json.error
+          typeof json.message === "string"
+            ? json.message
             : "Unable to submit signup."
         );
         return;
@@ -144,7 +146,7 @@ const SignupPage = () => {
             value={password}
             autoComplete="new-password"
             onChange={(event) => setPassword(event.target.value)}
-            minLength={6}
+            minLength={8}
             required
           />
         </label>

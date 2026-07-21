@@ -14,9 +14,12 @@ type Props = {
 const EventsList = ({ selectedEvent, onSelectEvent }: Props) => {
   const { data: events, isLoading, error } = useEvents();
 
-  const handleEventClick = useCallback((event: Event) => {
-    onSelectEvent(event);
-  }, []);
+  const handleEventClick = useCallback(
+    (event: Event) => {
+      onSelectEvent(event);
+    },
+    [onSelectEvent]
+  );
 
   return (
     <div className="h-[calc(100vh-64px)] basis-[30%] bg-background border rounded-md overflow-hidden">
@@ -44,12 +47,13 @@ const EventsList = ({ selectedEvent, onSelectEvent }: Props) => {
             <EventCard
               key={event.id}
               event={event}
+              isSelected={selectedEvent?.id === event.id}
               onClick={() => handleEventClick(event)}
             />
           ))
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">
-            <p>No upcoming events</p>
+            <p>No events to show</p>
           </div>
         )}
       </div>

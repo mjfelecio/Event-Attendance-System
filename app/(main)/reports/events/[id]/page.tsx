@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useParams } from "next/navigation";
-import { capitalize } from "lodash";
+import { capitalizeLabel } from "@/globals/utils/text";
 import { FaUserGroup } from "react-icons/fa6";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { VscPercentage } from "react-icons/vsc";
@@ -22,12 +22,21 @@ const EventReportsPage = () => {
   const { id } = useParams();
   const eventId = String(id);
 
-  const { data: event, isLoading: isEventLoading } = useFetchEvent(eventId);
-  const { data: eventStats, isLoading: isStatsLoading } =
-    useStatsOfEvent(eventId);
+  const {
+    data: event,
+    isLoading: isEventLoading,
+    isError: isEventError,
+  } = useFetchEvent(eventId);
+  const {
+    data: eventStats,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+  } = useStatsOfEvent(eventId);
 
   const { isExporting, exportData } = useDataExport({
-    apiUrl: `/api/events/${eventId}/records`,
+    // includeAbsent so the CSV matches the on-screen report (present + absent),
+    // not just the present rows.
+    apiUrl: `/api/events/${eventId}/records?includeAbsent=true`,
     filename: "attendance_records",
   });
 
@@ -36,8 +45,19 @@ const EventReportsPage = () => {
     return `${((eventStats.present / eventStats.eligible) * 100).toFixed(1)}%`;
   }, [eventStats]);
 
-  if (isEventLoading || !event) {
+  if (isEventLoading) {
     return <div className="p-6 text-lg">Loading event report…</div>;
+  }
+
+  if (isEventError || !event) {
+    return (
+      <div className="p-6">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Couldn&apos;t load this event report. It may have been removed, or you
+          may not have access. Please go back and try again.
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -47,7 +67,7 @@ const EventReportsPage = () => {
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold">{event.title}</h1>
           <p className="text-sm text-muted-foreground">
-            {readableDate(event.start)} • {capitalize(event.category)} Event
+            {readableDate(event.start)} • {capitalizeLabel(event.category)} Event
           </p>
         </div>
 
@@ -63,6 +83,13 @@ const EventReportsPage = () => {
           />
         </div>
       </section>
+
+      {isStatsError && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Couldn&apos;t load attendance totals. The numbers below may be
+          incomplete.
+        </div>
+      )}
 
       {/* ================= Attendance Summary ================= */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">

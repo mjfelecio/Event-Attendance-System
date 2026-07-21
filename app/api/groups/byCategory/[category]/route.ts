@@ -10,11 +10,11 @@ import { NextResponse } from "next/server";
  */
 export async function GET(
   request: Request,
-  { params }: { params: { category: EventCategory } },
+  { params }: { params: Promise<{ category: string }> },
 ) {
   const { category } = await params;
   try {
-    if (!Object.values(EventCategory).includes(category)) {
+    if (!Object.values(EventCategory).includes(category as EventCategory)) {
       return NextResponse.json(
         err("Invalid category provided", "INVALID_CATEGORY"),
         {
@@ -25,7 +25,7 @@ export async function GET(
 
     const groups = await prisma.group.findMany({
       where: {
-        category: category,
+        category: category as EventCategory,
       },
       select: {
         id: true,

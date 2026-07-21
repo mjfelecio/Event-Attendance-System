@@ -34,7 +34,7 @@ const AuthSplitLayout = ({
 
             <div className="relative text-center">
               <Image
-                src="/login/logo.png"
+                src="/logos/school/logo.png"
                 alt="ACLC College of Ormoc City logo"
                 width={360}
                 height={360}
@@ -52,7 +52,7 @@ const AuthSplitLayout = ({
             <div className="w-full md:max-w-md">
               <div className="mb-5 flex justify-center md:hidden">
                 <Image
-                  src="/login/logo.png"
+                  src="/logos/school/logo.png"
                   alt="ACLC College of Ormoc City logo"
                   width={104}
                   height={104}

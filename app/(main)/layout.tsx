@@ -47,8 +47,10 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             type="button"
             className="w-full rounded-lg bg-slate-900 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
             onClick={async () => {
-              await logout();
-              router.replace("/login");
+              // Navigate only if logout actually succeeded server-side.
+              if (await logout()) {
+                router.replace("/login");
+              }
             }}
           >
             Return to login

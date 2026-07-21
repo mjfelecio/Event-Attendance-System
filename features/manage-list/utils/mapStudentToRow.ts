@@ -1,5 +1,9 @@
 import { StudentRow } from "@/features/manage-list/types";
-import { SchoolLevel, Student, StudentStatus, YearLevel } from "@prisma/client";
+import { SchoolLevel, Student, YearLevel } from "@prisma/client";
+
+// Student status is a UI-level label; the DB schema has no StudentStatus enum,
+// so mirror the literal union used by StudentRow rather than importing one.
+type StudentStatus = StudentRow["status"];
 
 const YEAR_LEVEL_LABELS: Record<YearLevel, string> = {
   YEAR_1: "1st Year",

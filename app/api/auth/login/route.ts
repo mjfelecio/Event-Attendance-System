@@ -4,16 +4,40 @@ import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
 import { respondWithError } from "@/globals/utils/httpError";
 import { setAuthSession } from "@/globals/utils/auth";
+import {
+  hashPassword,
+  isHashedPassword,
+  verifyPassword,
+} from "@/globals/utils/password";
 import { loginSchema } from "@/features/auth/schema/loginSchema";
+import { clientKey, rateLimit } from "@/globals/utils/rateLimit";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = loginSchema.parse(await req.json());
+    const parsed = loginSchema.parse(await req.json());
+    const email = parsed.email.trim().toLowerCase();
+    const password = parsed.password;
+
+    // 10 attempts per client+account per 5 minutes
+    if (!rateLimit(`login:${clientKey(req)}:${email}`, 10, 5 * 60_000)) {
+      return NextResponse.json(
+        err("Too many login attempts. Try again in a few minutes."),
+        { status: 429 }
+      );
+    }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || user.password !== password) {
+    if (!user || !(await verifyPassword(password, user.password))) {
       return NextResponse.json(err("Invalid credentials."), { status: 401 });
+    }
+
+    // Transparently upgrade legacy plaintext rows to scrypt hashes.
+    if (!isHashedPassword(user.password)) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: await hashPassword(password) },
+      });
     }
 
     if (user.status === "PENDING") {

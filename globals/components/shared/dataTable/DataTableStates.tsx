@@ -23,6 +23,27 @@ export const DataTableEmptyState = ({
 };
 
 /**
+ * DataTableErrorState
+ *
+ * Shown inside the table card when the data fails to load, so error, loading,
+ * and empty presentation all live in the same shared shell.
+ */
+export const DataTableErrorState = ({
+  title = "Couldn't load data",
+  description = "Something went wrong while loading this table. Please retry.",
+}: {
+  title?: string;
+  description?: string;
+}) => {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center py-12 gap-2">
+      <p className="text-lg font-medium text-red-700">{title}</p>
+      <p className="text-sm text-red-600 max-w-sm">{description}</p>
+    </div>
+  );
+};
+
+/**
  * DataTableFilteredEmptyState
  * Used when search or filters return zero matches.
  */

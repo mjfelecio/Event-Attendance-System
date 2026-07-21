@@ -18,6 +18,7 @@ import { transformEventsForCalendar } from "@/features/calendar/utils/calendar";
 import { useCalendarResize } from "@/features/calendar/hooks/useCalendarResize";
 import { useDraftEvent } from "@/features/calendar/hooks/useDraftEvent";
 import { useCalendarEvents } from "@/features/calendar/hooks/useCalendarEvents";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 const Calendar = ({
   onSelectDate,
@@ -25,14 +26,16 @@ const Calendar = ({
   onEditEvent,
 }: CalendarProps) => {
   const { isExpanded: isSidebarExpanded } = useSidebar();
+  const { user } = useAuth();
   const { data } = useEvents();
-  const { mutate: saveEvent } = useSaveEvent();
+  const { mutateAsync: saveEvent } = useSaveEvent();
   const calendarRef = useRef<FullCalendar | null>(null);
 
-  // Transform events for FullCalendar format
+  // Transform events for FullCalendar format; per-event editability follows
+  // the server's rules (own drafts/rejected, or admin)
   const transformedEvents = useMemo(
-    () => transformEventsForCalendar(data || []),
-    [data]
+    () => transformEventsForCalendar(data || [], user),
+    [data, user]
   );
 
   // Custom hooks for managing component behavior

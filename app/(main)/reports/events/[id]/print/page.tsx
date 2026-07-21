@@ -4,13 +4,13 @@ import { StudentWithRecords } from "@/globals/types/students";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
 
 type PrintPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export default async function PrintPage({ params }: PrintPageProps) {
-  const eventId = await params.id;
+  const { id: eventId } = await params;
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },

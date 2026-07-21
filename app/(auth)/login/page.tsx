@@ -58,7 +58,7 @@ const LoginPage = () => {
 
       if (error instanceof Error) {
         setLoginError(error.message);
-        console.log(`Unknown error prevented submission: ${error}`);
+        console.error("Login submission failed:", error);
       }
     } finally {
       setIsSubmitting(false);

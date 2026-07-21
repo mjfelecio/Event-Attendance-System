@@ -6,7 +6,7 @@ import { respondWithError } from "@/globals/utils/httpError";
 // Fetching a single student by id
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
 
@@ -32,7 +32,7 @@ export async function GET(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
 

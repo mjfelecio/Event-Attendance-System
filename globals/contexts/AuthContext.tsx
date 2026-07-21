@@ -28,18 +28,24 @@ type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
-  logout: () => Promise<void>;
+  logout: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 async function fetchSession(): Promise<AuthUser | null> {
-  const res = await fetch("/api/auth/session", { cache: "no-store" });
-  const json = await res.json();
-  if (!res.ok || !json.success) {
+  // Never throw - an unreachable server must resolve to "not logged in",
+  // otherwise the app hangs forever on "Checking access".
+  try {
+    const res = await fetch("/api/auth/session", { cache: "no-store" });
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      return null;
+    }
+    return json.data;
+  } catch {
     return null;
   }
-  return json.data;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -83,9 +89,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { success: true };
   };
 
-  const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+  const logout = async (): Promise<boolean> => {
+    // Only clear local state if the server actually deleted the cookie -
+    // otherwise the browser still holds a valid session while the UI shows
+    // "logged out", which is worse than surfacing a failed logout.
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (!res.ok) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
     setUser(null);
+    return true;
   };
 
   const value = useMemo(

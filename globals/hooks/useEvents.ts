@@ -26,12 +26,17 @@ const transformEvent = (e: EventAPI): Event => ({
 export const useSaveEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (event: EventForm) => {
-      return fetchApi<EventForm>("/api/events", {
+    // Accepts a form payload (EventDrawer) or a full Event (calendar
+    // drag/resize); both serialize to the same JSON the API validates.
+    mutationFn: async (event: EventForm | Event) => {
+      // The API returns string dates; transform so the resolved value is a
+      // real Event (Date objects), matching what the type promises.
+      const saved = await fetchApi<EventAPI>("/api/events", {
         method: "POST",
         body: JSON.stringify(event),
         headers: { "Content-Type": "application/json" },
       });
+      return transformEvent(saved);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
@@ -42,14 +47,15 @@ const useEventAction = (action: "SUBMIT" | "APPROVE" | "REJECT") => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { id: string; reason?: string }) => {
-      return fetchApi<Event>(`/api/events/${payload.id}`, {
+    mutationFn: async (payload: { id: string; reason?: string }) => {
+      const updated = await fetchApi<EventAPI>(`/api/events/${payload.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           action === "REJECT" ? { action, reason: payload.reason } : { action },
         ),
       });
+      return transformEvent(updated);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.events.all() }),
@@ -79,28 +85,17 @@ export const useDeleteEvent = () => {
 };
 
 /**
- * Sets the event to start recording timeout instead of timein
- */
-export const useStartTimeoutMode = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => {
-      return fetchApi(`/api/events/${id}/timeout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-    },
-    onSuccess: (_, id) =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.events.withId(id) }),
-  });
-};
-
-/**
  * Fetches stats from the event
  *
  * @returns EventStats
  */
-export const useStatsOfEvent = (eventId?: string) => {
+/**
+ * @param live When true (the attendance screen), poll so a second device's
+ *   scans appear without a manual refresh. Leave false (report pages) so
+ *   completed events don't poll needlessly. `enabled: !!eventId` only means an
+ *   id exists, not that attendance is active - hence the explicit flag.
+ */
+export const useStatsOfEvent = (eventId?: string, live = false) => {
   return useQuery({
     queryKey: queryKeys.events.statsFromEvent(eventId!),
     enabled: !!eventId,
@@ -109,6 +104,13 @@ export const useStatsOfEvent = (eventId?: string) => {
 
       return fetchApi<EventStats>(`/api/events/${eventId}/stats`);
     },
+    ...(live
+      ? {
+          staleTime: 5_000,
+          refetchInterval: 8_000,
+          refetchIntervalInBackground: false,
+        }
+      : {}),
   });
 };
 
@@ -154,9 +156,13 @@ export const useFetchApprovedEvents = () => {
 };
 
 /**
- * Fetches an event through its id
+ * Fetches an event through its id.
+ *
+ * @param live When true (the attendance screen), poll so event mode changes
+ *   (isTimeout) made on another device are reflected here. Leave false
+ *   elsewhere so it doesn't poll needlessly.
  */
-export const useFetchEvent = (eventId?: string) => {
+export const useFetchEvent = (eventId?: string, live = false) => {
   return useQuery({
     queryKey: queryKeys.events.withId(eventId!),
     queryFn: async () => {
@@ -164,6 +170,13 @@ export const useFetchEvent = (eventId?: string) => {
       return transformEvent(event);
     },
     enabled: !!eventId,
+    ...(live
+      ? {
+          staleTime: 5_000,
+          refetchInterval: 8_000,
+          refetchIntervalInBackground: false,
+        }
+      : {}),
   });
 };
 

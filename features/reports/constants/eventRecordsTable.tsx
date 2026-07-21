@@ -1,59 +1,42 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { StudentAttendanceRecord } from "@/globals/types/students";
 import { Button } from "@/globals/components/shad-cn/button";
-import { ArrowUpDown, FileText } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { AttendanceStatus } from "@/globals/types/records";
-import { Group } from "@prisma/client";
 
-function ViewRecordCell({ row }: { row: any }) {
-  const { id: recordId } = row.original;
+function StatusCell({ getValue }: { getValue: () => unknown }) {
+  const status: AttendanceStatus = getValue() === "absent" ? "absent" : "present";
+  const Icon = ATTENDANCE_STATUS_ICONS[status];
 
-  const handleViewRecord = () => {
-    // Navigate to printable record page
-    window.open(`/reports/record/${recordId}`, "_blank");
-  };
-
-  return (
-    <div className="flex justify-center">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleViewRecord}
-        className="gap-2"
-      >
-        <FileText className="h-4 w-4" />
-        View
-      </Button>
-    </div>
-  );
-}
-
-function StatusCell({ getValue }: { getValue: () => any }) {
-  const Icon = ATTENDANCE_STATUS_ICONS.present;
-
-  const statusConfig: Record<AttendanceStatus, Record<any, any>> = {
+  const statusConfig: Record<AttendanceStatus, { color: string; bg: string }> = {
     present: { color: "text-emerald-600", bg: "bg-emerald-50" },
-    // EXCUSED: { color: "text-sky-600", bg: "bg-sky-50" },
     absent: { color: "text-red-600", bg: "bg-red-50" },
-    // LATE: {}
   };
 
-  const config = statusConfig.present;
+  const config = statusConfig[status];
 
   return (
     <div className="flex justify-center">
-      <div
-        className={`flex items-center gap-2 px-3 py-1 rounded-full ${config.bg}`}
-      >
+      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${config.bg}`}>
         <Icon className={`h-4 w-4 ${config.color}`} />
         <span className={`text-sm font-medium ${config.color}`}>
-          {"PRESENT"}
+          {status.toUpperCase()}
         </span>
       </div>
     </div>
   );
 }
+
+const formatTime = (value: string | null) =>
+  value
+    ? new Date(value).toLocaleString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      })
+    : "N/A";
 
 export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
   {
@@ -122,9 +105,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
       </div>
     ),
     cell: ({ getValue }) => (
-      <div className="text-center text-sm">
-        {(getValue() as Group | null)?.name || "N/A"}
-      </div>
+      <div className="text-center text-sm">{getValue() as string}</div>
     ),
     enableGlobalFilter: false,
   },
@@ -141,18 +122,10 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
         </Button>
       </div>
     ),
-    accessorFn: (row) => {
-      return row.timein
-        ? new Date(row.timein).toLocaleString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })
-        : "N/A";
-    },
-    cell: ({ getValue }) => (
-      <div className="text-center">{getValue() as string}</div>
+    accessorFn: (row) => (row.timein ? new Date(row.timein).getTime() : 0),
+    sortingFn: "basic",
+    cell: ({ row }) => (
+      <div className="text-center">{formatTime(row.original.timein)}</div>
     ),
     enableGlobalFilter: false,
   },
@@ -169,18 +142,10 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
         </Button>
       </div>
     ),
-    accessorFn: (row) => {
-      return row.timeout
-        ? new Date(row.timeout).toLocaleString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          })
-        : "N/A";
-    },
-    cell: ({ getValue }) => (
-      <div className="text-center">{getValue() as string}</div>
+    accessorFn: (row) => (row.timeout ? new Date(row.timeout).getTime() : 0),
+    sortingFn: "basic",
+    cell: ({ row }) => (
+      <div className="text-center">{formatTime(row.original.timeout)}</div>
     ),
     enableGlobalFilter: false,
   },
@@ -200,10 +165,4 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
     cell: StatusCell,
     enableGlobalFilter: false,
   },
-  // {
-  //   id: "view",
-  //   header: () => <div className="text-center">Details</div>,
-  //   cell: ({ row }) => <ViewRecordCell row={row} />,
-  //   enableSorting: false,
-  // },
 ];
