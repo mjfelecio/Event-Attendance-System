@@ -41,7 +41,10 @@ const GROUP_DATA: Record<
     "Hotel Management",
     "Business Administration",
   ],
-  HOUSE: ["Cahel", "Roxxo", "Giallio", "Azul", "Vierdy"],
+  // Names/slugs must match the canonical HOUSES list in
+  // globals/constants/groups.ts (the House UI queries those slugs), e.g.
+  // "Vierrdy" -> "vierrdy", not "Vierdy" -> "vierdy".
+  HOUSE: ["Cahel", "Roxxo", "Giallio", "Azul", "Vierrdy"],
   PROGRAM: ["BSCS", "BSIT", "BSHM", "BSBA"],
   YEAR: Object.values(YearLevel),
   SECTION: ["BSCS-2A", "BSIT-2B", "STEM-11A", "STEM-12B"],

@@ -41,14 +41,15 @@ export async function POST(request: Request) {
       ),
     ) as string[];
 
-    // Fetch all relevant groups
+    // Fetch all relevant groups with their category, so each slug can be
+    // validated against the field that referenced it.
     const foundGroups = await prisma.group.findMany({
       where: { slug: { in: allSlugs } },
-      select: { id: true, slug: true },
+      select: { id: true, slug: true, category: true },
     });
 
-    // Create a lookup map for speed: slug -> id
-    const groupMap = new Map(foundGroups.map((g) => [g.slug, g.id]));
+    // Create a lookup map for speed: slug -> { id, category }
+    const groupMap = new Map(foundGroups.map((g) => [g.slug, g]));
 
     // Reject the whole batch if any referenced group slug is unknown, instead
     // of silently dropping it and importing a student missing its groups.
@@ -58,6 +59,41 @@ export async function POST(request: Request) {
         err(
           `Unknown group(s): ${unknownSlugs.join(", ")}. Fix the file and re-import.`,
           "UNKNOWN_GROUPS",
+        ),
+        { status: 400 },
+      );
+    }
+
+    // Each column must reference a group of the matching category, so a HOUSE
+    // slug can't be smuggled into the section column (leaving the student with
+    // no real section while the batch still "succeeds").
+    const FIELD_CATEGORY = {
+      section: "SECTION",
+      house: "HOUSE",
+      department: "DEPARTMENT",
+      program: "PROGRAM",
+      strand: "STRAND",
+    } as const;
+
+    const mismatches: string[] = [];
+    for (const s of students) {
+      for (const [field, expected] of Object.entries(FIELD_CATEGORY)) {
+        const slug = (s as Record<string, string | null | undefined>)[field];
+        if (!slug) continue;
+        const group = groupMap.get(slug);
+        if (group && group.category !== expected) {
+          mismatches.push(
+            `"${slug}" is a ${group.category.toLowerCase()}, not a ${expected.toLowerCase()} (column "${field}")`,
+          );
+        }
+      }
+    }
+
+    if (mismatches.length > 0) {
+      return NextResponse.json(
+        err(
+          `Group category mismatch: ${Array.from(new Set(mismatches)).join("; ")}.`,
+          "GROUP_CATEGORY_MISMATCH",
         ),
         { status: 400 },
       );
@@ -75,7 +111,7 @@ export async function POST(request: Request) {
           data.strand,
         ]
           .filter(Boolean)
-          .map((slug) => groupMap.get(slug as string))
+          .map((slug) => groupMap.get(slug as string)?.id)
           .filter(Boolean)
           .map((id) => ({ id }));
 
