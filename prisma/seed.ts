@@ -7,6 +7,10 @@ import {
 } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+// Derive the school vocabulary from the single source of truth the UI reads,
+// so seeded groups match what the selection boards query (relative import: the
+// seed runs under tsx, and groups.ts has no dependencies of its own).
+import { HOUSES, SHS_STRANDS } from "../globals/constants/groups";
 
 // Fail fast rather than silently seeding a throwaway in-memory database that
 // the app never sees.
@@ -32,21 +36,38 @@ const slugify = (value: string): string =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 
-const GROUP_DATA: Record<
-  Exclude<EventCategory, "ALL" | "COLLEGE" | "SHS">,
-  string[]
+// Name-derived groups: the DB slug is slugify(name), which is exactly what
+// each consumer queries for these categories.
+const GROUP_DATA: Partial<
+  Record<Exclude<EventCategory, "ALL" | "COLLEGE" | "SHS">, string[]>
 > = {
   DEPARTMENT: [
     "Computer Studies",
     "Hotel Management",
     "Business Administration",
   ],
-  HOUSE: ["Cahel", "Roxxo", "Giallio", "Azul", "Vierdy"],
   PROGRAM: ["BSCS", "BSIT", "BSHM", "BSBA"],
   YEAR: Object.values(YearLevel),
   SECTION: ["BSCS-2A", "BSIT-2B", "STEM-11A", "STEM-12B"],
-  STRAND: ["STEM", "ABM", "HUMSS", "GAS"],
 };
+
+// Houses and strands are derived straight from the canonical constants so the
+// selection boards (which read the same file) always find these groups. Slugs
+// match each board's query value: HOUSES.slug for houses, slugify(code) for
+// strands - so no HUMSS/GAS drift.
+const DERIVED_GROUPS: { name: string; slug: string; category: EventCategory }[] =
+  [
+    ...HOUSES.map((h) => ({
+      name: h.name,
+      slug: h.slug,
+      category: "HOUSE" as EventCategory,
+    })),
+    ...SHS_STRANDS.map((s) => ({
+      name: s.name,
+      slug: slugify(s.code),
+      category: "STRAND" as EventCategory,
+    })),
+  ];
 
 async function main() {
   // This seed wipes every table before inserting demo data. Guard it so it
@@ -69,7 +90,7 @@ async function main() {
   // Groups
   const allGroups: Group[] = [];
   for (const [category, names] of Object.entries(GROUP_DATA)) {
-    for (const name of names) {
+    for (const name of names ?? []) {
       const group = await prisma.group.create({
         data: {
           name,
@@ -79,6 +100,12 @@ async function main() {
       });
       allGroups.push(group);
     }
+  }
+  for (const { name, slug, category } of DERIVED_GROUPS) {
+    const group = await prisma.group.create({
+      data: { name, slug, category },
+    });
+    allGroups.push(group);
   }
   console.log(`Created ${allGroups.length} groups.`);
 

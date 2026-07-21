@@ -5,6 +5,7 @@ import { requireAuth } from "@/globals/utils/auth";
 import { studentSchema } from "@/globals/schemas/studentSchema";
 import { z } from "zod";
 import { respondWithError } from "@/globals/utils/httpError";
+import { validateStudentGroupSlugs } from "@/globals/utils/studentGroups";
 
 const bulkSchema = z.array(studentSchema);
 
@@ -30,43 +31,21 @@ export async function POST(request: Request) {
 
     const students = parseResult.data;
 
-    // Collect all unique slugs across all students to resolve IDs in one go
-    const allSlugs = Array.from(
-      new Set(
-        students.flatMap((s) =>
-          [s.section, s.house, s.department, s.program, s.strand].filter(
-            Boolean,
-          ),
-        ),
-      ),
-    ) as string[];
-
-    // Fetch all relevant groups
-    const foundGroups = await prisma.group.findMany({
-      where: { slug: { in: allSlugs } },
-      select: { id: true, slug: true },
-    });
-
-    // Create a lookup map for speed: slug -> id
-    const groupMap = new Map(foundGroups.map((g) => [g.slug, g.id]));
-
-    // Reject the whole batch if any referenced group slug is unknown, instead
-    // of silently dropping it and importing a student missing its groups.
-    const unknownSlugs = allSlugs.filter((slug) => !groupMap.has(slug));
-    if (unknownSlugs.length > 0) {
-      return NextResponse.json(
-        err(
-          `Unknown group(s): ${unknownSlugs.join(", ")}. Fix the file and re-import.`,
-          "UNKNOWN_GROUPS",
-        ),
-        { status: 400 },
-      );
+    // Validate + resolve every referenced group slug in one shot, using the
+    // same shared validator the single-student endpoint uses: each slug must
+    // exist and match its column's category, or the whole batch is rejected.
+    const resolution = await validateStudentGroupSlugs(students);
+    if (!resolution.ok) {
+      return NextResponse.json(err(resolution.error, "INVALID_GROUPS"), {
+        status: 400,
+      });
     }
+    const { slugToId } = resolution;
 
     // Process the transaction
     const results = await prisma.$transaction(
       students.map((data) => {
-        // Map data slugs to actual IDs found in our lookup
+        // Map data slugs to actual IDs (all validated above).
         const studentGroupIds = [
           data.section,
           data.house,
@@ -75,7 +54,7 @@ export async function POST(request: Request) {
           data.strand,
         ]
           .filter(Boolean)
-          .map((slug) => groupMap.get(slug as string))
+          .map((slug) => slugToId.get(slug as string))
           .filter(Boolean)
           .map((id) => ({ id }));
 

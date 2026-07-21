@@ -42,15 +42,20 @@ const ManageStudentPage = () => {
   // Derive Category State. Fall back to ALL for unknown categories so a
   // crafted ?category=... can't crash on an undefined config.
   const rawCategory = filters?.category as string | undefined;
-  const category: ManageListCategory =
-    rawCategory && rawCategory in CATEGORY_CONFIG
-      ? (rawCategory as ManageListCategory)
-      : "ALL";
+  const isKnownCategory = !!rawCategory && rawCategory in CATEGORY_CONFIG;
+  const category: ManageListCategory = isKnownCategory
+    ? (rawCategory as ManageListCategory)
+    : "ALL";
   const config = CATEGORY_CONFIG[category];
 
-  // Use the validated category (not the raw param) so an unknown value falls
-  // back to the ALL roster instead of the API rejecting it with a 400.
-  const queryFilters = { ...filters, category };
+  // When the category is unknown we truly fall back to the ALL roster, so drop
+  // the other raw filters too - otherwise ?category=invalid&house=azul would
+  // claim "All Students" while still returning only Azul. A valid/absent
+  // category keeps its filters.
+  const queryFilters =
+    rawCategory && !isKnownCategory
+      ? { category: "ALL" }
+      : { ...filters, category };
   const { data: students, isLoading, isError } = useFetchStudents(queryFilters);
 
   // Dynamically extract the "item" slug based on the category's specific query key

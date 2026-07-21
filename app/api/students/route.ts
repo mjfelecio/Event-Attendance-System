@@ -9,6 +9,7 @@ import { studentSchema } from "@/globals/schemas/studentSchema";
 import { respondWithError } from "@/globals/utils/httpError";
 import { flattenStudentGroups } from "@/globals/utils/students";
 import { buildEventStudentFilter } from "@/globals/utils/buildEventStudentFilter";
+import { validateStudentGroupSlugs } from "@/globals/utils/studentGroups";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,21 +21,35 @@ export async function POST(request: NextRequest) {
     const payload = await request.json();
     const validatedData = studentSchema.parse(payload);
 
-    // Resolve group slugs to IDs
-    const groupSlugs = [
+    // Resolve group slugs to IDs using the same validator the bulk endpoint
+    // uses: every slug must exist AND match its column's category, so a crafted
+    // request can't (e.g.) put a HOUSE slug in the section field or reference
+    // an unknown section.
+    const resolution = await validateStudentGroupSlugs([
+      {
+        section: validatedData.section,
+        house: validatedData.house,
+        department: validatedData.department,
+        program: validatedData.program,
+        strand: validatedData.strand,
+      },
+    ]);
+
+    if (!resolution.ok) {
+      return NextResponse.json(err(resolution.error, "INVALID_GROUPS"), {
+        status: 400,
+      });
+    }
+
+    const groupConnectIds = [
       validatedData.section,
       validatedData.house,
       validatedData.department,
       validatedData.program,
       validatedData.strand,
-    ].filter(Boolean) as string[];
-
-    const groups = await prisma.group.findMany({
-      where: { slug: { in: groupSlugs } },
-      select: { id: true },
-    });
-
-    const groupConnectIds = groups.map((g) => ({ id: g.id }));
+    ]
+      .filter(Boolean)
+      .map((slug) => ({ id: resolution.slugToId.get(slug as string)! }));
 
     // We use the student's ID (the 11-character string) as the unique identifier
     const student = await prisma.student.upsert({
