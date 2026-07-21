@@ -26,9 +26,7 @@ const transformEvent = (e: EventAPI): Event => ({
 export const useSaveEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    // Accepts a form payload (EventDrawer) or a full Event (calendar
-    // drag/resize); both serialize to the same JSON the API validates.
-    mutationFn: async (event: EventForm | Event) => {
+    mutationFn: async (event: EventForm) => {
       // The API returns string dates; transform so the resolved value is a
       // real Event (Date objects), matching what the type promises.
       const saved = await fetchApi<EventAPI>("/api/events", {

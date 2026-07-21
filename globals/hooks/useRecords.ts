@@ -14,8 +14,10 @@ export const useCreateRecord = (eventId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // `changed` is false when the scan was a no-op (already timed in/out), so
+    // the caller can avoid falsely reporting a fresh record.
     mutationFn: (record: NewRecord) => {
-      return fetchApi<Record>("/api/records", {
+      return fetchApi<Record & { changed: boolean }>("/api/records", {
         method: "POST",
         body: JSON.stringify(record),
         headers: { "Content-Type": "application/json" },

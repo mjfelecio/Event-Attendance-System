@@ -73,17 +73,21 @@ export async function POST(req: Request) {
         );
       }
 
+      // `changed` distinguishes a real time-out from a repeat scan, so the UI
+      // doesn't falsely report success when the student was already timed out.
+      let changed = false;
       if (!existing.timeout) {
-        await prisma.record.updateMany({
+        const res = await prisma.record.updateMany({
           where: { id: existing.id, timeout: null },
           data: { timeout: now, lastModifiedById: user.id },
         });
+        changed = res.count > 0;
       }
 
       const current = await prisma.record.findUnique({
         where: { id: existing.id },
       });
-      return NextResponse.json(ok(current), { status: 200 });
+      return NextResponse.json(ok({ ...current, changed }), { status: 200 });
     }
 
     if (!existing) {
@@ -98,7 +102,9 @@ export async function POST(req: Request) {
           },
         });
 
-        return NextResponse.json(ok(created), { status: 201 });
+        return NextResponse.json(ok({ ...created, changed: true }), {
+          status: 201,
+        });
       } catch (createError: unknown) {
         // Unique constraint hit: another scan created the record first -
         // fall through and return that record untouched.
@@ -110,12 +116,22 @@ export async function POST(req: Request) {
         where: { id: existing.id, timein: null },
         data: { timein: now, lastModifiedById: user.id },
       });
+
+      const current = await prisma.record.findUnique({
+        where: { eventId_studentId: { eventId, studentId } },
+      });
+      return NextResponse.json(ok({ ...current, changed: true }), {
+        status: 200,
+      });
     }
 
+    // Nothing changed: the student was already timed in for this event.
     const current = await prisma.record.findUnique({
       where: { eventId_studentId: { eventId, studentId } },
     });
-    return NextResponse.json(ok(current), { status: 200 });
+    return NextResponse.json(ok({ ...current, changed: false }), {
+      status: 200,
+    });
   } catch (error) {
     return respondWithError(error);
   }

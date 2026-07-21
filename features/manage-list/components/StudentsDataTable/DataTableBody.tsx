@@ -11,6 +11,7 @@ import {
 } from "@/globals/components/shad-cn/table";
 import {
   DataTableEmptyState,
+  DataTableErrorState,
   DataTableFilteredEmptyState,
   DataTableSkeleton,
 } from "@/globals/components/shared/dataTable/DataTableStates";
@@ -21,6 +22,8 @@ type Props<TData> = {
   table: TableType<TData>;
   /** Whether the data is still loading */
   isLoading: boolean;
+  /** Whether the data fetch failed */
+  isError?: boolean;
 };
 
 const MIN_TABLE_HEIGHT = "min-h-[420px]";
@@ -32,7 +35,11 @@ const MIN_TABLE_HEIGHT = "min-h-[420px]";
  * Separated to keep the main DataTable component focused on orchestration
  * rather than rendering details.
  */
-const DataTableBody = <TData,>({ table, isLoading }: Props<TData>) => {
+const DataTableBody = <TData,>({
+  table,
+  isLoading,
+  isError = false,
+}: Props<TData>) => {
   const hasRows = table.getRowModel().rows.length > 0;
   const hasFilters =
     table.getState().globalFilter || table.getState().columnFilters.length > 0;
@@ -48,6 +55,11 @@ const DataTableBody = <TData,>({ table, isLoading }: Props<TData>) => {
     >
       {isLoading ? (
         <DataTableSkeleton />
+      ) : isError ? (
+        <DataTableErrorState
+          title="Couldn't load students"
+          description="Something went wrong while loading the roster. Please retry."
+        />
       ) : !hasRows ? (
         hasFilters ? (
           <DataTableFilteredEmptyState onClear={resetFilters} />

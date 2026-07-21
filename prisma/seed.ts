@@ -8,8 +8,16 @@ import {
 import { faker } from "@faker-js/faker";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
+// Fail fast rather than silently seeding a throwaway in-memory database that
+// the app never sees.
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL is not set. Refusing to seed. Set it in .env before running the seed.",
+  );
+}
+
 const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || ":memory:",
+  url: process.env.DATABASE_URL,
 });
 const prisma = new PrismaClient({ adapter });
 
@@ -41,6 +49,15 @@ const GROUP_DATA: Record<
 };
 
 async function main() {
+  // This seed wipes every table before inserting demo data. Guard it so it
+  // can never erase a real database: allow only outside production, unless
+  // SEED_FORCE=true is explicitly set.
+  if (process.env.NODE_ENV === "production" && process.env.SEED_FORCE !== "true") {
+    throw new Error(
+      "Refusing to run destructive seed in production. Set SEED_FORCE=true to override.",
+    );
+  }
+
   console.log("Seeding database...");
 
   await prisma.record.deleteMany();

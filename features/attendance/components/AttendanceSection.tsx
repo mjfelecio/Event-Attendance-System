@@ -64,13 +64,23 @@ export default function AttendanceSection({ selectedEvent }: Props) {
 
         setDisplayedStudent(student);
 
-        await createRecord({
+        const result = await createRecord({
           eventId: selectedEvent.id,
           studentId,
           method: "SCANNED",
         });
 
-        toastSuccess("Attendance recorded");
+        if (result.changed) {
+          toastSuccess(
+            selectedEvent.isTimeout ? "Time-out recorded" : "Attendance recorded",
+          );
+        } else {
+          toastWarning(
+            selectedEvent.isTimeout
+              ? "Student was already timed out."
+              : "Student attendance was already recorded.",
+          );
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
 
