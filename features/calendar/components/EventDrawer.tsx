@@ -87,7 +87,10 @@ export default function EventDrawer({
     isEdit && isOrganizer && eventStatus === "PENDING";
   const isReadOnlyView = isReadOnlyApprovedView || isReadOnlyPendingView;
 
-  const canSubmit = isOrganizer && eventStatus === "DRAFT";
+  // A draft's owner can submit it for review - including an admin who created
+  // it, otherwise admin-authored drafts get stranded (the API already allows
+  // the owner, admin or not, to submit).
+  const canSubmit = eventStatus === "DRAFT" && (isOrganizer || isOwner);
   // Drafts are not approvable: the API requires them to be submitted first,
   // so only offer approval for events actually awaiting a decision.
   const canApprove =
