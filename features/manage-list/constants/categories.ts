@@ -1,87 +1,32 @@
-export const COLLEGE_DEPARTMENTS = [
-  {
-    title: "Computer Studies",
-    abbreviation: "CS Dept.",
-    slug: "computer-studies",
-    logo: "/logos/department/CS.png",
-  },
-  {
-    title: "Hotel Management",
-    abbreviation: "HM Dept.",
-    slug: "hotel-management",
-    logo: "/logos/department/HM.png",
-  },
-  {
-    title: "Business Administration",
-    abbreviation: "BA Dept.",
-    slug: "business-administration",
-    logo: "/logos/department/AJBE.png",
-  },
-];
+import {
+  DEPARTMENTS,
+  HOUSES as HOUSE_INFO,
+  SHS_STRANDS as STRAND_INFO,
+} from "@/globals/constants/groups";
+import { slugify } from "@/features/manage-list/utils/mapStudentToRow";
 
+export const COLLEGE_DEPARTMENTS = DEPARTMENTS.map((d) => ({
+  title: d.name,
+  abbreviation: d.abbreviation,
+  slug: d.slug,
+  logo: d.logo,
+}));
+
+// Selection boards match rows via slugify(student.shsStrand), so each board
+// entry's slug must equal slugify(<strand code>).
 export const SHS_STRANDS = {
-  academics: [
-    {
-      title: "STEM",
-      slug: "stem",
-    },
-    {
-      title: "HUMSS",
-      slug: "humss",
-    },
-    {
-      title: "ABM",
-      slug: "abm",
-    },
-    {
-      title: "GAS",
-      slug: "gas",
-    },
-  ],
-  tvl: [
-    {
-      title: "Programming",
-      slug: "programming",
-    },
-    {
-      title: "Animation",
-      slug: "animation",
-    },
-    {
-      title: "Home Economics",
-      slug: "home-economics",
-    },
-    {
-      title: "CSS",
-      slug: "css",
-    },
-  ],
+  academics: STRAND_INFO.filter((s) => s.track === "ACADEMIC").map((s) => ({
+    title: s.name,
+    slug: slugify(s.code)!,
+  })),
+  tvl: STRAND_INFO.filter((s) => s.track === "TECHVOC").map((s) => ({
+    title: s.name,
+    slug: slugify(s.code)!,
+  })),
 };
 
-export const HOUSES = [
-  {
-    name: "Giallio",
-    slug: "giallio",
-    logo: "/logos/house/GIALLIO.png",
-  },
-  {
-    name: "Roxxo",
-    slug: "roxxo",
-    logo: "/logos/house/ROXXO.png",
-  },
-  {
-    name: "Azul",
-    slug: "azul",
-    logo: "/logos/house/AZUL.png",
-  },
-  {
-    name: "Cahel",
-    slug: "cahel",
-    logo: "/logos/house/CAHEL.png",
-  },
-  {
-    name: "Vierrdy",
-    slug: "vierrdy",
-    logo: "/logos/house/VIERRDY.png",
-  },
-];
+export const HOUSES = HOUSE_INFO.map((h) => ({
+  name: h.name,
+  slug: h.slug,
+  logo: h.logo,
+}));

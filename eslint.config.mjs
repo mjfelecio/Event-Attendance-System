@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Generated output and SQL that ESLint has nothing useful to say about.
+    'graphify-out/**',
+    'prisma/migrations/**',
   ]),
 ])
  

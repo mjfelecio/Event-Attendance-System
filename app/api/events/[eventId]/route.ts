@@ -16,30 +16,36 @@ const submitSchema = z.object({
   action: z.enum(["SUBMIT", "APPROVE", "REJECT"]),
 });
 const rejectionSchema = z.object({ reason: z.string().min(1) });
-const patchSchema = z.object({
-  title: z.string().min(1),
-  location: z.string().nullable().optional(),
-  category: z.enum([
-    "ALL",
-    "COLLEGE",
-    "SHS",
-    "DEPARTMENT",
-    "HOUSE",
-    "STRAND",
-    "PROGRAM",
-    "SECTION",
-    "YEAR",
-  ]),
-  includedGroups: z.array(z.string()).nullable().optional(),
-  description: z.string().nullable().optional(),
-  start: z.coerce.date(),
-  end: z.coerce.date(),
-  allDay: z.boolean().optional().default(false),
-});
+
+const patchSchema = z
+  .object({
+    title: z.string().trim().min(1),
+    location: z.string().nullable().optional(),
+    category: z.enum([
+      "ALL",
+      "COLLEGE",
+      "SHS",
+      "DEPARTMENT",
+      "HOUSE",
+      "STRAND",
+      "PROGRAM",
+      "SECTION",
+      "YEAR",
+    ]),
+    includedGroups: z.array(z.string()).nullable().optional(),
+    description: z.string().nullable().optional(),
+    start: z.coerce.date(),
+    end: z.coerce.date(),
+    allDay: z.boolean().optional().default(false),
+  })
+  .refine((data) => data.end.getTime() >= data.start.getTime(), {
+    message: "End must be the same or after start.",
+    path: ["end"],
+  });
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { eventId: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const user = await requireAuth();
@@ -47,16 +53,24 @@ export async function GET(
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      include: { includedGroups: true },
+      include: {
+        includedGroups: true,
+        createdBy: { select: { name: true } },
+      },
     });
 
     if (!event) {
-      return NextResponse.json(ok(null), { status: 404 });
+      return NextResponse.json(err("Event not found."), { status: 404 });
     }
 
     assertEventVisibility(event, user);
 
-    return NextResponse.json(ok(event), { status: 200 });
+    // Expose the organizer's display name so the UI needn't show a raw user id.
+    const { createdBy, ...rest } = event;
+    return NextResponse.json(
+      ok({ ...rest, organizerName: createdBy?.name ?? null }),
+      { status: 200 }
+    );
   } catch (error) {
     return respondWithError(error);
   }
@@ -64,7 +78,7 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { eventId: string } },
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const user = await requireAuth();
@@ -74,7 +88,7 @@ export async function PATCH(
     const event = await prisma.event.findUnique({ where: { id: eventId } });
 
     if (!event) {
-      return NextResponse.json(ok(null), { status: 404 });
+      return NextResponse.json(err("Event not found."), { status: 404 });
     }
 
     const actionParse = submitSchema.safeParse(payload);
@@ -101,7 +115,9 @@ export async function PATCH(
       requireRole(user, "ADMIN");
 
       if (action === "APPROVE") {
-        assertEventStatus(event, ["PENDING", "DRAFT", "REJECTED", "APPROVED"]);
+        // DRAFT is intentionally not approvable: drafts must be submitted
+        // first so the approval always reviews a finished event.
+        assertEventStatus(event, ["PENDING", "REJECTED", "APPROVED"]);
         const approved = await prisma.event.update({
           where: { id: eventId },
           data: {
@@ -133,19 +149,41 @@ export async function PATCH(
       }
     }
 
-    // Default PATCH behavior: organizer editing draft event content
+    // Default PATCH behavior: editing event content.
+    // Non-admins can only edit drafts and rejected events; approved events
+    // are locked so content cannot change without re-review.
     const data = patchSchema.parse(payload);
-    assertEventOwnership(event, user);
-    assertEventStatus(event, "DRAFT");
 
+    assertEventOwnership(event, user);
+    assertEventStatus(
+      event,
+      user.role === "ADMIN"
+        ? ["DRAFT", "PENDING", "APPROVED", "REJECTED"]
+        : ["DRAFT", "REJECTED"]
+    );
+
+    // Editing a rejected event returns it to DRAFT (clearing the review)
+    // so the organizer can fix it and resubmit.
+    const rejectionReset =
+      user.role !== "ADMIN" && event.status === "REJECTED"
+        ? {
+            status: "DRAFT" as const,
+            reviewedById: null,
+            reviewedAt: null,
+            rejectionReason: null,
+          }
+        : {};
+
+    const { includedGroups, ...eventData } = data;
     const updated = await prisma.event.update({
       where: { id: eventId },
       data: {
-          ...data,
-          includedGroups: {
-            set: data.includedGroups?.map((g) => ({ id: g })),
-          },
-        },
+        ...eventData,
+        ...rejectionReset,
+        ...(includedGroups
+          ? { includedGroups: { set: includedGroups.map((id) => ({ id })) } }
+          : {}),
+      },
     });
 
     return NextResponse.json(ok(updated), { status: 200 });
@@ -155,8 +193,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { eventId: string } },
+  _req: Request,
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const user = await requireAuth();
@@ -164,7 +202,7 @@ export async function DELETE(
 
     const existing = await prisma.event.findUnique({ where: { id: eventId } });
     if (!existing) {
-      return NextResponse.json(ok(null), { status: 404 });
+      return NextResponse.json(err("Event not found."), { status: 404 });
     }
 
     assertEventOwnership(existing, user);
@@ -177,9 +215,9 @@ export async function DELETE(
       return NextResponse.json(
         err(
           "Cannot delete this event because attendance has already been recorded.",
-          "EVENT_HAS_RECORDS",
+          "EVENT_HAS_RECORDS"
         ),
-        { status: 409 },
+        { status: 409 }
       );
     }
 

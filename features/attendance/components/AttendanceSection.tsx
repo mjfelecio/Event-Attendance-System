@@ -29,7 +29,7 @@ export default function AttendanceSection({ selectedEvent }: Props) {
   );
 
   const { mutateAsync: createRecord, isPending: isSavingRecord } =
-    useCreateRecord();
+    useCreateRecord(selectedEvent?.id ?? "");
 
   /**
    * MANUAL FLOW

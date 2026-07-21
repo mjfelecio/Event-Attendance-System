@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { capitalize } from "lodash";
+import { capitalizeLabel } from "@/globals/utils/text";
 import { FaUserGroup } from "react-icons/fa6";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { VscPercentage } from "react-icons/vsc";
@@ -29,7 +29,11 @@ const NoSelectionScreen = () => {
 const EventSummary = ({ selectedEvent }: Props) => {
   const router = useRouter();
 
-  const { data: eventStats, isLoading } = useStatsOfEvent(selectedEvent?.id);
+  const {
+    data: eventStats,
+    isLoading,
+    isError,
+  } = useStatsOfEvent(selectedEvent?.id);
 
   const attendanceRate = useMemo(() => {
     if (!eventStats?.eligible) return "—";
@@ -54,9 +58,15 @@ const EventSummary = ({ selectedEvent }: Props) => {
           <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
           <p className="text-sm text-muted-foreground">
             {readableDate(selectedEvent.start)} •{" "}
-            {capitalize(selectedEvent.category)} Event
+            {capitalizeLabel(selectedEvent.category)} Event
           </p>
         </div>
+
+        {isError && (
+          <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            Couldn&apos;t load attendance totals for this event.
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

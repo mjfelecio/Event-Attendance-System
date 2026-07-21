@@ -1,24 +1,36 @@
 import { Event } from "@/globals/types/events";
+import { AuthUser } from "@/globals/contexts/AuthContext";
 import { CALENDAR_CONFIG } from "@/features/calendar/constants/calendarConfig";
 import { CalendarEvent, DraftEvent } from "@/features/calendar/types/calendar";
 
-export const transformEventsForCalendar = (events: Event[]): CalendarEvent[] => {
+/**
+ * Mirrors the server's edit rules: admins can move any event; organizers can
+ * only move their own drafts and rejected events (approved/pending are locked).
+ */
+export const canEditEvent = (event: Event, user: AuthUser | null): boolean => {
+  if (!user) return false;
+  if (user.role === "ADMIN") return true;
+  return (
+    event.createdById === user.id &&
+    (event.status === "DRAFT" || event.status === "REJECTED")
+  );
+};
+
+export const transformEventsForCalendar = (
+  events: Event[],
+  user: AuthUser | null
+): CalendarEvent[] => {
   return events?.map((event) => ({
     id: event.id,
     title: event.title,
     start: event.start,
     end: event.end,
     allDay: event.allDay,
+    editable: canEditEvent(event, user),
     extendedProps: {
       status: event.status,
     },
   })) ?? [];
-};
-
-export const calculateEndDate = (start: Date, end: Date, isSingleDay: boolean): Date => {
-  return isSingleDay
-    ? new Date(start.toISOString())
-    : new Date(end.getTime() - CALENDAR_CONFIG.MILLISECONDS_PER_DAY);
 };
 
 export const createDraftEvent = (start: Date, end: Date): DraftEvent => {

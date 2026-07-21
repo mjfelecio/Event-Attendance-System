@@ -4,16 +4,30 @@ import { z } from "zod";
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
 import { respondWithError } from "@/globals/utils/httpError";
+import { hashPassword } from "@/globals/utils/password";
+import { clientKey, rateLimit } from "@/globals/utils/rateLimit";
 
 const signupSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().trim().min(1, "Name is required"),
   email: z.string().email("Valid email required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = signupSchema.parse(await req.json());
+    const parsed = signupSchema.parse(await req.json());
+    const name = parsed.name;
+    // Normalized so case-variant duplicate accounts are impossible
+    const email = parsed.email.trim().toLowerCase();
+    const password = parsed.password;
+
+    // 5 signups per client per 10 minutes
+    if (!rateLimit(`signup:${clientKey(req)}`, 5, 10 * 60_000)) {
+      return NextResponse.json(
+        err("Too many signup attempts. Try again in a few minutes."),
+        { status: 429 }
+      );
+    }
 
     const existing = await prisma.user.findUnique({ where: { email } });
 
@@ -27,7 +41,7 @@ export async function POST(req: Request) {
       data: {
         name,
         email,
-        password,
+        password: await hashPassword(password),
         role: "ORGANIZER",
         status: "PENDING",
       },

@@ -19,7 +19,7 @@ import {
 import { useAuth } from "@/globals/contexts/AuthContext";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
 import { cn } from "@/globals/libs/shad-cn";
-import Link from "next/link";
+import { toastDanger } from "@/globals/components/shared/toasts";
 
 type NavigationItem = {
   text: string;
@@ -31,6 +31,7 @@ type NavigationButtonProps = {
   item: NavigationItem;
   isExpanded: boolean;
   active: boolean;
+  onClick: () => void;
 };
 
 const navigationItems: NavigationItem[] = [
@@ -46,29 +47,29 @@ const NavigationButton = ({
   item,
   isExpanded,
   active,
+  onClick,
 }: NavigationButtonProps) => {
   const Icon = item.icon;
 
   return (
-    <Link href={item.route}>
-      <button
-        type="button"
-        className={cn(
-          "group flex w-full items-center rounded-xl px-3 py-2.5 transition-all duration-200",
-          isExpanded ? "gap-3" : "justify-center",
-          active
-            ? "bg-[linear-gradient(90deg,rgba(11,77,255,0.36)_0%,rgba(109,40,217,0.34)_55%,rgba(239,68,68,0.3)_100%)] text-white shadow-[0_10px_24px_rgba(79,70,229,0.32)]"
-            : "text-slate-300 hover:bg-white/10 hover:text-white",
-        )}
-        aria-label={item.text}
-        title={item.text}
-      >
-        <Icon className="size-5 shrink-0" />
-        {isExpanded ? (
-          <span className="truncate text-sm font-medium">{item.text}</span>
-        ) : null}
-      </button>
-    </Link>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "group flex w-full items-center rounded-xl px-3 py-2.5 transition-all duration-200",
+        isExpanded ? "gap-3" : "justify-center",
+        active
+          ? "bg-[linear-gradient(90deg,rgba(11,77,255,0.36)_0%,rgba(109,40,217,0.34)_55%,rgba(239,68,68,0.3)_100%)] text-white shadow-[0_10px_24px_rgba(79,70,229,0.32)]"
+          : "text-slate-300 hover:bg-white/10 hover:text-white"
+      )}
+      aria-label={item.text}
+      title={item.text}
+    >
+      <Icon className="size-5 shrink-0" />
+      {isExpanded ? (
+        <span className="truncate text-sm font-medium">{item.text}</span>
+      ) : null}
+    </button>
   );
 };
 
@@ -83,8 +84,14 @@ const Sidebar = () => {
     pathname === route || pathname.startsWith(`${route}/`);
 
   const handleLogout = async () => {
-    await logout();
-    router.replace("/login");
+    // Only navigate away if the server actually cleared the session; otherwise
+    // surface the failure rather than showing a logged-out UI over a live cookie.
+    const ok = await logout();
+    if (ok) {
+      router.replace("/login");
+    } else {
+      toastDanger("Couldn't sign out. Please try again.");
+    }
   };
 
   const initials = (user?.name ?? "Organizer")
@@ -107,7 +114,7 @@ const Sidebar = () => {
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <Image
-                  src="/login/logo.png"
+                  src="/logos/school/logo.png"
                   alt="ACLC logo"
                   width={38}
                   height={38}
@@ -153,6 +160,11 @@ const Sidebar = () => {
               item={item}
               isExpanded={isExpanded}
               active={isRouteActive(item.route)}
+              onClick={() => {
+                if (!isRouteActive(item.route)) {
+                  router.push(item.route);
+                }
+              }}
             />
           ))}
         </nav>
@@ -180,15 +192,13 @@ const Sidebar = () => {
             onClick={handleLogout}
             className={cn(
               "flex w-full items-center rounded-xl bg-red-600 px-3 py-2.5 text-white transition-colors hover:bg-red-700",
-              isExpanded ? "gap-3" : "justify-center",
+              isExpanded ? "gap-3" : "justify-center"
             )}
             aria-label="Logout"
             title="Logout"
           >
             <LogOut className="size-5 shrink-0" />
-            {isExpanded ? (
-              <span className="text-sm font-medium">Logout</span>
-            ) : null}
+            {isExpanded ? <span className="text-sm font-medium">Logout</span> : null}
           </button>
         </div>
       </aside>

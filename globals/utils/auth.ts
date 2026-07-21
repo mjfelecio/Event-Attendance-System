@@ -1,7 +1,10 @@
 import "server-only";
 
+import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { z } from "zod";
+
+import { prisma } from "@/globals/libs/prisma";
 
 const userRoleEnum = z.enum(["ORGANIZER", "ADMIN"]);
 const userStatusEnum = z.enum(["PENDING", "ACTIVE", "REJECTED"]);
@@ -26,8 +29,44 @@ export type AuthSession = z.infer<typeof authSessionSchema>;
 
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
+const DEV_FALLBACK_SECRET = "dev-only-insecure-secret";
+
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET;
+  if (secret && secret.length >= 16) {
+    return secret;
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "AUTH_SECRET environment variable (min 16 chars) must be set in production."
+    );
+  }
+  return DEV_FALLBACK_SECRET;
+}
+
+function signPayload(payload: string): string {
+  return createHmac("sha256", getAuthSecret())
+    .update(payload)
+    .digest("base64url");
+}
+
+// The signed payload wraps the session with an expiry so a captured cookie
+// stops verifying after COOKIE_MAX_AGE_SECONDS even if the browser's
+// Max-Age is stripped or ignored.
+const cookiePayloadSchema = z.object({
+  session: authSessionSchema,
+  exp: z.number(),
+});
+
+// Cookie format: base64url(payloadJson) + "." + HMAC-SHA256 signature.
+// The signature prevents clients from forging or tampering with the session.
 function serializeSession(session: AuthSession) {
-  return encodeURIComponent(JSON.stringify(session));
+  const exp = Math.floor(Date.now() / 1000) + COOKIE_MAX_AGE_SECONDS;
+  const payload = Buffer.from(
+    JSON.stringify({ session, exp }),
+    "utf8"
+  ).toString("base64url");
+  return `${payload}.${signPayload(payload)}`;
 }
 
 export class AuthError extends Error {
@@ -66,21 +105,72 @@ export async function getAuthSession(): Promise<AuthSession | null> {
     return null;
   }
 
+  const [payload, signature] = raw.split(".");
+  if (!payload || !signature) {
+    return null;
+  }
+
   try {
-    const decoded = decodeURIComponent(raw);
-    const parsed = authSessionSchema.safeParse(JSON.parse(decoded));
-    return parsed.success ? parsed.data : null;
+    const expected = Buffer.from(signPayload(payload));
+    const provided = Buffer.from(signature);
+    if (
+      expected.length !== provided.length ||
+      !timingSafeEqual(expected, provided)
+    ) {
+      return null;
+    }
+
+    const decoded = Buffer.from(payload, "base64url").toString("utf8");
+    const parsed = cookiePayloadSchema.safeParse(JSON.parse(decoded));
+    if (!parsed.success) {
+      return null;
+    }
+
+    if (parsed.data.exp < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+
+    return parsed.data.session;
   } catch {
     return null;
   }
 }
 
-export async function requireAuth(): Promise<AuthSession> {
+/**
+ * Cookie session revalidated against the database - the authoritative name,
+ * role, and status. Returns null when the user no longer exists.
+ */
+export async function getFreshAuthSession(): Promise<AuthSession | null> {
   const session = await getAuthSession();
   if (!session) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+      rejectionReason: true,
+    },
+  });
+
+  return user ?? null;
+}
+
+export async function requireAuth(): Promise<AuthSession> {
+  // Revalidate against the database on every protected request so
+  // demotions, rejections, and deletions take effect immediately instead
+  // of at cookie expiry.
+  const user = await getFreshAuthSession();
+  if (!user) {
     throw new AuthError("Unauthorized", 401, "UNAUTHORIZED");
   }
-  return session;
+  assertActiveUser(user);
+  return user;
 }
 
 export function assertActiveUser(user: AuthSession) {

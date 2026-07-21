@@ -478,7 +478,11 @@ const AdminDashboard = () => {
                   <tr key={event.id} className="transition-colors hover:bg-slate-50/70">
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900">{event.title}</div>
-                      {event.createdById ? (
+                      {event.organizerName ? (
+                        <div className="text-xs text-slate-500">
+                          Organizer: {event.organizerName}
+                        </div>
+                      ) : event.createdById ? (
                         <div className="text-xs text-slate-500">
                           Organizer ID: {event.createdById.slice(0, 6)}...
                         </div>

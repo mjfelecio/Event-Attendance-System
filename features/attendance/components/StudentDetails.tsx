@@ -4,8 +4,11 @@ import AttendanceActionButtons from "@/features/attendance/components/Attendance
 import { Event } from "@/globals/types/events";
 import { memo } from "react";
 import AttendanceStatusCard from "@/features/attendance/components/AttendanceStatusCard";
-import { capitalize } from "lodash";
+import { capitalizeLabel } from "@/globals/utils/text";
+import { fullName } from "@/globals/utils/formatting";
+import { labelForGroup } from "@/globals/constants/groups";
 import { Record } from "@/globals/types/records";
+import { useAuth } from "@/globals/contexts/AuthContext";
 
 type DetailRowProps = {
   label: string;
@@ -59,6 +62,10 @@ type Props = {
 };
 
 const StudentDetails = ({ event, student, record, isLoading }: Props) => {
+  const { user } = useAuth();
+  const canManage =
+    user?.role === "ADMIN" || event.createdById === user?.id;
+
   if (isLoading) return <LoadingState />;
   if (!student) return <EmptyState />;
 
@@ -69,20 +76,19 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
     lastName,
     schoolLevel,
     yearLevel,
-    collegeProgram,
-    shsStrand,
+    program,
+    strand,
     section,
     house,
     department,
   } = student;
 
-  const middleInitial = middleName?.[0] ? `${middleName[0]}.` : "";
-  const fullNameDisplay = `${firstName} ${middleInitial} ${lastName}`.trim();
+  const fullNameDisplay = fullName(firstName, middleName ?? "", lastName);
   const isCollege = schoolLevel === "COLLEGE";
   const isSHS = schoolLevel === "SHS";
   // program or strand + year + section letter
   const fullSection = `${
-    isCollege ? collegeProgram : shsStrand
+    isCollege ? program : strand
   } - ${section} • ${id}`;
   const timeIn = record?.timein ? formatDate(new Date(record?.timein)) : "N/A";
   const timeOut = record?.timeout
@@ -101,6 +107,8 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
             recordId={record?.id}
             eventId={event.id}
             studentId={student.id}
+            isTimeout={event.isTimeout}
+            canManage={canManage}
           />
         </div>
       </div>
@@ -121,15 +129,15 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
         <div className="grid grid-cols-2 gap-4">
           <DetailRow
             label="Type"
-            value={`${capitalize(schoolLevel)} Student`}
+            value={`${capitalizeLabel(schoolLevel)} Student`}
           />
           {isCollege && (
-            <DetailRow label="Program" value={collegeProgram || "N/A"} />
+            <DetailRow label="Program" value={program || "N/A"} />
           )}
-          {isSHS && <DetailRow label="Strand" value={shsStrand || "N/A"} />}
+          {isSHS && <DetailRow label="Strand" value={strand || "N/A"} />}
           <DetailRow
             label="Year & Section"
-            value={`${yearLevel} - ${section}`}
+            value={`${labelForGroup("YEAR", yearLevel)} - ${section}`}
           />
           <DetailRow label="Department" value={department || "N/A"} />
           <DetailRow label="House" value={house || "N/A"} />
