@@ -19,6 +19,7 @@ interface ManageStudentClientProps {
   categoryHeading: string;
   students: Student[];
   isLoading: boolean;
+  isError?: boolean;
 }
 
 const ManageStudentClient = ({
@@ -28,6 +29,7 @@ const ManageStudentClient = ({
   categoryHeading,
   students,
   isLoading,
+  isError = false,
 }: ManageStudentClientProps) => {
   const [formData, setFormData] = useState<Student>();
   const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
@@ -98,6 +100,7 @@ const ManageStudentClient = ({
         columns={columns}
         data={students ?? []}
         isLoading={isLoading}
+        isError={isError}
         categoryHeader={label ?? ""}
         categorySubheader={categoryHeading ?? ""}
         groupSlug={item ?? ""}

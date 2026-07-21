@@ -18,6 +18,8 @@ import {
   AlertTitle,
 } from "@/globals/components/shad-cn/alert";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/globals/utils/queryKeys";
 
 type Props = {
   onImportSuccess: (count: number) => void;
@@ -25,6 +27,7 @@ type Props = {
 
 export default function StudentImporter({ onImportSuccess }: Props) {
   const { CSVReader } = useCSVReader();
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [parsedData, setParsedData] = useState<any[] | null>(null);
 
@@ -43,6 +46,12 @@ export default function StudentImporter({ onImportSuccess }: Props) {
 
       if (response.ok && data.success) {
         toastSuccess(data.message || "Import completed successfully.");
+        // A bulk import changes the roster (and thus counts, event
+        // eligibility, and reports); refresh their caches.
+        queryClient.invalidateQueries({ queryKey: queryKeys.students.all() });
+        queryClient.invalidateQueries({ queryKey: ["stats", "students"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.events.all() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.records.all() });
         onImportSuccess(data.data?.count ?? 0);
         setParsedData(null);
       } else {

@@ -31,6 +31,8 @@ type DataTableProps<TData, TValue> = {
   data: TData[];
   /** Whether the table is currently loading data */
   isLoading: boolean;
+  /** Whether the data fetch failed */
+  isError?: boolean;
   /** Usually displays the category name */
   categoryHeader: string;
   /** Complements the category name */
@@ -54,6 +56,7 @@ function StudentsDataTable<TData, TValue>({
   columns,
   data,
   isLoading,
+  isError = false,
   categoryHeader,
   categorySubheader,
   groupSlug,
@@ -115,7 +118,7 @@ function StudentsDataTable<TData, TValue>({
         filterOptions={dynamicFilters}
       />
 
-      <DataTableBody table={table} isLoading={isLoading} />
+      <DataTableBody table={table} isLoading={isLoading} isError={isError} />
     </div>
   );
 }

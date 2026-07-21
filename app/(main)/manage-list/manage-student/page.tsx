@@ -39,11 +39,19 @@ const ManageStudentPage = () => {
   const searchParams = useSearchParams();
   const filters = Object.fromEntries(searchParams.entries());
 
-  const { data: students, isLoading } = useFetchStudents(filters);
-
-  // Derive Category State
-  const category = (filters?.category as ManageListCategory) || "ALL";
+  // Derive Category State. Fall back to ALL for unknown categories so a
+  // crafted ?category=... can't crash on an undefined config.
+  const rawCategory = filters?.category as string | undefined;
+  const category: ManageListCategory =
+    rawCategory && rawCategory in CATEGORY_CONFIG
+      ? (rawCategory as ManageListCategory)
+      : "ALL";
   const config = CATEGORY_CONFIG[category];
+
+  // Use the validated category (not the raw param) so an unknown value falls
+  // back to the ALL roster instead of the API rejecting it with a 400.
+  const queryFilters = { ...filters, category };
+  const { data: students, isLoading, isError } = useFetchStudents(queryFilters);
 
   // Dynamically extract the "item" slug based on the category's specific query key
   const itemSlug = config.queryKey
@@ -72,6 +80,7 @@ const ManageStudentPage = () => {
           categoryHeading={config.heading}
           students={students ?? []}
           isLoading={isLoading}
+          isError={isError}
         />
       </div>
     </section>

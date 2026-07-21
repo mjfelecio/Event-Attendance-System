@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Student, StudentDTO } from "@/globals/types/students";
 import { useMemo } from "react";
 import { filterAndSortStudents } from "@/globals/utils/fuzzySearch";
@@ -128,6 +133,16 @@ export const useFetchStudents = (filters: any = {}) => {
  *
  * @returns created or edited Student object
  */
+// Roster changes affect student counts, event eligibility (event stats), and
+// report records - all of which live under separate query keys - so invalidate
+// them together, not just ["students"].
+const invalidateStudentDependents = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.students.all() });
+  queryClient.invalidateQueries({ queryKey: ["stats", "students"] });
+  queryClient.invalidateQueries({ queryKey: queryKeys.events.all() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.records.all() });
+};
+
 export const useSaveStudent = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -139,10 +154,7 @@ export const useSaveStudent = () => {
       });
     },
 
-    // TODO: Replace this with optimistic handling and manual adding of the data
-    // Instead of revalidating the whole thing, which hits the backend
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.students.all() }),
+    onSuccess: () => invalidateStudentDependents(queryClient),
   });
 };
 
@@ -159,7 +171,6 @@ export const useDeleteStudent = () => {
         method: "DELETE",
       });
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.students.all() }),
+    onSuccess: () => invalidateStudentDependents(queryClient),
   });
 };

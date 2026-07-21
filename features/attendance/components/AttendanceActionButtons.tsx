@@ -17,6 +17,10 @@ type Props = {
   recordId?: string;
   /** When true, the event records time-outs, so the "present" action means Time Out. */
   isTimeout?: boolean;
+  /** Whether the student already has a time-in for this event. */
+  hasTimeIn?: boolean;
+  /** Whether the student already has a time-out for this event. */
+  hasTimeOut?: boolean;
   /** Whether the user may delete records (event owner or admin). */
   canManage?: boolean;
 };
@@ -26,6 +30,8 @@ const AttendanceActionButtons = ({
   studentId,
   recordId,
   isTimeout = false,
+  hasTimeIn = false,
+  hasTimeOut = false,
   canManage = false,
 }: Props) => {
   // The "present" action records a time-in normally and a time-out while the
@@ -68,13 +74,21 @@ const AttendanceActionButtons = ({
   const handleAction = async (action: "present" | "absent") => {
     if (action === "present") {
       try {
-        await createRecord({
+        const result = await createRecord({
           eventId,
           studentId,
           method: "MANUAL",
         } as NewRecord);
 
-        if (!recordId) {
+        if (!result.changed) {
+          toastWarning(
+            isTimeout
+              ? "Student was already timed out."
+              : "Attendance was already recorded.",
+          );
+        } else if (isTimeout) {
+          toastSuccess("Time-out recorded");
+        } else if (!recordId) {
           toastSuccess("Student marked as present");
         } else {
           toastSuccess("Updated student record");
@@ -110,8 +124,16 @@ const AttendanceActionButtons = ({
   return (
     <div className="flex flex-col gap-2 justify-center items-center">
       {actionButtons.map(({ action, icon: Icon, label, title, color }) => {
-        // Disable "absent" button if there's no record to delete
-        const isDisabled = isLoading || (action === "absent" && !recordId);
+        // Disable rules:
+        // - "absent": nothing to delete when there's no record.
+        // - "present" in timeout mode: can't time out without a time-in, and
+        //   can't time out again once already done.
+        const presentDisabled =
+          action === "present" &&
+          isTimeout &&
+          (!hasTimeIn || hasTimeOut);
+        const isDisabled =
+          isLoading || (action === "absent" && !recordId) || presentDisabled;
 
         return (
           <Button

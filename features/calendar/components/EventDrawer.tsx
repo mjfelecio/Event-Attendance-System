@@ -81,8 +81,11 @@ export default function EventDrawer({
   const isAdmin = user?.role === "ADMIN";
   const isOwner = initialData?.createdById === user?.id;
 
+  // Organizers can't edit approved events (the API only lets them edit drafts
+  // and rejected events), so present a read-only drawer even to the owner -
+  // otherwise saving returns a 409.
   const isReadOnlyApprovedView =
-    isEdit && isOrganizer && !isOwner && eventStatus === "APPROVED";
+    isEdit && isOrganizer && eventStatus === "APPROVED";
   const isReadOnlyPendingView =
     isEdit && isOrganizer && eventStatus === "PENDING";
   const isReadOnlyView = isReadOnlyApprovedView || isReadOnlyPendingView;

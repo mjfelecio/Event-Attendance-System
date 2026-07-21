@@ -5,7 +5,11 @@ import {
   useDeleteRecord,
   useUpdateAttendanceRecord,
 } from "@/globals/hooks/useRecords";
-import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
+import {
+  toastDanger,
+  toastSuccess,
+  toastWarning,
+} from "@/globals/components/shared/toasts";
 import { ArrowUpDown } from "lucide-react";
 import { ATTENDANCE_STATUS_ICONS } from "@/features/attendance/constants/attendanceStatus";
 import { useConfirm } from "@/globals/contexts/ConfirmModalContext";
@@ -27,8 +31,12 @@ function ActionsCell({
 
   const handleRecordAttendance = async () => {
     try {
-      await recordAttendance(recordId);
-      toastSuccess("Attendance updated");
+      const result = await recordAttendance(recordId);
+      if (result.changed) {
+        toastSuccess("Attendance updated");
+      } else {
+        toastWarning("Attendance was already completed for this student.");
+      }
     } catch (error) {
       toastDanger(`Failed to update: ${studentId}`);
     }

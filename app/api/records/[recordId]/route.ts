@@ -81,6 +81,9 @@ export async function PATCH(
     // Scan rules: exactly one scan each for time-in and time-out, and a
     // time-out is only possible after a time-in. Writes are conditional
     // (compare-and-set) so concurrent requests cannot overwrite the first.
+    // `changed` distinguishes a real update from a repeat action, so the table
+    // doesn't falsely report "Attendance updated" on a no-op.
+    let changed = false;
     if (record.event.isTimeout) {
       if (!record.timein) {
         return NextResponse.json(
@@ -90,23 +93,25 @@ export async function PATCH(
       }
 
       if (!record.timeout) {
-        await prisma.record.updateMany({
+        const res = await prisma.record.updateMany({
           where: { id: record.id, timeout: null },
           data: { timeout: recordedAt, lastModifiedById: user.id },
         });
+        changed = res.count > 0;
       }
     } else if (!record.timein) {
-      await prisma.record.updateMany({
+      const res = await prisma.record.updateMany({
         where: { id: record.id, timein: null },
         data: { timein: recordedAt, lastModifiedById: user.id },
       });
+      changed = res.count > 0;
     }
 
     const updatedRecord = await prisma.record.findUnique({
       where: { id: record.id },
     });
 
-    return NextResponse.json(ok(updatedRecord), { status: 200 });
+    return NextResponse.json(ok({ ...updatedRecord, changed }), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }

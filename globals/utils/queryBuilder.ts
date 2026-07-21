@@ -16,8 +16,11 @@ export function buildStudentQuery(params: any): Prisma.StudentWhereInput {
     });
   }
 
-  // 2. Filter by College/Dept/Program
+  // 2. Filter by College/Dept/Program. Always scope to the school level so
+  // `?category=COLLEGE` without a subgroup returns college students only, not
+  // the entire roster (SHS included).
   if (category === "COLLEGE") {
+    conditions.push({ schoolLevel: "COLLEGE" });
     if (department) {
       conditions.push({
         groups: { some: { category: "DEPARTMENT", slug: department } },
@@ -30,11 +33,14 @@ export function buildStudentQuery(params: any): Prisma.StudentWhereInput {
     }
   }
 
-  // 3. Filter by SHS/Strand
-  if (category === "SHS" && strand) {
-    conditions.push({
-      groups: { some: { category: "STRAND", slug: strand } },
-    });
+  // 3. Filter by SHS/Strand. Scope to the SHS school level regardless of strand.
+  if (category === "SHS") {
+    conditions.push({ schoolLevel: "SHS" });
+    if (strand) {
+      conditions.push({
+        groups: { some: { category: "STRAND", slug: strand } },
+      });
+    }
   }
 
   // If no conditions, return empty object (fetches all)

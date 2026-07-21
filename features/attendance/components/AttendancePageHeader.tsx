@@ -90,16 +90,22 @@ const AttendancePageHeader: React.FC<Props> = ({
         </div>
 
         <div className="flex flex-row gap-4 items-center">
-          {/* View Report Button */}
-          <Link href={`/reports/events/${selectedEvent?.id}`} target="_blank">
-            <ButtonWithIcon
-              variant="ghost"
-              icon={IoDocument}
-              onClick={() => alert("Exporting attendance records...")}
+          {/* View Report Button - only navigable once an event is selected,
+              so it can't link to /reports/events/undefined. */}
+          {selectedEvent?.id ? (
+            <Link
+              href={`/reports/events/${selectedEvent.id}`}
+              target="_blank"
             >
+              <ButtonWithIcon variant="ghost" icon={IoDocument}>
+                View Report
+              </ButtonWithIcon>
+            </Link>
+          ) : (
+            <ButtonWithIcon variant="ghost" icon={IoDocument} disabled>
               View Report
             </ButtonWithIcon>
-          </Link>
+          )}
 
           {/* Timeout Mode Button */}
           <TurnOnTimeoutMode

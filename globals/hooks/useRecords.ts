@@ -14,8 +14,10 @@ export const useCreateRecord = (eventId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // `changed` is false when the scan was a no-op (already timed in/out), so
+    // the caller can avoid falsely reporting a fresh record.
     mutationFn: (record: NewRecord) => {
-      return fetchApi<Record>("/api/records", {
+      return fetchApi<Record & { changed: boolean }>("/api/records", {
         method: "POST",
         body: JSON.stringify(record),
         headers: { "Content-Type": "application/json" },
@@ -58,10 +60,15 @@ export const useUpdateAttendanceRecord = (eventId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // `changed` is false when the request was a no-op (already timed in/out),
+    // so the caller can avoid falsely reporting an update.
     mutationFn: (recordId: string) => {
-      return fetchApi<Record>(`/api/records/${recordId}`, {
-        method: "PATCH",
-      });
+      return fetchApi<Record & { changed: boolean }>(
+        `/api/records/${recordId}`,
+        {
+          method: "PATCH",
+        },
+      );
     },
 
     // No optimistic write: whether this sets a time-in, a time-out, or nothing
