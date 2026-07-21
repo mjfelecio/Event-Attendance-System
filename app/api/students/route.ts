@@ -138,8 +138,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(ok(flattenStudentGroups(rawStudent)));
     }
 
-    // Bulk Student Fetch (List View)
-    const where = buildStudentQuery(filters);
+    // Bulk Student Fetch (List View).
+    // When an eventId is supplied (manual-attendance list) the result must be
+    // scoped to the event's eligible students, not the whole roster. Otherwise
+    // fall back to the category/group filters used by Manage List.
+    let where = buildStudentQuery(filters);
+
+    if (eventId) {
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        include: { includedGroups: true },
+      });
+
+      if (!event) {
+        return NextResponse.json(err("Event not found"), { status: 404 });
+      }
+
+      where = { ...where, ...buildEventStudentFilter(event) };
+    }
 
     const rawStudents = await prisma.student.findMany({
       where,
