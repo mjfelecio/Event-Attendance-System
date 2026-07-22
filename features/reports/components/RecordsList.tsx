@@ -36,7 +36,9 @@ const RecordsList = ({ selectedEvent }: Props) => {
           description="Please retry."
         />
       }
-      title="Attendance Records"
+      // No `title` here: the page renders the single "Attendance Records"
+      // heading above this table, so passing a title would duplicate it. The
+      // toolbar still renders its search box.
       // The reports event can change without unmounting this table; restart at
       // page 1 for the newly selected event.
       resetKey={selectedEvent.id}
