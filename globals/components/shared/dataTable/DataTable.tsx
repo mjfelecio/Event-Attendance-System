@@ -12,10 +12,11 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import DataTablePagination from "./DataTablePagination";
 import DataTableToolbar from "./DataTableToolbar";
 import DataTableViewport from "./DataTableViewPort";
+import { PAGE_SIZE_OPTIONS } from "./config";
 
 /**
  * Controlled/server ("manual") table configuration.
@@ -118,6 +119,16 @@ type DataTableProps<TData, TValue> = {
    * sorting, and filtering entirely on the client (the historical behavior).
    */
   manual?: DataTableManualConfig;
+
+  /**
+   * Client-mode only. An identity token for the underlying data set (e.g. the
+   * selected event id). When it changes, client pagination jumps back to page 1
+   * so switching data sets never strands the user on a page that no longer
+   * exists. Keyed on identity rather than row count, since two data sets can
+   * share the same number of rows. Ignored in manual mode (the server owns the
+   * page there).
+   */
+  resetKey?: string;
 };
 
 /**
@@ -143,13 +154,31 @@ export function DataTable<TData, TValue>({
   errorState,
   getRowId,
   manual,
+  resetKey,
 }: DataTableProps<TData, TValue>) {
   // Client-mode state (unused in manual mode, where the server owns it).
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  // Client pagination is controlled here. TanStack only wires nextPage(),
+  // setPageSize(), etc. to a state updater when onPaginationChange is supplied;
+  // previously it was left undefined in client mode, which silently overrode the
+  // default updater and made every pager control a no-op. Seed pageSize from the
+  // shared option list so the default matches the selector it renders.
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE_OPTIONS[0],
+  });
 
   const isManual = !!manual;
+
+  // Jumping back to the first page keeps a refined view from stranding the user
+  // on a now-empty deep page. Skip the state write when already there so we
+  // don't trigger a needless render.
+  const resetClientPageIndex = () =>
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }
+    );
 
   const handleManualSorting: OnChangeFn<SortingState> = (updater) => {
     if (!manual) return;
@@ -170,6 +199,25 @@ export function DataTable<TData, TValue>({
     }
   };
 
+  // Client mode: sorting, searching, or column-filtering from a deep page should
+  // land on page 1 (the standard "new query" behavior). autoResetPageIndex is
+  // disabled below to survive live polling, so these resets are re-added
+  // explicitly for the cases where a reset is actually wanted.
+  const handleClientSorting: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater);
+    resetClientPageIndex();
+  };
+  const handleClientColumnFilters: OnChangeFn<ColumnFiltersState> = (
+    updater
+  ) => {
+    setColumnFilters(updater);
+    resetClientPageIndex();
+  };
+  const handleClientGlobalFilter: OnChangeFn<string> = (updater) => {
+    setGlobalFilter(updater);
+    resetClientPageIndex();
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -186,16 +234,22 @@ export function DataTable<TData, TValue>({
           sorting,
           columnFilters,
           globalFilter,
+          pagination,
         },
     // Manual mode: the server already sorted, filtered, and paginated the page.
     manualPagination: isManual,
     manualSorting: isManual,
     manualFiltering: isManual,
     ...(manual ? { rowCount: manual.rowCount } : {}),
-    onSortingChange: manual ? handleManualSorting : setSorting,
-    onPaginationChange: manual ? handleManualPagination : undefined,
-    onColumnFiltersChange: manual ? undefined : setColumnFilters,
-    onGlobalFilterChange: manual ? undefined : setGlobalFilter,
+    // Client mode polls (live attendance) replace the data array every few
+    // seconds; leave the automatic page-index reset off so a poll can't bounce
+    // the user back to page 1. The intentional resets (sort/search/filter,
+    // dataset change) and page clamping are handled explicitly instead.
+    ...(isManual ? {} : { autoResetPageIndex: false }),
+    onSortingChange: manual ? handleManualSorting : handleClientSorting,
+    onPaginationChange: manual ? handleManualPagination : setPagination,
+    onColumnFiltersChange: manual ? undefined : handleClientColumnFilters,
+    onGlobalFilterChange: manual ? undefined : handleClientGlobalFilter,
     globalFilterFn: "includesString",
     getCoreRowModel: getCoreRowModel(),
     // Client row models are skipped in manual mode so the server page renders
@@ -208,6 +262,35 @@ export function DataTable<TData, TValue>({
           getPaginationRowModel: getPaginationRowModel(),
         }),
   });
+
+  // With autoResetPageIndex disabled we lose its one genuinely useful job:
+  // keeping pageIndex in range when the row set shrinks. Re-add just that. If a
+  // deletion or filter drops the page count below the current page, clamp to the
+  // last real page instead of rendering an empty, impossible page. Growing the
+  // set (a new scan) leaves the current page untouched.
+  const clientPageCount = isManual ? 0 : table.getPageCount();
+  useEffect(() => {
+    if (isManual) return;
+    // Clamp to the last valid page. When the set is emptied entirely
+    // (clientPageCount === 0) the only valid index is 0, so a deep pageIndex
+    // left over from a now-gone page must still be pulled back rather than
+    // stranded past the (empty) end.
+    const lastPageIndex = Math.max(clientPageCount - 1, 0);
+    setPagination((prev) =>
+      prev.pageIndex > lastPageIndex
+        ? { ...prev, pageIndex: lastPageIndex }
+        : prev,
+    );
+  }, [isManual, clientPageCount, pagination.pageIndex]);
+
+  // A change of data-set identity (e.g. selecting a different event, which swaps
+  // the rows without unmounting the table) restarts at page 1.
+  useEffect(() => {
+    if (isManual) return;
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }
+    );
+  }, [resetKey, isManual]);
 
   const isPending = manual?.isPending ?? false;
 

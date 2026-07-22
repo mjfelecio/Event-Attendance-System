@@ -92,7 +92,11 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
     enableGlobalFilter: false,
   },
   {
-    accessorKey: "section",
+    id: "section",
+    // section is a Group object; derive its name so the cell renders a string
+    // (not the raw object, which threw React error #31) and sorting compares
+    // names instead of object references.
+    accessorFn: (row) => row.section?.name ?? "",
     header: ({ column }) => (
       <div className="text-center">
         <Button
@@ -105,7 +109,7 @@ export const reportColumns: ColumnDef<StudentAttendanceRecord>[] = [
       </div>
     ),
     cell: ({ getValue }) => (
-      <div className="text-center text-sm">{getValue() as string}</div>
+      <div className="text-center text-sm">{(getValue() as string) || "N/A"}</div>
     ),
     enableGlobalFilter: false,
   },

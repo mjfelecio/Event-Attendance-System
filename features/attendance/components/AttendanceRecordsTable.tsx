@@ -47,6 +47,9 @@ const AttendanceRecordsTable = ({ selectedEvent }: Props) => {
         />
       }
       title="Attendance Records"
+      // Switching events swaps the rows without unmounting; restart at page 1 so
+      // live polling of the previous event's page doesn't linger.
+      resetKey={selectedEvent.id}
     />
   );
 };
