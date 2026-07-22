@@ -7,18 +7,18 @@ import { Loader2 } from "lucide-react";
 import React, { useCallback } from "react";
 
 type Props = {
-  selectedEvent: Event | null;
-  onSelectEvent: (event: Event) => void;
+  selectedEventId: string | null;
+  onSelectEventId: (eventId: string) => void;
 };
 
-const EventsList = ({ selectedEvent, onSelectEvent }: Props) => {
+const EventsList = ({ selectedEventId, onSelectEventId }: Props) => {
   const { data: events, isLoading, error } = useEvents();
 
   const handleEventClick = useCallback(
     (event: Event) => {
-      onSelectEvent(event);
+      onSelectEventId(event.id);
     },
-    [onSelectEvent]
+    [onSelectEventId]
   );
 
   return (
@@ -47,7 +47,7 @@ const EventsList = ({ selectedEvent, onSelectEvent }: Props) => {
             <EventCard
               key={event.id}
               event={event}
-              isSelected={selectedEvent?.id === event.id}
+              isSelected={selectedEventId === event.id}
               onClick={() => handleEventClick(event)}
             />
           ))
