@@ -37,6 +37,9 @@ const RecordsList = ({ selectedEvent }: Props) => {
         />
       }
       title="Attendance Records"
+      // The reports event can change without unmounting this table; restart at
+      // page 1 for the newly selected event.
+      resetKey={selectedEvent.id}
     />
   );
 };
