@@ -1,17 +1,11 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
 import { respondWithError } from "@/globals/utils/httpError";
 import { hashPassword } from "@/globals/utils/password";
 import { clientKey, rateLimit } from "@/globals/utils/rateLimit";
-
-const signupSchema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  email: z.string().email("Valid email required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
+import { signupSchema } from "@/features/auth/schema/signupSchema";
 
 export async function POST(req: Request) {
   try {

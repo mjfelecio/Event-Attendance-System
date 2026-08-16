@@ -1,22 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckCircle2, Loader2 } from "lucide-react";
 
+import { Button } from "@/globals/components/shad-cn/button";
+import FormInput from "@/globals/components/shared/FormInput";
+import { toastDanger } from "@/globals/components/shared/toasts";
 import AuthSplitLayout from "@/features/auth/components/AuthSplitLayout";
+import AuthStatusScreen from "@/features/auth/components/AuthStatusScreen";
+import {
+  SignupFormValues,
+  signupSchema,
+} from "@/features/auth/schema/signupSchema";
 import { useAuth } from "@/globals/contexts/AuthContext";
+import { ApiError, fetchApi } from "@/globals/utils/api";
 
 const SignupPage = () => {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [submittedName, setSubmittedName] = useState<string | null>(null);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+  });
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -24,77 +38,27 @@ const SignupPage = () => {
     }
   }, [isLoading, user, router]);
 
-  if (isLoading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_50%,#ef4444_100%)] text-white/90">
-        Preparing signup...
-      </main>
-    );
-  }
-
-  if (user) {
-    return null;
-  }
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!event.currentTarget.checkValidity()) {
-      event.currentTarget.reportValidity();
-      return;
-    }
-
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
-
-    if (!trimmedName) {
-      setError("Name is required.");
-      return;
-    }
-
-    if (!trimmedEmail) {
-      setError("Email is required.");
-      return;
-    }
-
-    setError(null);
-    setSuccess(null);
-    setIsSubmitting(true);
-
+  const onSubmit = handleSubmit(async ({ name, email, password }) => {
     try {
-      const res = await fetch("/api/auth/signup", {
+      await fetchApi("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: trimmedName,
-          email: trimmedEmail,
-          password,
-        }),
+        body: JSON.stringify({ name, email, password }),
       });
 
-      const json = await res.json();
-
-      if (!res.ok || !json.success) {
-        // The API returns { success:false, message } - reading json.error here
-        // meant duplicate-email/rate-limit/validation messages never showed.
-        setError(
-          typeof json.message === "string"
-            ? json.message
-            : "Unable to submit signup."
-        );
-        return;
-      }
-
-      setSuccess("Request submitted! An admin will review your account shortly.");
-      setName("");
-      setEmail("");
-      setPassword("");
-    } catch (submitError) {
-      setError("Unexpected error. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setSubmittedName(name);
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.message : "Unexpected error. Please try again.";
+      toastDanger(message);
     }
-  };
+  });
+
+  if (isLoading) {
+    return <AuthStatusScreen message="Preparing signup…" />;
+  }
+
+  if (user) return null;
 
   return (
     <AuthSplitLayout
@@ -106,71 +70,67 @@ const SignupPage = () => {
           Already approved?{" "}
           <Link
             href="/login"
-            className="font-semibold text-slate-900 underline-offset-2 hover:underline"
+            className="font-semibold text-slate-900 underline-offset-2 hover:text-indigo-600 hover:underline"
           >
             Return to login
           </Link>
         </p>
       }
     >
-      <form className="space-y-4" onSubmit={handleSubmit}>
-        <label className="block text-sm font-medium text-slate-700">
-          Full name
-          <input
-            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+      {submittedName ? (
+        <div className="flex flex-col items-center gap-3 py-4 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-emerald-50">
+            <CheckCircle2 className="size-6 text-emerald-600" />
+          </div>
+          <p className="text-sm font-semibold text-slate-900">
+            Request submitted, {submittedName.split(" ")[0]}.
+          </p>
+          <p className="max-w-xs text-sm text-slate-500">
+            An admin will review your account shortly. You&apos;ll be able to
+            sign in once it&apos;s approved.
+          </p>
+        </div>
+      ) : (
+        <form className="space-y-4" onSubmit={onSubmit} noValidate>
+          <FormInput
+            label="Full name"
             type="text"
-            value={name}
             autoComplete="name"
-            onChange={(event) => setName(event.target.value)}
-            required
+            {...register("name")}
+            error={errors.name?.message}
           />
-        </label>
 
-        <label className="block text-sm font-medium text-slate-700">
-          Email
-          <input
-            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          <FormInput
+            label="Email"
             type="email"
-            value={email}
             autoComplete="email"
-            onChange={(event) => setEmail(event.target.value)}
-            required
+            {...register("email")}
+            error={errors.email?.message}
           />
-        </label>
 
-        <label className="block text-sm font-medium text-slate-700">
-          Password
-          <input
-            className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+          <FormInput
+            label="Password"
             type="password"
-            value={password}
             autoComplete="new-password"
-            onChange={(event) => setPassword(event.target.value)}
-            minLength={8}
-            required
+            {...register("password")}
+            error={errors.password?.message}
+            description={
+              !errors.password ? "At least 8 characters." : undefined
+            }
           />
-        </label>
 
-        {error ? (
-          <p className="text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        {success ? (
-          <p className="text-sm text-green-600" role="status">
-            {success}
-          </p>
-        ) : null}
-
-        <button
-          type="submit"
-          className="w-full rounded-xl bg-[linear-gradient(90deg,#0b4dff_0%,#6d28d9_50%,#ef4444_100%)] py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(109,40,217,0.35)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Submitting..." : "Submit request"}
-        </button>
-      </form>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Submitting…
+              </>
+            ) : (
+              "Submit request"
+            )}
+          </Button>
+        </form>
+      )}
     </AuthSplitLayout>
   );
 };
