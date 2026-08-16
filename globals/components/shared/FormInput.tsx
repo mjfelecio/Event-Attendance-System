@@ -65,7 +65,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
         <Input
           ref={ref}
           id={inputId}
-          className={`border-slate-200 rounded-xl mb-0 ${className}`}
+          className={`border-slate-300 rounded-xl mb-0 ${className}`}
           {...props}
         />
         {description && !error && (
