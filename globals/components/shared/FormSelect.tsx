@@ -18,15 +18,52 @@ import { Option } from "@/globals/types/primitives";
 import { Info } from "lucide-react";
 
 interface FormSelectProps {
+  /** Field name in the form schema. */
   name: string;
+  /** Visible label. */
   label: string;
   placeholder?: string;
+  /** `{ label, value }` pairs. Derive these from `globals/constants/groups.ts`
+   *  rather than hardcoding school vocabulary at the call site. */
   options: Option[];
+  /** react-hook-form `control` — this component is controlled, not registered. */
   control: Control<any>;
   description?: string;
+  /** Validation message. Pass `errors.field?.message`. */
   error?: string;
 }
 
+/**
+ * FormSelect
+ *
+ * Single-select bound to react-hook-form via `useController`. Unlike
+ * {@link FormInput}, this takes `control` rather than spreading `register()` —
+ * Radix's Select isn't a native input, so it has to be controlled.
+ *
+ * ## Prefer this over
+ * - A raw shad-cn `Select` inside a `Controller`, which reimplements the same
+ *   wiring plus the label/error layout every time.
+ * - A `ComboBox`, unless the list is long enough to need search. Under ~10
+ *   options a plain select is faster to operate.
+ *
+ * ## Constraints
+ * - Requires `control`; it will not work with `register()`.
+ * - For multi-select, use `CheckboxGroup` instead — this component holds a
+ *   single string value.
+ *
+ * @example
+ * ```tsx
+ * <FormSelect
+ *   name="department"
+ *   label="Department"
+ *   options={departmentOptions}
+ *   control={form.control}
+ *   error={errors.department?.message}
+ * />
+ * ```
+ *
+ * @see /design-system — live examples
+ */
 const FormSelect = ({
   name,
   label,
