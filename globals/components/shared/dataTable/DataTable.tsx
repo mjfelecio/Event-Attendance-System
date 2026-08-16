@@ -138,6 +138,28 @@ type DataTableProps<TData, TValue> = {
  * common table behavior so features don't reimplement table markup, pagination,
  * loading, or empty states. Client-managed and server-managed modes share the
  * exact same viewport and pagination UI - only who owns the state differs.
+ *
+ * ## Use this for any new table
+ *
+ * A second, feature-local table exists at
+ * `features/manage-list/components/StudentsDataTable/`, used only by Manage
+ * List's roster. The two share no code. That duplication is known and tracked -
+ * **new tables use this component**, not that one.
+ *
+ * ## Conventions
+ * - Column definitions belong in a `constants/` file next to the owning
+ *   feature, as a `ColumnDef<T>[]`, not inlined in the rendering component.
+ * - Reduce relation objects to primitives with `accessorFn` before rendering.
+ *   Passing a relation straight through breaks sorting and has crashed this
+ *   table before.
+ * - Pass `getRowId` whenever rows can be paginated, reordered, or mutated, so
+ *   React and TanStack track identity correctly.
+ * - Pass `resetKey` (e.g. the selected event id) in client mode so switching
+ *   data sets returns to page 1 instead of stranding the user on a page that
+ *   no longer exists.
+ *
+ * @see /design-system — live example with the standard states
+ * @see docs/design-system.md — table and page-pattern guidance
  */
 export function DataTable<TData, TValue>({
   columns,

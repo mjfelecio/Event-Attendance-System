@@ -3,6 +3,28 @@ name: forms-tables-ui
 description: Form, table, modal, and destructive-action UI conventions for the Event Attendance System — react-hook-form + Zod, the two coexisting table implementations, Sheet vs Drawer, and the mandatory confirm-before-destroy pattern. Use whenever building or editing a form, a data table, a modal/drawer, or any delete/destructive action in the UI.
 ---
 
+> ## Read the design system first
+>
+> **Before creating or modifying any UI in this repo, consult
+> [`docs/design-system.md`](../../../docs/design-system.md) and the interactive
+> playbook at `/design-system`.** They are the canonical visual reference —
+> colour, typography, surfaces, component choices, page-level patterns, the
+> binding rules for AI agents, and the list of known deviations you should not
+> propagate.
+>
+> Key points that override any instinct to invent something new:
+> - Primary colour is Tailwind **indigo-600** (shadcn `--primary` resolves to it).
+> - Import layout/colour tokens from `globals/constants/designTokens.ts`; don't
+>   re-derive class strings.
+> - Prefer an existing component over a new one; prefer an existing page pattern
+>   over a new layout.
+> - The **Manage List** pages are the canonical visual reference.
+> - Never build Tailwind class names at runtime (`` `bg-${x}-500` `` ships
+>   unstyled).
+>
+> This skill covers the *code* conventions below; the design system covers how
+> the result should look.
+
 # Forms, Tables & UI Conventions
 
 ## Forms: react-hook-form + zodResolver, sharing the API's own schema
