@@ -62,7 +62,13 @@ body {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  /* Primary is Tailwind indigo-600 (#4f46e5) — the app's stated primary colour.
+     This was stock shadcn neutral (oklch(0.205 0 0), near-black), which meant
+     <Button>, <Checkbox>, and <Switch> rendered black while every hand-styled
+     action in Manage List used indigo-600. Pointing the token at indigo makes
+     the primitive layer agree with the design system rather than compete with
+     it. See docs/design-system.md. */
+  --primary: oklch(0.511 0.262 276.966);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
