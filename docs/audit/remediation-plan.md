@@ -6,6 +6,11 @@ that is not a release blocker is explicitly called out below as a backlog task, 
 something to implement during this audit pass (no code was changed to produce this
 document).
 
+> **Work queue:** every actionable item below is tracked as a GitHub Issue
+> (#37–#52), linked inline. This document explains *why* and *in what order*; the
+> issues are where the work is claimed and closed. Umbrella:
+> [#52](https://github.com/mjfelecio/Event-Attendance-System/issues/52).
+
 ---
 
 ## Phase 0 — Must fix before beta (this week)
@@ -13,19 +18,22 @@ document).
 Ordered by dependency, not just severity — HTTPS unblocks the manual verification for
 everything else, so it should happen first.
 
-1. **Resolve the HTTP/secure-context problem** ([SEC-01](./security.md#sec-01),
-   [SEC-02](./security.md#sec-02)). Decide on and stand up an HTTPS path for the LAN
-   deployment (local CA via `mkcert` trusted on each staff device, or a reverse proxy
-   that terminates TLS), or explicitly decide to run in a mode that doesn't set the
-   `Secure` cookie flag and accept QR scanning is host-laptop-only. Either decision is
-   viable; *not deciding* is the actual risk. Rehearse the chosen path on a real second
-   device before the event.
-2. **Fix the bulk-import transaction** ([DATA-01](./data-integrity.md#data-01)). Pass
+1. **Resolve the production-build/LAN deployment problem** — [SEC-01](./security.md#sec-01),
+   [SEC-02](./security.md#sec-02), SEC-11 → **[#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37)**.
+   Decide on and stand up an HTTPS path for the LAN deployment (local CA via `mkcert`
+   trusted on each staff device, or a reverse proxy that terminates TLS), or explicitly
+   decide to run in a mode that doesn't set the `Secure` cookie flag and accept QR
+   scanning is host-laptop-only. Set `AUTH_SECRET` (≥16 chars) for any production build.
+   Either deployment decision is viable; *not deciding* is the actual risk. Rehearse the
+   chosen path on a real second device before the event.
+2. **Fix the bulk-import transaction** — [DATA-01](./data-integrity.md#data-01) →
+   **[#38](https://github.com/mjfelecio/Event-Attendance-System/issues/38)**. Pass
    an explicit longer `timeout`/`maxWait` to the `$transaction` call in
    `app/api/bulk-import/students/route.ts`, or restructure it into chunked commits.
    This is a small, contained code change — a good candidate to actually implement this
    week rather than defer, given how directly it blocks roster onboarding.
-3. **Resolve the group-vocabulary gap** ([DATA-02](./data-integrity.md#data-02)).
+3. **Resolve the group-vocabulary gap** — [DATA-02](./data-integrity.md#data-02) →
+   **[#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39)**.
    Confirm the real school's sections/departments/programs/strands/houses against
    `globals/constants/groups.ts` and re-seed with the corrected list *before* any real
    data entry begins, or prepare the Prisma Studio fallback procedure and make sure
@@ -33,14 +41,20 @@ everything else, so it should happen first.
    code change.
 4. **Prepare the four should-fix mitigations as runbook items**, even if no code
    changes: back up the SQLite file periodically during the event
-   ([DATA-04](./data-integrity.md#data-04)), disable laptop sleep and keep the server
-   process supervised or at least watched ([OPS-08](./operability.md#ops-08)), raise or
-   plan around the signup rate limit ([SEC-05](./security.md#sec-05)), and brief admins
-   not to change category/groups on approved events that already have attendance
-   ([SEC-03](./security.md#sec-03)).
+   ([DATA-04](./data-integrity.md#data-04) →
+   [#41](https://github.com/mjfelecio/Event-Attendance-System/issues/41)), disable
+   laptop sleep and keep the server process supervised or at least watched
+   ([OPS-08](./operability.md#ops-08) →
+   [#42](https://github.com/mjfelecio/Event-Attendance-System/issues/42)), raise or
+   plan around the signup rate limit ([SEC-05](./security.md#sec-05) →
+   [#43](https://github.com/mjfelecio/Event-Attendance-System/issues/43)), and brief
+   admins not to change category/groups on approved events that already have attendance
+   ([SEC-03](./security.md#sec-03) →
+   [#40](https://github.com/mjfelecio/Event-Attendance-System/issues/40)).
 5. **Run the manual verification list and smoke tests** in
    [`release-readiness.md`](./release-readiness.md) end-to-end on real hardware, on the
-   real event Wi-Fi, before the event.
+   real event Wi-Fi, before the event. Checklist mirrored in
+   [#52](https://github.com/mjfelecio/Event-Attendance-System/issues/52).
 
 Nothing else in this document should be attempted this week — nothing else materially
 threatens the beta, and every hour spent on Phase 1+ items is an hour not spent
@@ -55,23 +69,28 @@ week.
 
 - Guard against editing `category`/`includedGroups` on an approved event that already
   has attendance records ([SEC-03](./security.md#sec-03) /
-  [DATA-05](./data-integrity.md#data-05)) — either block the specific fields or require
-  an explicit confirmation naming the consequence.
+  [DATA-05](./data-integrity.md#data-05) →
+  [#40](https://github.com/mjfelecio/Event-Attendance-System/issues/40)) — either block
+  the specific fields or require an explicit confirmation naming the consequence.
 - Add a pre-delete attendance-record check (and correct error message) to
   `DELETE /api/students/[id]`, mirroring the existing event-delete guard
-  ([DATA-03](./data-integrity.md#data-03) / [OPS-07](./operability.md#ops-07)).
-- Build a minimal self-service password reset flow
-  ([OPS-05](./operability.md#ops-05)).
-- Build a minimal group-management screen (create/edit `Group` rows) so the
-  "destructive reseed or Prisma Studio" workaround from Phase 0 becomes unnecessary
-  going forward ([DATA-02](./data-integrity.md#data-02)).
+  ([DATA-03](./data-integrity.md#data-03) / [OPS-07](./operability.md#ops-07) →
+  [#44](https://github.com/mjfelecio/Event-Attendance-System/issues/44)).
+- Build a minimal self-service password reset flow, a group-management screen, and
+  basic user management — the durable replacement for Phase 0's Prisma Studio runbook
+  ([OPS-05](./operability.md#ops-05) / [OPS-06](./operability.md#ops-06) /
+  [DATA-02](./data-integrity.md#data-02) →
+  [#46](https://github.com/mjfelecio/Event-Attendance-System/issues/46)).
 - Add real process supervision for the server (`pm2` or an OS service) instead of the
-  Phase 0 manual mitigation ([OPS-08](./operability.md#ops-08)).
+  Phase 0 manual mitigation ([OPS-08](./operability.md#ops-08) →
+  [#42](https://github.com/mjfelecio/Event-Attendance-System/issues/42)).
 - Add a real backup mechanism (scheduled file copy, or an in-app export-everything
-  endpoint) instead of the Phase 0 manual copy ([DATA-04](./data-integrity.md#data-04)).
+  endpoint) instead of the Phase 0 manual copy ([DATA-04](./data-integrity.md#data-04) →
+  [#41](https://github.com/mjfelecio/Event-Attendance-System/issues/41)).
 - Widen or remove the signup rate-limit's dependency on `X-Forwarded-For`
-  ([SEC-05](./security.md#sec-05)) — e.g., raise the limit permanently, or accept a
-  session-based signal instead.
+  ([SEC-05](./security.md#sec-05) →
+  [#43](https://github.com/mjfelecio/Event-Attendance-System/issues/43)) — e.g., raise
+  the limit permanently, or accept a session-based signal instead.
 
 **Explicitly flagged for backlog, not this-week implementation**, per the audit
 instructions: every item above.
@@ -84,16 +103,23 @@ Backlog. Lower urgency than Phase 1; mostly consistency and quality-of-life fixe
 no meaningful user-facing risk.
 
 - Add a durable audit trail for record deletion (a table, or at minimum log-to-file
-  instead of console-only) ([DATA-10](./data-integrity.md#data-10)).
-- Add the missing `res.count > 0` check in `POST /api/records`'s fill-timein branch for
-  consistency with its sibling implementations ([DATA-11](./data-integrity.md#data-11)).
-- Add `.trim()` to name/ID fields in `studentSchema` and add sensible `.max()` bounds
-  across `studentSchema`/`eventSchema` ([DATA-07](./data-integrity.md#data-07),
-  [SEC-09](./security.md#sec-09)).
-- Detect and reject duplicate student IDs within a single bulk-import batch instead of
-  silently resolving to last-wins ([DATA-08](./data-integrity.md#data-08)).
+  instead of console-only) and the missing `res.count > 0` check in `POST /api/records`'s
+  fill-timein branch ([DATA-10](./data-integrity.md#data-10),
+  [DATA-11](./data-integrity.md#data-11) →
+  [#48](https://github.com/mjfelecio/Event-Attendance-System/issues/48)).
+- Validation-schema pass: `.trim()` on name/ID fields, sensible `.max()` bounds,
+  student-ID format validation if a real format exists, and duplicate-ID detection
+  within a bulk-import batch ([DATA-07](./data-integrity.md#data-07),
+  [DATA-08](./data-integrity.md#data-08), [SEC-09](./security.md#sec-09),
+  [SEC-10](./security.md#sec-10) →
+  [#47](https://github.com/mjfelecio/Event-Attendance-System/issues/47)).
 - Add `requireAuth()` to the three currently-unauthenticated `GET` routes for
-  consistency ([SEC-06](./security.md#sec-06)).
+  consistency ([SEC-06](./security.md#sec-06) →
+  [#49](https://github.com/mjfelecio/Event-Attendance-System/issues/49)).
+- Attendance UI polish: a done-state on the Time In button in normal mode, and a
+  per-event scan debounce key ([OPS-10](./operability.md#ops-10),
+  [OPS-12](./operability.md#ops-12) →
+  [#50](https://github.com/mjfelecio/Event-Attendance-System/issues/50)).
 - Consolidate the duplicated event-authorization logic across
   `POST /api/events` / `PATCH /api/events/[eventId]` / the print page's hand-rolled
   copy (carried forward from the architecture pass, `architecture.md` §17.9) — a
@@ -111,15 +137,18 @@ Backlog, longer-horizon. These are the items that require actual architectural c
 not just a patch — correctly out of scope for "fix before beta" per the audit's release
 context.
 
-- **Historical eligibility snapshots** ([DATA-06](./data-integrity.md#data-06)) — stop
+- **Historical eligibility snapshots** ([DATA-06](./data-integrity.md#data-06) →
+  [#45](https://github.com/mjfelecio/Event-Attendance-System/issues/45)) — stop
   recomputing event eligibility live from the current roster; snapshot the eligible set
   at event approval or event start. This is a schema change (a new table or a
   materialized snapshot column) and a meaningful behavior change to how reports work —
-  needs its own design discussion, not a quick fix.
-- **PostgreSQL migration** ([`postgres-migration.md`](./postgres-migration.md)) — squash
+  needs its own design discussion, not a quick fix. The near-term deliverable on that
+  issue is *documenting* the behavior for report readers, not changing it.
+- **PostgreSQL migration** ([`postgres-migration.md`](./postgres-migration.md) →
+  [#51](https://github.com/mjfelecio/Event-Attendance-System/issues/51)) — squash
   the SQLite migration history to a fresh Postgres baseline, swap the driver adapter,
   migrate data. Fully deferred; theoretical scale is explicitly out of scope for this
-  beta per the audit brief.
+  beta per the audit brief, and the issue is labelled to say so explicitly.
 - **Server-side pagination and search** — `architecture.md` §17.6–7 already documents
   this as a known constraint; the shared `DataTable` component already has a `manual`
   mode built for exactly this, unused on `main`. Worth doing once student counts or

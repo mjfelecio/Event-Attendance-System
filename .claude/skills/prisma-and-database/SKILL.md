@@ -87,7 +87,7 @@ assuming you can "just add a group" some other way.
   (`buildEventStudentFilter`, `buildStudentQuery`) — not classes, not a query-builder
   abstraction. `buildEventStudentFilter` in particular is the single source of truth
   for "who is eligible for this event"; if you change it, check every one of its
-  current call sites (six, per `docs/architecture.md`) including the print page, which
+  current call sites (**7**, across 5 files) including the print page, which
   calls it directly rather than through the stats API.
 - Validate with Zod **before** any Prisma call, never after.
 

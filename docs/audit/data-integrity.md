@@ -193,7 +193,12 @@ for an already-happened event change without any audit trail explaining why).
 
 **Severity:** P2
 **Confidence:** CONFIRMED (by design — documented in `domain-model.md`)
-**Location:** `globals/utils/buildEventStudentFilter.ts`, all six call sites
+**Location:** `globals/utils/buildEventStudentFilter.ts`, all **7** call sites across 5
+files (`app/api/events/[eventId]/stats/route.ts`, `app/api/records/route.ts`,
+`app/api/events/[eventId]/records/route.ts` ×2, `app/api/students/route.ts` ×2, and
+`app/(main)/reports/events/[id]/print/page.tsx`) — corrected from "six" during the
+2026-08-16 reconciliation pass
+**Tracked:** [#45](https://github.com/mjfelecio/Event-Attendance-System/issues/45)
 
 **Problem:** "is this student eligible for this event" is recomputed from the *current*
 roster and group membership every time it's read — there is no snapshot of who was

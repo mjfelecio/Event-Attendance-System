@@ -25,6 +25,13 @@ it may have a documented, deliberate rationale (e.g. `DATA-06`'s live eligibilit
 computation is by design, not a bug) or an already-scoped fix direction you'd otherwise
 duplicate or contradict.
 
+**The actionable work queue lives in GitHub Issues (#37–#52), not in the docs.**
+`docs/audit/` is the detailed technical record; each finding there links to its issue.
+Umbrella tracking issue for the beta: **#52**. Before starting work, check the issue
+(`gh issue view <n>`) for current status and any discussion that postdates the docs —
+and check open PRs too, since in-flight work may already cover it (OPS-09, for example,
+is fixed by PR #36 and was deliberately never filed as an issue).
+
 **Do not mark a P0/P1 finding as resolved without verifying the underlying condition
 changed.** These are the current P0 release blockers as of the last audit pass — treat
 them as still open until you've confirmed otherwise by reading the current code AND, for

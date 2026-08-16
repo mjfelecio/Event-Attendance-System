@@ -189,11 +189,14 @@ counterpart (an action payload, a query-string shape), define it locally in the 
 file (pattern 3) — that's the norm, not a shortcut.
 
 **Known validation gaps, not to copy**: no schema in this codebase sets an upper-bound
-`.max()` on any string field, and none call `.trim()` before validating — see
-`audit/security.md#sec-09` and `audit/data-integrity.md#data-07`. If you're writing a
-new schema, adding both is a reasonable improvement, not a deviation from convention
-(there isn't a considered convention here to preserve — it's an oversight repeated
-consistently, which is different from a deliberate pattern).
+`.max()` on any string field, and trimming is applied inconsistently — `patchSchema` in
+`app/api/events/[eventId]/route.ts` does use `z.string().trim().min(1)` for `title`, but
+`studentSchema` (the one that matters for CSV import) does not trim `id` or any name
+field. See `audit/security.md#sec-09` and `audit/data-integrity.md#data-07`, tracked as
+[#47](https://github.com/mjfelecio/Event-Attendance-System/issues/47). If you're writing
+a new schema, adding both is a reasonable improvement, not a deviation from convention
+(there isn't a considered convention here to preserve — it's an oversight, which is
+different from a deliberate pattern).
 
 ---
 

@@ -20,17 +20,23 @@ group-vocabulary gap.
 
 ## Release blockers (must be resolved before the event)
 
-| ID | Issue | What breaks if unresolved |
-|---|---|---|
-| [SEC-01](./security.md#sec-01) | `Secure` cookie flag on a `next start` production build drops sessions over LAN HTTP | Every device except the host laptop can't stay logged in |
-| [SEC-02](./security.md#sec-02) | QR camera requires a secure context; LAN HTTP doesn't qualify | QR scanning doesn't work on any device except the host laptop |
-| [DATA-01](./data-integrity.md#data-01) | Bulk import transaction has no timeout override; likely fails at 2,000+ rows | Cannot load the real student roster in one operation |
-| [DATA-02](./data-integrity.md#data-02) | No way to add a missing `Group` (section/department/etc.) without a destructive reseed | Bulk import hard-rejects the entire batch if the seeded vocabulary doesn't match the real school |
+> **Tracked as GitHub Issues.** Umbrella:
+> [#52](https://github.com/mjfelecio/Event-Attendance-System/issues/52). Individual
+> blockers linked in the table below. This document is the reasoning; the issues are
+> the checklist.
 
-**SEC-01 and SEC-02 share one root fix**: get the deployment onto HTTPS (or an
-equivalent secure-context workaround) before the event. This is the single highest-
-leverage thing to resolve this week — it's an infrastructure/ops decision, not a large
-code change.
+| ID | Issue | What breaks if unresolved | Tracked |
+|---|---|---|---|
+| [SEC-01](./security.md#sec-01) | `Secure` cookie flag on a `next start` production build drops sessions over LAN HTTP | Every device except the host laptop can't stay logged in | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
+| [SEC-02](./security.md#sec-02) | QR camera requires a secure context; LAN HTTP doesn't qualify | QR scanning doesn't work on any device except the host laptop | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
+| SEC-11 | `AUTH_SECRET` unset; production build throws on login, surfacing as `500 "Database error occurred."` | Login fails with an error naming the wrong subsystem | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
+| [DATA-01](./data-integrity.md#data-01) | Bulk import transaction has no timeout override; likely fails at 2,000+ rows | Cannot load the real student roster in one operation | [#38](https://github.com/mjfelecio/Event-Attendance-System/issues/38) |
+| [DATA-02](./data-integrity.md#data-02) | No way to add a missing `Group` (section/department/etc.) without a destructive reseed | Bulk import hard-rejects the entire batch if the seeded vocabulary doesn't match the real school | [#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39) |
+
+**SEC-01, SEC-02, and SEC-11 share one trigger**: switching to a production build for
+the LAN deployment. Getting onto HTTPS (or an equivalent secure-context workaround) plus
+setting `AUTH_SECRET` resolves all three. This is the single highest-leverage thing to
+resolve this week — it's an infrastructure/ops decision, not a large code change.
 
 **DATA-01 and DATA-02 both live on the path of "get the real roster into the system"**
 — the one task that absolutely must succeed before doors open. Resolve both before
@@ -41,12 +47,12 @@ a small sample.
 
 ## Must-fix-before-beta (strongly recommended, not hard blockers)
 
-| ID | Issue | Why it's not a hard blocker |
-|---|---|---|
-| [SEC-03](./security.md#sec-03) / [DATA-05](./data-integrity.md#data-05) | Admin can silently rescope an approved, already-recorded event | Requires deliberate admin action; brief admins not to change category/groups on live events as an interim mitigation |
-| [SEC-05](./security.md#sec-05) / [OPS-03](./operability.md#ops-03) | Signup rate limit is a single network-wide bucket | Workaround: space out organizer signups by >10 minutes during onboarding |
-| [DATA-04](./data-integrity.md#data-04) | No backup strategy for the SQLite file | Zero-code operational fix: a periodic file copy during the event |
-| [OPS-08](./operability.md#ops-08) | No process supervision for the server | Zero-code operational fix: disable laptop sleep, keep the terminal open and watched |
+| ID | Issue | Why it's not a hard blocker | Tracked |
+|---|---|---|---|
+| [SEC-03](./security.md#sec-03) / [DATA-05](./data-integrity.md#data-05) | Admin can silently rescope an approved, already-recorded event | Requires deliberate admin action; brief admins not to change category/groups on live events as an interim mitigation | [#40](https://github.com/mjfelecio/Event-Attendance-System/issues/40) |
+| [SEC-05](./security.md#sec-05) / [OPS-03](./operability.md#ops-03) | Signup rate limit is a single network-wide bucket | Workaround: space out organizer signups by >10 minutes during onboarding | [#43](https://github.com/mjfelecio/Event-Attendance-System/issues/43) |
+| [DATA-04](./data-integrity.md#data-04) | No backup strategy for the SQLite file | Zero-code operational fix: a periodic file copy during the event | [#41](https://github.com/mjfelecio/Event-Attendance-System/issues/41) |
+| [OPS-08](./operability.md#ops-08) | No process supervision for the server | Zero-code operational fix: disable laptop sleep, keep the terminal open and watched | [#42](https://github.com/mjfelecio/Event-Attendance-System/issues/42) |
 
 These four are "should fix" precisely because each has a workable non-code mitigation
 that a briefed operator can execute — they become release blockers only if the
@@ -57,10 +63,23 @@ mitigation isn't actually put in place.
 ## Safe to defer
 
 Everything at P2 and below in [`findings.md`](./findings.md) — misleading error
-messages, retroactive-eligibility behavior (documented, by design), missing password
-reset, the Settings placeholder, minor validation gaps, calendar date-range UX, and all
-Postgres-migration considerations. None of these will plausibly derail the beta if left
-as-is; all are tracked in the remediation plan's later phases.
+messages ([#44](https://github.com/mjfelecio/Event-Attendance-System/issues/44)),
+retroactive-eligibility behavior, documented and by design
+([#45](https://github.com/mjfelecio/Event-Attendance-System/issues/45)), missing
+password reset and the Settings placeholder
+([#46](https://github.com/mjfelecio/Event-Attendance-System/issues/46)), minor
+validation gaps ([#47](https://github.com/mjfelecio/Event-Attendance-System/issues/47)),
+audit-trail durability
+([#48](https://github.com/mjfelecio/Event-Attendance-System/issues/48)),
+unauthenticated GETs
+([#49](https://github.com/mjfelecio/Event-Attendance-System/issues/49)), attendance UI
+polish ([#50](https://github.com/mjfelecio/Event-Attendance-System/issues/50)), and all
+Postgres-migration considerations
+([#51](https://github.com/mjfelecio/Event-Attendance-System/issues/51) — explicitly
+post-beta). Calendar date-range UX (OPS-09) is already fixed by the open
+[PR #36](https://github.com/mjfelecio/Event-Attendance-System/pull/36). None of these
+will plausibly derail the beta if left as-is; all are tracked in the remediation plan's
+later phases.
 
 ---
 
@@ -97,8 +116,13 @@ review and cannot confirm runtime behavior.
    correct.
 8. **Env var check.** Confirm `DATABASE_URL` resolves to the intended file when the
    server is started from wherever it will actually be started from on event day
-   (working directory matters — see `architecture.md` §16), and decide/set
-   `AUTH_SECRET` if running a production build.
+   (working directory matters — see `architecture.md` §16). **Set `AUTH_SECRET`
+   (≥16 characters) before any production build** — the repository's current `.env`
+   does not define it, and `getAuthSecret()` throws in production when it's missing.
+   Because that throw is a plain `Error`, it surfaces to the operator as
+   `500 "Database error occurred."` on login rather than as a configuration error, so
+   this failure is easy to misdiagnose. Verified during the 2026-08-16 reconciliation
+   pass; see SEC-11 in [`findings.md`](./findings.md).
 
 ---
 
