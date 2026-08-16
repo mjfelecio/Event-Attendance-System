@@ -1,0 +1,4 @@
+# Replace with the server laptop's LAN IP address.
+192.168.254.148 {
+	reverse_proxy localhost:3000
+}
