@@ -7,6 +7,14 @@ import { useAuth } from "@/globals/contexts/AuthContext";
 import { useLogout } from "@/globals/hooks/useLogout";
 import { focusRing } from "@/globals/constants/designTokens";
 import { cn } from "@/globals/libs/shad-cn";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/globals/components/shad-cn/dropdown-menu";
 
 /**
  * Sticky mobile/tablet header shown below the `lg` breakpoint. Navigation
@@ -39,28 +47,34 @@ const MobileTopBar = () => {
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        <div
-          className="flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_100%)] text-xs font-semibold text-white"
-          title={user?.name ?? "Organizer"}
-          aria-label={`Signed in as ${user?.name ?? "Organizer"}`}
-        >
-          {initials || "O"}
-        </div>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className={cn(
-            "flex size-9 items-center justify-center rounded-full bg-red-600 text-white transition-colors hover:bg-red-700",
-            focusRing
-          )}
-          aria-label="Logout"
-          title="Logout"
-        >
-          <LogOut className="size-4" />
-        </button>
-      </div>
+      {/* Catch-all account menu - only Logout today, but this is where
+          future account-scoped actions (e.g. Settings) belong once they
+          exist, rather than adding more standalone icon buttons here. */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_100%)] text-xs font-semibold text-white transition-opacity hover:opacity-90",
+              focusRing
+            )}
+            aria-label={`Account menu for ${user?.name ?? "Organizer"}`}
+            title={user?.name ?? "Organizer"}
+          >
+            {initials || "O"}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel className="truncate">
+            {user?.name ?? "Organizer"}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+            <LogOut />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 };
