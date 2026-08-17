@@ -16,7 +16,7 @@ const AttendancePage = () => {
   const selectedEvent = liveEvent ?? null;
 
   return (
-    <section className={page.surface}>
+    <section className={`${page.surface} min-h-svh`}>
       <div className={page.containerWide}>
         <AttendancePageHeader
           selectedEvent={selectedEvent}

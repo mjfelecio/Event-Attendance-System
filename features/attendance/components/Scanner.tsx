@@ -31,12 +31,16 @@ type ScannerProps = {
  * Camera off state
  */
 const CameraOffState = ({ onOpen }: { onOpen: () => void }) => (
-  <div className="flex flex-col items-center justify-center py-8 px-4">
-    <IoCameraOutline size={120} className="text-slate-400 mb-6" />
-    <p className="text-lg font-medium text-slate-600 mb-6 text-center">
+  <div className="flex flex-col items-center justify-center px-4 py-6 sm:py-8">
+    <IoCameraOutline className="size-16 text-slate-400 mb-4 sm:size-24 sm:mb-6 md:size-28" />
+    <p className="text-base font-medium text-slate-600 mb-4 text-center sm:text-lg sm:mb-6">
       Turn on camera to start attendance
     </p>
-    <Button onClick={onOpen} size="lg" className="text-base px-8 py-6">
+    <Button
+      onClick={onOpen}
+      size="lg"
+      className="text-sm px-6 py-4 sm:text-base sm:px-8 sm:py-6"
+    >
       Open Camera
     </Button>
   </div>

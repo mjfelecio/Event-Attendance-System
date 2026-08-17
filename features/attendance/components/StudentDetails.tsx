@@ -53,9 +53,11 @@ const LoadingState = () => (
 );
 
 const EmptyState = () => (
-  <div className="flex min-h-[240px] flex-1 flex-col items-center justify-center gap-4">
-    <FaUser className="text-slate-300 text-6xl" />
-    <p className="text-slate-400 text-2xl font-medium">No Student Found</p>
+  <div className="flex min-h-[240px] flex-1 flex-col items-center justify-center gap-3 sm:gap-4">
+    <FaUser className="text-slate-300 text-4xl sm:text-6xl" />
+    <p className="text-slate-400 text-lg font-medium sm:text-2xl">
+      No Student Found
+    </p>
   </div>
 );
 
