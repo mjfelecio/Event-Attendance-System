@@ -39,6 +39,19 @@ export const queryKeys = {
     fromEventForStudent: (eventId: string, studentId: string) =>
       ["records", "fromEventForStudent", eventId, studentId] as const,
   },
+  reports: {
+    all: () => ["reports"] as const,
+    /** One event's full report (`GET /api/reports/events/[eventId]`). */
+    event: (eventId: string) => ["reports", "event", eventId] as const,
+    /**
+     * Cross-event summary. The range and category are part of the key so each
+     * distinct query caches separately; `from`/`to` are ISO date strings
+     * (`YYYY-MM-DD`) rather than `Date`s, since a `Date` is a fresh object every
+     * render and would never match a cached key.
+     */
+    overview: (from: string, to: string, category = "ALL_CATEGORIES") =>
+      ["reports", "overview", from, to, category] as const,
+  },
   admin: {
     pendingOrganizers: () => ["admin", "pendingOrganizers"] as const,
   },
