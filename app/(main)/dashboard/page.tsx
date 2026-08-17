@@ -105,27 +105,34 @@ const MetricCard = ({
   return (
     <article
       className={cn(
-        "rounded-2xl border bg-white p-5 shadow-[0_16px_32px_rgba(15,23,42,0.06)]",
+        "rounded-xl border bg-white p-3 shadow-[0_16px_32px_rgba(15,23,42,0.06)] sm:rounded-2xl sm:p-5",
         toneStyle.borderClass
       )}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+      <div className="flex items-start justify-between gap-2 sm:gap-4">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
             {label}
           </p>
-          <p className={cn("mt-3 text-4xl font-bold leading-none", toneStyle.valueClass)}>
+          <p
+            className={cn(
+              "mt-1 text-2xl font-bold leading-none sm:mt-3 sm:text-4xl",
+              toneStyle.valueClass
+            )}
+          >
             {value}
           </p>
-          <p className="mt-2 text-xs text-slate-500">{description}</p>
+          <p className="mt-1 text-[11px] text-slate-500 sm:mt-2 sm:text-xs">
+            {description}
+          </p>
         </div>
         <div
           className={cn(
-            "flex size-11 items-center justify-center rounded-xl",
+            "flex size-8 shrink-0 items-center justify-center rounded-lg sm:size-11 sm:rounded-xl",
             toneStyle.iconWrap
           )}
         >
-          <Icon className="size-5" />
+          <Icon className="size-4 sm:size-5" />
         </div>
       </div>
     </article>
@@ -317,7 +324,7 @@ const AdminDashboard = () => {
         </p>
       </section>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <MetricCard
           label="Pending Organizers"
           value={pendingCount}
@@ -697,7 +704,7 @@ const OrganizerDashboard = () => {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {Object.entries(grouped).map(([status, items]) => {
           const typedStatus = status as Event["status"];
           const meta = statusMeta[typedStatus];
@@ -706,7 +713,7 @@ const OrganizerDashboard = () => {
           return (
             <article
               key={status}
-              className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_32px_rgba(15,23,42,0.06)]"
+              className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-3 shadow-[0_16px_32px_rgba(15,23,42,0.06)] sm:rounded-2xl sm:p-5"
             >
               <div
                 className={cn(
@@ -715,23 +722,25 @@ const OrganizerDashboard = () => {
                 )}
               />
               <div className="relative">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
                   <span
                     className={cn(
-                      "inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]",
+                      "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] sm:px-2.5 sm:py-1 sm:text-[11px] sm:tracking-[0.12em]",
                       meta.chipClass
                     )}
                   >
                     {meta.title}
                   </span>
-                  <div className="rounded-xl bg-slate-100 p-2 text-slate-600">
-                    <Icon className="size-4.5" />
+                  <div className="shrink-0 rounded-lg bg-slate-100 p-1.5 text-slate-600 sm:rounded-xl sm:p-2">
+                    <Icon className="size-3.5 sm:size-4.5" />
                   </div>
                 </div>
-                <p className="mt-4 text-4xl font-bold text-slate-900">
+                <p className="mt-2 text-2xl font-bold text-slate-900 sm:mt-4 sm:text-4xl">
                   {isLoading ? "--" : items.length}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{meta.description}</p>
+                <p className="mt-1 text-[11px] text-slate-500 sm:text-xs">
+                  {meta.description}
+                </p>
               </div>
             </article>
           );
