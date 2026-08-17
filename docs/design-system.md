@@ -126,6 +126,7 @@ Live examples: [`/design-system`](../app/(main)/design-system/page.tsx) →
 | Text field | `FormInput` | Bare `Input` + hand-written label |
 | Select | `FormSelect` (needs `control`) | Raw `Select` in a `Controller` |
 | Searchable select | `ComboBox` | `FormSelect` with 50 options |
+| Date range | `DateRangePicker` | Two loose `DatePicker`s |
 | Multi-select | `CheckboxGroup` | Several checkboxes in a row |
 | Status / count chip | `StatusBadge` | Inline `rounded-full bg-x-50` |
 | Page title | `PageHeader` | A bare `<h1>` |
@@ -135,6 +136,7 @@ Live examples: [`/design-system`](../app/(main)/design-system/page.tsx) →
 | Transient feedback | `toastSuccess` / `Warning` / `Danger` | `alert()` |
 | Persistent message | `Alert` | A toast |
 | Table loading/empty/error | `DataTableStates` exports | Per-feature placeholders |
+| Chart | Recharts inside `ChartPanel` | A bare `ResponsiveContainer` |
 
 Two rules worth stating explicitly:
 
@@ -144,6 +146,32 @@ Two rules worth stating explicitly:
 - **`toastWarning` ≠ `toastDanger`.** Warning is for a no-op that isn't a failure
   ("attendance was already recorded"). During an event, red for a harmless
   duplicate scan makes an organizer think data was lost and start re-scanning.
+
+---
+
+### Charts
+
+Recharts, added for the reports overhaul. Charts are a **new pattern**, so the
+rules are short and binding:
+
+- **Wrap every chart in `features/reports/components/charts/ChartPanel`** — it
+  supplies the card, the title, the fixed height Recharts needs to measure, an
+  `overflow-x-auto` plot area, and the empty state. An empty chart frame with axes
+  and no marks reads as broken; a sentence reads as "nothing happened".
+- **Colours come from `CHART_COLORS`** in `globals/constants/attendance.ts`, as
+  literal hex. Recharts styles with CSS values, not classes — and a Tailwind class
+  assembled at runtime ships unstyled anyway.
+- **The present/late/absent trio is validated, not chosen by eye.** It passes
+  colour-vision-deficient separation but `late` (amber-500) sits under 3:1 contrast
+  against white, so **any chart using it must carry visible labels or an
+  accompanying table**. The status donut's labelled legend is that relief.
+- **One series needs no legend** (the panel title names it); two or more always get
+  one, so identity is never colour-alone.
+- **`isAnimationActive={false}`.** A report is read, not watched, and animation
+  makes print and screenshots non-deterministic.
+- **Never on the print page.** `ResponsiveContainer` measures the DOM and renders
+  blank or mis-sized in print. Printed documents are tables and numbers.
+- Load charts with `next/dynamic` so Recharts stays out of the initial bundle.
 
 ---
 
@@ -215,7 +243,7 @@ is deliberately out of scope. **Follow the "preferred" column in new work.**
 | Deviation | Where | Preferred |
 |---|---|---|
 | Two table implementations | `StudentsDataTable` vs shared `DataTable` | Shared `DataTable` |
-| Three page shells | Manage List/Dashboard use `page.surface`; Attendance `bg-white p-6`; Reports `p-4` | `page.surface` |
+| Two page shells | Manage List/Dashboard/Reports use `page.surface`; Attendance `bg-white p-6` | `page.surface` |
 | Event-status colours duplicated | Dashboard `chipClass`, calendar `EventCard` | `EVENT_STATUS_TONE` |
 | `Sheet` and `Drawer` coexist | `StudentFormDrawer` vs `EventDrawer` | `Sheet` |
 | Manage List `Pagination` duplicates the shared one | `StudentsDataTable/Pagination.tsx` | Shared `DataTablePagination` |

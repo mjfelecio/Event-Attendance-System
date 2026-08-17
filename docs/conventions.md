@@ -744,26 +744,61 @@ Edit `prisma/seed.ts` and run `pnpm db:seed`. Know before you touch this file:
 
 ## How do I build a printable report?
 
-Two coexisting mechanisms:
+**One builder feeds both the screen and the paper.**
+`globals/utils/eventReport.ts` (`server-only`) exports `buildEventReport(event)`,
+which runs the eligibility query, derives every student's outcome, and returns the
+totals, section breakdown, arrival buckets, and rows. Its two consumers are:
 
-1. **On-screen report** (`app/(main)/reports/events/[id]/page.tsx` and its
-   feature components under `features/reports/`) — client-rendered, fetches through the
-   normal API/TanStack Query path, uses the shared `DataTable`.
-2. **Print view** (`app/(main)/reports/events/[id]/print/page.tsx` +
-   `PrintableEventReport.tsx`) — a **server component**, queries Prisma directly, and
-   computes its own stats/grouping rather than calling the stats API. It exists as a
-   server component specifically to avoid shipping print-only markup/logic to the
-   client bundle and to render cleanly for the browser's native print dialog. Tailwind's
-   `print:` variants (`print:hidden`, `print-break-inside-avoid`) are used directly in
-   the component's className strings rather than a separate print stylesheet — see
-   `PrintableEventReport.tsx` and `Sidebar.tsx`'s `print:hidden`.
+1. **On-screen** — `GET /api/reports/events/[eventId]` →
+   `features/reports/hooks/useEventReport.ts` → `app/(main)/reports/events/[id]/page.tsx`.
+2. **Print** — `app/(print)/reports/events/[id]/print/page.tsx`, a **server
+   component**, calls `buildEventReport` directly and renders
+   `features/reports/components/print/AttendanceSheet.tsx`.
 
-**If you change what counts as "present" or "eligible," you must update the print
-page's inline computation too** — it does not call `buildEventStudentFilter`'s
-consumers indirectly through the API, it calls `buildEventStudentFilter` itself, and
-computes `presentCount`/`eligibleCount` locally rather than hitting
-`/api/events/[id]/stats`. This is the single most important "these two things must be
-changed together" relationship in the codebase — see `architecture.md` §5 and §20.
+This replaced an arrangement where the print page queried Prisma and recomputed
+eligibility and stats itself. That was previously flagged here as the single most
+important "these two things must be changed together" relationship in the
+codebase; it no longer exists. **If you change what counts as present or eligible,
+change it in `buildEventReport` (or the derivation rules in
+`globals/utils/attendance.ts`) and both surfaces follow.**
+
+### The print route group
+
+Printable pages live under `app/(print)/`, which supplies a bare white layout. They
+deliberately do **not** sit under `(main)`: that layout mounts the sidebar, mobile
+bars, a slate background and a `pb-24` gutter, and gates rendering behind a
+client-side auth check that flashes "Checking access…" first. The nav chrome all
+carries `print:hidden` so it never reached paper, but it framed the on-screen
+preview and delayed first paint.
+
+Because `(main)`'s gate is a client component and never protected a direct request
+to a server route anyway, print pages **authenticate on the server themselves** —
+`getFreshAuthSession()` plus an inline visibility check mirroring
+`assertEventVisibility`. Keep that if you add another printable page.
+
+### Print styling
+
+Tailwind `print:` variants inline in the component, plus the shared rules in
+`app/globals.css` (`@page A4 portrait`, `.no-print`, `.print-break-inside-avoid`,
+`.print-table thead { display: table-header-group }` so headers repeat on every
+page).
+
+Two constraints worth knowing:
+
+- **No charts on printed pages.** Recharts' `ResponsiveContainer` measures the DOM
+  and renders blank or mis-sized in print. Printed documents are tables and numbers.
+- **No page numbers in the markup.** Chrome does not support `@page` counters for
+  HTML content, so any "Page 1 of 4" rendered in the document would be wrong on
+  every sheet after the first. The browser's own print header/footer supplies real
+  ones.
+
+### Print options
+
+The sheet's options (include absentees, group by section, signature column) live in
+**URL search params**, read by the server page from `searchParams`. That keeps the
+page a server component — no report logic ships to the browser — and makes a
+configuration a shareable link. The only client component is
+`PrintOptionsBar`, which is `.no-print`.
 
 ---
 
