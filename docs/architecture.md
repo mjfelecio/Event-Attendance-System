@@ -142,6 +142,36 @@ hooks never see the envelope. Error codes actually used in branching:
 `NO_TIME_IN`, `EVENT_HAS_RECORDS`, `INVALID_GROUPS`, `DUPLICATE`, `FORBIDDEN`,
 `UNAUTHORIZED`, `INACTIVE_USER`, `INVALID_STATUS`.
 
+### The `/api/reports/*` namespace
+
+Reporting has its own namespace rather than extending the endpoints the live
+attendance screen polls. `GET /api/events/[eventId]/stats` and
+`GET /api/events/[eventId]/records` are deliberately left alone: the attendance
+page is the one screen operated under time pressure, and reshaping its payloads to
+serve reports would put the riskiest change on the least forgiving surface.
+
+| Route | Returns | Builder |
+|---|---|---|
+| `GET /api/reports/events/[eventId]` | totals (eligible/present/late/absent/attended/noTimeout/scanned/manual), rate, arrival buckets, per-section breakdown, one row per eligible student | `globals/utils/eventReport.ts` |
+| `GET /api/reports/overview?from&to&category` | per-event rates for a date range, range totals, best/worst, per-category averages | `globals/utils/reportsOverview.ts` |
+
+Both builders are `server-only`; their payload types live in
+`globals/types/reports.ts` so the client hooks can import them without crossing
+that boundary. `buildEventReport` is also called directly by the print page — see
+`conventions.md` §"How do I build a printable report?".
+
+Two things to know before changing either:
+
+- **The overview covers APPROVED events only.** Attendance is only writable on
+  approved events, so a draft has no records by construction and would report as 0%
+  turnout for an event that never ran. It also makes authorization trivially safe:
+  approved events are readable by every active user, so the filter is strictly
+  narrower than any caller's visibility and cannot leak another organizer's draft.
+- **`overview` batches by eligibility scope, not by event.** Events sharing a
+  filter (every `ALL` event, every event scoped to the same groups) share one
+  student count and one grouped record query, so the cost tracks distinct scopes
+  rather than event count. The range is Zod-validated and capped at 366 days.
+
 ### Error funnel
 
 `globals/utils/httpError.ts::respondWithError` is the single catch-all:

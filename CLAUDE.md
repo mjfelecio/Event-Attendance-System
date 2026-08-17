@@ -10,6 +10,7 @@ deployed on a single laptop over a school LAN for one week at a time.
 | **Anything UI** | **[`docs/design-system.md`](docs/design-system.md)** + the `/design-system` page — **mandatory** |
 | Anything non-trivial | [`docs/architecture.md`](docs/architecture.md), [`docs/conventions.md`](docs/conventions.md) |
 | Business rules | [`docs/domain-model.md`](docs/domain-model.md) |
+| **Anything in `/reports`** | [`docs/plans/reports-overhaul.md`](docs/plans/reports-overhaul.md) — the approved overhaul plan; follow it rather than redesigning |
 | Before calling work done | [`docs/audit/findings.md`](docs/audit/findings.md) — known issues, so you don't "discover" a tracked one |
 
 Task-scoped skills live in `.claude/skills/` and load automatically; see

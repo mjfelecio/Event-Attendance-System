@@ -22,6 +22,7 @@ import { useAuth } from "@/globals/contexts/AuthContext";
 import PageHeader from "@/globals/components/shared/PageHeader";
 import StatusBadge from "@/globals/components/shared/StatusBadge";
 import { surface } from "@/globals/constants/designTokens";
+import { formatAttendanceRate } from "@/globals/utils/attendance";
 import { cn } from "@/globals/libs/shad-cn";
 
 type Props = {
@@ -72,10 +73,11 @@ const AttendancePageHeader: React.FC<Props> = ({
   } = useStatsOfEvent(selectedEvent?.id, true);
 
   // Compute attendance rate
-  const attendanceRate = useMemo(() => {
-    if (!eventStats?.eligible) return "—";
-    return `${((eventStats.present / eventStats.eligible) * 100).toFixed(1)}%`;
-  }, [eventStats]);
+  const attendanceRate = useMemo(
+    () =>
+      formatAttendanceRate(eventStats?.present ?? 0, eventStats?.eligible ?? 0),
+    [eventStats],
+  );
 
   // Build combobox options
   const eventChoices: ComboBoxValue[] = useMemo(() => {

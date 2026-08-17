@@ -418,4 +418,19 @@ body {
   .print-table tr {
     break-inside: avoid;
   }
+
+  /*
+   * Forces the element to start a fresh sheet, leaving whatever blank space that
+   * costs on the previous one. Used to give every section of a grouped
+   * attendance sheet its own page, so a section heading is always at the top of
+   * a page and never stranded near the bottom.
+   *
+   * Applied to a block-level wrapper, never a `tr` or `tbody` — Chrome honours
+   * fragmentation breaks on blocks reliably and on table internals only
+   * erratically. `page-break-before` is the legacy alias, kept for older engines.
+   */
+  .print-page-break-before {
+    break-before: page;
+    page-break-before: always;
+  }
 }
