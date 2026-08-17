@@ -49,7 +49,9 @@ const SignupPage = () => {
       setSubmittedName(name);
     } catch (error) {
       const message =
-        error instanceof ApiError ? error.message : "Unexpected error. Please try again.";
+        error instanceof ApiError
+          ? error.message
+          : "Unexpected error. Please try again.";
       toastDanger(message);
     }
   });
@@ -119,7 +121,12 @@ const SignupPage = () => {
             }
           />
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
