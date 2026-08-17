@@ -118,7 +118,6 @@ const Calendar = ({
           ref={calendarRef}
           height="100%"
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
           headerToolbar={CALENDAR_HEADER_TOOLBAR}
           buttonText={{
             today: "Today",
@@ -127,7 +126,7 @@ const Calendar = ({
             day: "Day",
           }}
           dayHeaderContent={renderDayHeader}
-          allDayText="all-day"
+          allDayText="All Day"
           slotMinTime="06:00:00"
           slotMaxTime="22:00:00"
           scrollTime="06:00:00"
