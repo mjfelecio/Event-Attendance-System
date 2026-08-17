@@ -2,13 +2,20 @@ import { useCallback, useState } from "react";
 import { fetchApi } from "@/globals/utils/api";
 import { toastDanger } from "@/globals/components/shared/toasts";
 
-type ExportFormat = "csv";
-
-type UseDataExportParams<T> = {
+type UseDataExportParams<T, TRow extends object = Record<string, unknown>> = {
   /** API endpoint to fetch export data from */
   apiUrl: string;
   /** Filename without extension */
   filename: string;
+  /**
+   * Reshapes each API row into the row the CSV should contain.
+   *
+   * Without one, the CSV is whatever JSON the endpoint returns — which is how the
+   * attendance export used to emit `[object Object]` for its nested `section`
+   * relation and raw ISO strings for every timestamp. Map to flat, human-labelled
+   * keys (the keys become the CSV header) and format dates here.
+   */
+  mapRow?: (row: T) => TRow;
 };
 
 type UseDataExportResult = {
@@ -49,10 +56,11 @@ function downloadFile(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export function useDataExport<T>({
+export function useDataExport<T, TRow extends object = Record<string, unknown>>({
   apiUrl,
   filename,
-}: UseDataExportParams<T>): UseDataExportResult {
+  mapRow,
+}: UseDataExportParams<T, TRow>): UseDataExportResult {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportData = useCallback(async () => {
@@ -60,10 +68,13 @@ export function useDataExport<T>({
       setIsExporting(true);
 
       const response = await fetchApi<T[]>(apiUrl);
+      const rows: (T | TRow)[] = mapRow ? response.map(mapRow) : response;
 
-      // Loaded on demand so the CSV library stays out of every page bundle
+      // Loaded on demand so the CSV library stays out of every page bundle.
+      // escapeCsvFormulas runs on the *mapped* rows so a formula smuggled into a
+      // student's name is still neutralized after reshaping.
       const { jsonToCSV } = await import("react-papaparse");
-      const csv = jsonToCSV(escapeCsvFormulas(response));
+      const csv = jsonToCSV(escapeCsvFormulas(rows));
       const blob = new Blob([csv], {
         type: "text/csv;charset=utf-8;",
       });
@@ -82,7 +93,7 @@ export function useDataExport<T>({
     } finally {
       setIsExporting(false);
     }
-  }, [apiUrl, filename]);
+  }, [apiUrl, filename, mapRow]);
 
   return { isExporting, exportData };
 }

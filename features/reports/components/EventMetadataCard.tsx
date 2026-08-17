@@ -1,58 +1,52 @@
-import { Event } from "@/globals/types/events";
+import { memo } from "react";
+
+import StatusBadge from "@/globals/components/shared/StatusBadge";
+import { surface } from "@/globals/constants/designTokens";
+import type { ReportEvent } from "@/globals/types/reports";
 import { readableDate } from "@/globals/utils/formatting";
-import { capitalize } from "lodash";
-import React, { memo } from "react";
+import { capitalizeLabel } from "@/globals/utils/text";
 
-const EventMetadataCard = ({ event }: { event: Event }) => {
+type Field = { label: string; value: string };
+
+/**
+ * The event's own details, beside its attendance numbers.
+ *
+ * Previously rendered `event.createdById` — a raw cuid — under the label
+ * "Organizer". The creator's name is now carried on `ReportEvent.createdBy`,
+ * selected down to id + name so the response never ships a password hash.
+ */
+const EventMetadataCard = ({ event }: { event: ReportEvent }) => {
+  const fields: Field[] = [
+    ...(event.createdBy ? [{ label: "Organizer", value: event.createdBy.name }] : []),
+    ...(event.location ? [{ label: "Location", value: event.location }] : []),
+    { label: "Starts", value: readableDate(event.start) },
+    { label: "Ends", value: readableDate(event.end) },
+    { label: "Scope", value: `${capitalizeLabel(event.category)} event` },
+  ];
+
   return (
-    <section className="rounded-md border bg-muted/30 p-4 shadow-sm">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6 text-sm">
-        {event.createdById && (
-          <div>
-            <p className="text-muted-foreground">Organizer</p>
-            <p className="font-medium">{event.createdById}</p>
+    <section className={`${surface.card} p-5`}>
+      <div className="grid grid-cols-1 gap-x-6 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+        {fields.map((field) => (
+          <div key={field.label}>
+            <p className="text-slate-500">{field.label}</p>
+            <p className="mt-0.5 font-medium text-slate-900">{field.value}</p>
           </div>
-        )}
+        ))}
 
-        {event.location && (
-          <div>
-            <p className="text-muted-foreground">Location</p>
-            <p className="font-medium">{event.location}</p>
-          </div>
-        )}
-
-        {event.category !== "ALL" && (
-          <div>
-            <p className="text-muted-foreground mb-1">Participant Groups</p>
-            <div className="flex flex-wrap gap-2 max-w-64 max-h-12 overflow-y-scroll">
+        {/* ALL / COLLEGE / SHS ignore includedGroups entirely. */}
+        {event.category !== "ALL" && event.includedGroups.length > 0 ? (
+          <div className="sm:col-span-2 lg:col-span-3">
+            <p className="text-slate-500">Participant groups</p>
+            <div className="mt-1.5 flex flex-wrap gap-2">
               {event.includedGroups.map((group) => (
-                <p
-                  key={group.id}
-                  className="text-xs font-medium bg-sky-100 rounded-2xl py-0.5 px-2"
-                >
+                <StatusBadge key={group.id} tone="primary">
                   {group.name}
-                </p>
+                </StatusBadge>
               ))}
             </div>
           </div>
-        )}
-
-        <div>
-          <p className="text-muted-foreground">Start Time</p>
-          <p className="font-medium">{readableDate(event.start)}</p>
-        </div>
-
-        {event.end && (
-          <div>
-            <p className="text-muted-foreground">End Time</p>
-            <p className="font-medium">{readableDate(event.end)}</p>
-          </div>
-        )}
-
-        <div>
-          <p className="text-muted-foreground">Event Type</p>
-          <p className="font-medium">{capitalize(event.category)} Event</p>
-        </div>
+        ) : null}
       </div>
     </section>
   );
