@@ -69,25 +69,25 @@ const toneMap: Record<
 > = {
   blue: {
     iconWrap:
-      "bg-[linear-gradient(135deg,#1d4ed8_0%,#2563eb_100%)] text-white shadow-[0_12px_22px_rgba(37,99,235,0.35)]",
+      "bg-[linear-gradient(135deg,#1d4ed8_0%,#2563eb_100%)] text-white",
     valueClass: "text-blue-700",
     borderClass: "border-blue-100",
   },
   emerald: {
     iconWrap:
-      "bg-[linear-gradient(135deg,#047857_0%,#10b981_100%)] text-white shadow-[0_12px_22px_rgba(16,185,129,0.35)]",
+      "bg-[linear-gradient(135deg,#047857_0%,#10b981_100%)] text-white",
     valueClass: "text-emerald-700",
     borderClass: "border-emerald-100",
   },
   amber: {
     iconWrap:
-      "bg-[linear-gradient(135deg,#a16207_0%,#f59e0b_100%)] text-white shadow-[0_12px_22px_rgba(245,158,11,0.35)]",
+      "bg-[linear-gradient(135deg,#a16207_0%,#f59e0b_100%)] text-white",
     valueClass: "text-amber-700",
     borderClass: "border-amber-100",
   },
   rose: {
     iconWrap:
-      "bg-[linear-gradient(135deg,#be123c_0%,#f43f5e_100%)] text-white shadow-[0_12px_22px_rgba(244,63,94,0.35)]",
+      "bg-[linear-gradient(135deg,#be123c_0%,#f43f5e_100%)] text-white",
     valueClass: "text-rose-700",
     borderClass: "border-rose-100",
   },

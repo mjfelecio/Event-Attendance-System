@@ -59,7 +59,7 @@ const NavigationButton = ({
         "group flex w-full items-center rounded-xl px-3 py-2.5 transition-all duration-200",
         isExpanded ? "gap-3" : "justify-center",
         active
-          ? "bg-[linear-gradient(90deg,rgba(11,77,255,0.36)_0%,rgba(109,40,217,0.34)_55%,rgba(239,68,68,0.3)_100%)] text-white shadow-[0_10px_24px_rgba(79,70,229,0.32)]"
+          ? "bg-[linear-gradient(90deg,rgba(11,77,255,0.36)_0%,rgba(109,40,217,0.34)_100%)] text-white"
           : "text-slate-300 hover:bg-white/10 hover:text-white"
       )}
       aria-label={item.text}
@@ -181,7 +181,7 @@ const Sidebar = () => {
             </div>
           ) : (
             <div className="flex justify-center">
-              <div className="flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_55%,#ef4444_100%)] text-xs font-semibold text-white">
+              <div className="flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_100%)] text-xs font-semibold text-white">
                 {initials || "O"}
               </div>
             </div>

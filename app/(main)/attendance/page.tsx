@@ -15,7 +15,7 @@ const AttendancePage = () => {
   const selectedEvent = liveEvent ?? null;
 
   return (
-    <div className="flex flex-col flex-1 bg-white p-6 gap-4 overflow-y-scroll">
+    <div className="flex flex-col flex-1 bg-white p-6 gap-4 overflow-y-scroll min-h-svh">
       <AttendancePageHeader
         selectedEvent={selectedEvent}
         onChangeEvent={(event) => setSelectedEventId(event.id)}
