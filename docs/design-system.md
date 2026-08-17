@@ -28,7 +28,7 @@ them:
 - `features/manage-list/components/**` — the components those pages compose
 
 The Dashboard independently adopted much of the same language, which is good
-corroboration. Attendance, Reports, Calendar, and Settings diverge — see
+corroboration. Attendance, Reports, and Calendar diverge — see
 [Known deviations](#known-deviations).
 
 ---
@@ -215,7 +215,7 @@ is deliberately out of scope. **Follow the "preferred" column in new work.**
 | Deviation | Where | Preferred |
 |---|---|---|
 | Two table implementations | `StudentsDataTable` vs shared `DataTable` | Shared `DataTable` |
-| Three page shells | Manage List/Dashboard use `page.surface`; Attendance `bg-white p-6`; Reports `p-4`; Settings centred | `page.surface` |
+| Three page shells | Manage List/Dashboard use `page.surface`; Attendance `bg-white p-6`; Reports `p-4` | `page.surface` |
 | Event-status colours duplicated | Dashboard `chipClass`, calendar `EventCard` | `EVENT_STATUS_TONE` |
 | `Sheet` and `Drawer` coexist | `StudentFormDrawer` vs `EventDrawer` | `Sheet` |
 | Manage List `Pagination` duplicates the shared one | `StudentsDataTable/Pagination.tsx` | Shared `DataTablePagination` |

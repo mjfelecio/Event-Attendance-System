@@ -152,7 +152,7 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <Button
             size="lg"
-            className="h-11 rounded-xl bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_50%,#ef4444_100%)] px-6 font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.35)] transition-transform hover:scale-[1.01]"
+            className="h-11 rounded-xl bg-primary px-6 font-semibold text-white transition-transform hover:scale-[1.01]"
             onClick={() => onDrawerOpen(null)}
           >
             Create event
@@ -259,7 +259,7 @@ const EventsContainer = ({ onDrawerOpen }: Props) => {
               onClick={() => setFilter(option.id)}
               className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-all ${
                 isActive
-                  ? "border-transparent bg-[linear-gradient(135deg,#0b4dff_0%,#6d28d9_52%,#ef4444_100%)] text-white shadow-[0_8px_16px_rgba(29,78,216,0.28)]"
+                  ? "border-transparent bg-primary text-white"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >

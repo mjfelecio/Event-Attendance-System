@@ -18,6 +18,7 @@ import FormInput from "@/globals/components/shared/FormInput";
 import ComboBox from "@/globals/components/shared/ComboBox";
 import CheckboxGroup from "@/globals/components/shared/CheckboxGroup";
 import DateTimeForm from "@/features/calendar/components/DateTimeForm";
+import { cn } from "@/globals/libs/shad-cn";
 
 import { useEventForm } from "@/features/calendar/hooks/useEventForm";
 import { useAuth } from "@/globals/contexts/AuthContext";
@@ -181,17 +182,17 @@ export default function EventDrawer({
     <Drawer
       open={isOpen}
       onOpenChange={(open) => !open && handleDrawerClose()}
-      direction="right"
+      direction="bottom"
     >
-      <DrawerContent className="border-l bg-white sm:max-w-[480px] min-w-[500px]">
+      <DrawerContent className="mx-auto w-full max-w-2xl overflow-hidden bg-white">
         <form
           onSubmit={(e) => {
             if (!isReadOnlyView) handleSaveDraft(e);
             else e.preventDefault();
           }}
-          className="flex h-full flex-col"
+          className="flex h-full min-h-0 flex-col"
         >
-          <DrawerHeader className=" px-5 pt-5">
+          <DrawerHeader className="px-5 pt-2">
             <DrawerTitle className="text-2xl font-bold">
               {isEdit ? "Edit Event" : "Create Event"}
             </DrawerTitle>
@@ -210,11 +211,14 @@ export default function EventDrawer({
 
           <div
             ref={formScrollRef}
-            className="flex-1 overflow-y-auto px-5 pb-6"
+            className="flex-1 min-h-0 overflow-y-auto px-5 pb-6"
           >
             <fieldset
               disabled={isReadOnlyView}
-              className={`flex flex-col gap-4 ${isReadOnlyView ? "opacity-80" : ""}`}
+              className={cn(
+                "grid grid-cols-1 gap-4 sm:grid-cols-2",
+                isReadOnlyView && "opacity-80"
+              )}
             >
               <FormInput
                 label="Title"
@@ -231,14 +235,16 @@ export default function EventDrawer({
                 error={errors.location?.message}
               />
 
-              {/* Category */}
-              <div>
+              {/* Category - spans the full width when there's no Included
+                  Groups field next to it, so it doesn't leave a half-empty row */}
+              <div className={cn(!showIncludedGroups && "sm:col-span-2")}>
                 <Label className="mb-1 text-sm font-semibold">Category</Label>
                 <Controller
                   name="category"
                   control={control}
                   render={({ field }) => (
                     <ComboBox
+                      className="w-full"
                       selectedValue={field.value}
                       choices={EVENT_CHOICES}
                       placeholder="Select event category"
@@ -266,6 +272,7 @@ export default function EventDrawer({
                     control={control}
                     render={({ field }) => (
                       <CheckboxGroup
+                        className="w-full"
                         placeholder="Select target groups"
                         choices={availableGroups.map((g) => ({
                           id: g.id,
@@ -284,10 +291,11 @@ export default function EventDrawer({
                 </div>
               )}
 
-              {/* Schedule Block */}
-              <div>
+              {/* Schedule Block - full width; Start/End sit side by side once
+                  the bottom sheet has room for two columns */}
+              <div className="sm:col-span-2">
                 <Label className="mb-1 text-sm font-semibold">Schedule</Label>
-                <div className="flex flex-col gap-2 rounded-xl border p-3">
+                <div className="flex flex-col gap-3 rounded-xl border p-3">
                   <div className="flex items-center gap-3">
                     <p className="text-sm font-medium">All Day</p>
                     <Controller
@@ -301,42 +309,45 @@ export default function EventDrawer({
                       )}
                     />
                   </div>
-                  <Controller
-                    name="start"
-                    control={control}
-                    render={({ field }) => (
-                      <DateTimeForm
-                        date={field.value}
-                        onDateTimeChange={field.onChange}
-                        label="Start"
-                        allDay={allDay}
-                      />
-                    )}
-                  />
 
-                  <Controller
-                    name="end"
-                    control={control}
-                    render={({ field }) => (
-                      <>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+                    <Controller
+                      name="start"
+                      control={control}
+                      render={({ field }) => (
                         <DateTimeForm
                           date={field.value}
                           onDateTimeChange={field.onChange}
-                          label="End"
+                          label="Start"
                           allDay={allDay}
                         />
-                        {errors.end && (
-                          <p className="text-sm text-red-500">
-                            * {errors.end.message}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  />
+                      )}
+                    />
+
+                    <Controller
+                      name="end"
+                      control={control}
+                      render={({ field }) => (
+                        <>
+                          <DateTimeForm
+                            date={field.value}
+                            onDateTimeChange={field.onChange}
+                            label="End"
+                            allDay={allDay}
+                          />
+                          {errors.end && (
+                            <p className="text-sm text-red-500">
+                              * {errors.end.message}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div>
+              <div className="sm:col-span-2">
                 <Label
                   htmlFor="description"
                   className="mb-1 text-sm font-semibold text-slate-700"

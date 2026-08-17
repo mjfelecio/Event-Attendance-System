@@ -3,6 +3,8 @@ import { Button } from "@/globals/components/shad-cn/button";
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { IoCameraOutline } from "react-icons/io5";
+import { surface } from "@/globals/constants/designTokens";
+import { cn } from "@/globals/libs/shad-cn";
 
 // The camera surface (and its ~170KB QR-scanner dependency) is only loaded
 // once the user opens the camera, not on the attendance page's first paint.
@@ -11,8 +13,8 @@ const ScannerCamera = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      <div className="flex min-h-[380px] items-center justify-center sm:min-h-[440px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900" />
       </div>
     ),
   }
@@ -29,12 +31,16 @@ type ScannerProps = {
  * Camera off state
  */
 const CameraOffState = ({ onOpen }: { onOpen: () => void }) => (
-  <div className="h-full flex flex-col items-center justify-center py-8 px-4">
-    <IoCameraOutline size={200} className="text-gray-400 mb-6" />
-    <p className="text-2xl font-medium text-gray-600 mb-6 text-center">
+  <div className="flex flex-col items-center justify-center px-4 py-6 sm:py-8">
+    <IoCameraOutline className="size-16 text-slate-400 mb-4 sm:size-24 sm:mb-6 md:size-28" />
+    <p className="text-base font-medium text-slate-600 mb-4 text-center sm:text-lg sm:mb-6">
       Turn on camera to start attendance
     </p>
-    <Button onClick={onOpen} size="lg" className="text-lg px-8 py-6">
+    <Button
+      onClick={onOpen}
+      size="lg"
+      className="text-sm px-6 py-4 sm:text-base sm:px-8 sm:py-6"
+    >
       Open Camera
     </Button>
   </div>
@@ -47,7 +53,12 @@ const Scanner = ({ onRead, isPending = false }: ScannerProps) => {
   const [cameraOpen, setCameraOpen] = useState(false);
 
   return (
-    <div className="flex-1 h-full bg-white border rounded-lg flex flex-col items-center justify-center overflow-hidden">
+    <div
+      className={cn(
+        surface.card,
+        "flex h-[380px] flex-col items-center justify-center overflow-hidden p-4 sm:h-[440px]"
+      )}
+    >
       {cameraOpen ? (
         <ScannerCamera
           onRead={onRead}

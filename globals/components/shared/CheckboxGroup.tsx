@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { Checkbox } from "@/globals/components/shad-cn/checkbox";
 import { Label } from "@/globals/components/shad-cn/label";
+import { cn } from "@/globals/libs/shad-cn";
 
 type CheckboxItem = {
   id: string;
@@ -23,6 +24,8 @@ type CheckboxGroupProps = {
   selectedValues: string[];
   onSelect: (newValues: string[]) => void;
   maxHeight?: string;
+  /** Extra classes for the trigger button - e.g. "w-full" inside a grid/flex cell. */
+  className?: string;
 };
 
 /**
@@ -35,6 +38,7 @@ const CheckboxGroup = ({
   selectedValues,
   onSelect,
   maxHeight = "300px", // Default max height
+  className,
 }: CheckboxGroupProps) => {
   const [open, setOpen] = useState(false);
 
@@ -58,7 +62,7 @@ const CheckboxGroup = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="min-w-[250px] justify-between"
+          className={cn("min-w-[250px] justify-between", className)}
         >
           {selectedValues.length > 0
             ? `${placeholder} (${selectedValues.length} selected)`

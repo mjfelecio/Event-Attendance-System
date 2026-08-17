@@ -62,7 +62,7 @@ const DEVIATIONS = [
   {
     tone: "warning" as const,
     title: "Three page shells",
-    body: "Manage List + Dashboard use the radial-gradient shell; Attendance uses flat bg-white p-6; Reports uses bare p-4; Settings centres its content. New pages use page.surface.",
+    body: "Manage List + Dashboard use the radial-gradient shell; Attendance uses flat bg-white p-6; Reports uses bare p-4. New pages use page.surface.",
   },
   {
     tone: "warning" as const,

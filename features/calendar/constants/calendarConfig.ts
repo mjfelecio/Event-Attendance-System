@@ -9,7 +9,6 @@ export const CALENDAR_CONFIG = {
 } as const;
 
 export const CALENDAR_HEADER_TOOLBAR = {
-  left: "prev,next today",
-  center: "title",
-  right: "dayGridMonth,timeGridWeek,timeGridDay",
+  left: "title",
+  right: "prev,next today dayGridMonth,timeGridWeek,timeGridDay",
 } as const;

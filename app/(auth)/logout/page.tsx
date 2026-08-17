@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+
+import { Button } from "@/globals/components/shad-cn/button";
+import AuthStatusScreen from "@/features/auth/components/AuthStatusScreen";
 import { useAuth } from "@/globals/contexts/AuthContext";
 
 const LogoutPage = () => {
@@ -31,25 +34,20 @@ const LogoutPage = () => {
 
   if (failed) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-6 text-center">
-        <div className="max-w-md space-y-3">
-          <p className="text-slate-700">
-            We couldn&apos;t sign you out. Please check your connection and try
-            again.
-          </p>
-          <button
-            type="button"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-            onClick={() => void attemptLogout()}
-          >
+      <AuthStatusScreen
+        variant="error"
+        title="Couldn't sign you out"
+        message="Please check your connection and try again."
+        action={
+          <Button className="mt-1" onClick={() => void attemptLogout()}>
             Retry
-          </button>
-        </div>
-      </main>
+          </Button>
+        }
+      />
     );
   }
 
-  return null;
+  return <AuthStatusScreen message="Signing you out…" />;
 };
 
 export default LogoutPage;

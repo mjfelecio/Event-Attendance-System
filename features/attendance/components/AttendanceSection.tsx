@@ -18,6 +18,8 @@ import { Event } from "@/globals/types/events";
 import { NewRecord } from "@/globals/types/records";
 import { Student } from "@/globals/types/students";
 import { fetchApi } from "@/globals/utils/api";
+import { surface } from "@/globals/constants/designTokens";
+import { cn } from "@/globals/libs/shad-cn";
 
 type Props = {
   selectedEvent: Event | null;
@@ -106,11 +108,16 @@ export default function AttendanceSection({ selectedEvent }: Props) {
 
   if (!selectedEvent) {
     return (
-      <div className="flex h-[400px] w-full flex-col items-center justify-center rounded-lg border p-8 shadow-sm">
-        <h1 className="mb-2 text-3xl font-bold text-gray-800">
+      <div
+        className={cn(
+          surface.card,
+          "flex min-h-[320px] w-full flex-col items-center justify-center gap-2 p-8 text-center"
+        )}
+      >
+        <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
           No Event Selected
-        </h1>
-        <p className="text-lg text-gray-500">
+        </h2>
+        <p className="text-base text-slate-500">
           Select an event first to start attendance.
         </p>
       </div>
@@ -118,7 +125,7 @@ export default function AttendanceSection({ selectedEvent }: Props) {
   }
 
   return (
-    <div className="flex h-[600px] w-full gap-4 rounded-lg border bg-white p-4 shadow-sm">
+    <div className="grid w-full gap-3 lg:grid-cols-[1fr_1.2fr]">
       <Scanner onRead={handleScan} isPending={isSavingRecord} />
 
       <ManualAttendanceSection
