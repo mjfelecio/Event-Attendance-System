@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import Image from "next/image";
 
 import { labelForGroup } from "@/globals/constants/groups";
@@ -30,74 +29,86 @@ const time = (value: string | null) =>
       })
     : "—";
 
-/** One `<tbody>` group: a section heading, its students, then its subtotal. */
-const SectionGroup = ({
-  title,
+/**
+ * Column widths, as percentages summing to 100.
+ *
+ * Each section renders its own `<table>`, and independently-sized tables would
+ * pick different column widths per section — visibly jittering down a filed
+ * document. Fixed layout plus a shared `<colgroup>` keeps every page identical.
+ */
+const COLUMN_WIDTHS = {
+  withSignature: ["5%", "14%", "26%", "10%", "11%", "11%", "10%", "13%"],
+  withoutSignature: ["5%", "14%", "32%", "11%", "12%", "12%", "14%"],
+} as const;
+
+const cell = "border border-gray-400 px-2 py-1";
+
+/**
+ * One section's table: shared column widths, its own repeating header, its rows,
+ * and its subtotal.
+ *
+ * The header is repeated per section rather than once for the whole roster
+ * because each section is its own table — which also means a section long enough
+ * to overflow still repeats its header on the next page, via
+ * `.print-table thead { display: table-header-group }`.
+ */
+const RosterTable = ({
   rows,
   startIndex,
-  columns,
-  options,
-  showHeading,
+  includeSignature,
 }: {
-  title: string;
   rows: ReportRow[];
   startIndex: number;
-  columns: number;
-  options: SheetOptions;
-  showHeading: boolean;
+  includeSignature: boolean;
 }) => {
-  const attended = rows.filter((row) => row.outcome !== "ABSENT").length;
+  const widths = includeSignature
+    ? COLUMN_WIDTHS.withSignature
+    : COLUMN_WIDTHS.withoutSignature;
 
   return (
-    <Fragment>
-      {showHeading ? (
-        <tr className="bg-gray-100 print-break-inside-avoid">
-          <td colSpan={columns} className="border border-gray-400 px-2 py-1 font-semibold">
-            {title}
-          </td>
+    <table className="print-table w-full table-fixed border-collapse text-xs">
+      <colgroup>
+        {widths.map((width, i) => (
+          <col key={i} style={{ width }} />
+        ))}
+      </colgroup>
+      <thead>
+        <tr className="bg-gray-200">
+          <th className={`${cell} text-right`}>No.</th>
+          <th className={`${cell} text-left`}>Student No.</th>
+          <th className={`${cell} text-left`}>Name</th>
+          <th className={`${cell} text-left`}>Year</th>
+          <th className={cell}>Time In</th>
+          <th className={cell}>Time Out</th>
+          <th className={cell}>Status</th>
+          {includeSignature ? <th className={cell}>Signature</th> : null}
         </tr>
-      ) : null}
-
-      {rows.map((row, index) => (
-        <tr key={row.studentId} className="print-break-inside-avoid">
-          {/* Continuous across sections — a per-section restart made the sheet
-              useless for "how many attended in total". */}
-          <td className="border border-gray-400 px-2 py-1 text-right">
-            {startIndex + index + 1}
-          </td>
-          <td className="border border-gray-400 px-2 py-1 font-mono">
-            {row.studentId}
-          </td>
-          <td className="border border-gray-400 px-2 py-1">{row.fullName}</td>
-          <td className="border border-gray-400 px-2 py-1 whitespace-nowrap">
-            {labelForGroup("YEAR", row.yearLevel)}
-          </td>
-          <td className="border border-gray-400 px-2 py-1 text-center whitespace-nowrap">
-            {time(row.timein)}
-          </td>
-          <td className="border border-gray-400 px-2 py-1 text-center whitespace-nowrap">
-            {time(row.timeout)}
-          </td>
-          <td className="border border-gray-400 px-2 py-1 text-center">
-            {ATTENDANCE_OUTCOME_LABEL[row.outcome]}
-          </td>
-          {options.includeSignature ? (
-            <td className="border border-gray-400 px-2 py-1" />
-          ) : null}
-        </tr>
-      ))}
-
-      {showHeading ? (
-        <tr className="print-break-inside-avoid">
-          <td
-            colSpan={columns}
-            className="border border-gray-400 bg-gray-50 px-2 py-1 text-right text-xs font-semibold"
-          >
-            {title} subtotal: {attended} of {rows.length} attended
-          </td>
-        </tr>
-      ) : null}
-    </Fragment>
+      </thead>
+      <tbody>
+        {rows.map((row, index) => (
+          <tr key={row.studentId} className="print-break-inside-avoid">
+            {/* Continuous across sections — a per-section restart made the sheet
+                useless for "how many attended in total". */}
+            <td className={`${cell} text-right`}>{startIndex + index + 1}</td>
+            <td className={`${cell} font-mono`}>{row.studentId}</td>
+            <td className={cell}>{row.fullName}</td>
+            <td className={`${cell} whitespace-nowrap`}>
+              {labelForGroup("YEAR", row.yearLevel)}
+            </td>
+            <td className={`${cell} whitespace-nowrap text-center`}>
+              {time(row.timein)}
+            </td>
+            <td className={`${cell} whitespace-nowrap text-center`}>
+              {time(row.timeout)}
+            </td>
+            <td className={`${cell} text-center`}>
+              {ATTENDANCE_OUTCOME_LABEL[row.outcome]}
+            </td>
+            {includeSignature ? <td className={cell} /> : null}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 };
 
@@ -128,8 +139,6 @@ export default function AttendanceSheet({
   const rows = options.includeAbsentees
     ? report.rows
     : report.rows.filter((row) => row.outcome !== "ABSENT");
-
-  const columns = options.includeSignature ? 8 : 7;
 
   // Preserve the report's ordering inside each section rather than re-sorting.
   const groups = options.groupBySection
@@ -240,55 +249,56 @@ export default function AttendanceSheet({
         ) : null}
       </section>
 
-      {/* ================= Roster ================= */}
-      <section>
-        <table className="print-table w-full border-collapse text-xs">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border border-gray-400 px-2 py-1 text-right">No.</th>
-              <th className="border border-gray-400 px-2 py-1 text-left">
-                Student No.
-              </th>
-              <th className="border border-gray-400 px-2 py-1 text-left">Name</th>
-              <th className="border border-gray-400 px-2 py-1 text-left">Year</th>
-              <th className="border border-gray-400 px-2 py-1">Time In</th>
-              <th className="border border-gray-400 px-2 py-1">Time Out</th>
-              <th className="border border-gray-400 px-2 py-1">Status</th>
-              {options.includeSignature ? (
-                <th className="border border-gray-400 px-2 py-1">Signature</th>
+      {/* ================= Roster =================
+          Grouped: one block per section, each starting on a fresh sheet so a
+          section heading is always at the top of a page. Ungrouped: a single
+          continuous table. */}
+      {rows.length === 0 ? (
+        <p className="border border-gray-400 px-2 py-6 text-center text-xs">
+          No students to list.
+        </p>
+      ) : (
+        groups.map((group, groupIndex) => {
+          const startIndex = runningIndex;
+          runningIndex += group.rows.length;
+          const attended = group.rows.filter(
+            (row) => row.outcome !== "ABSENT",
+          ).length;
+
+          return (
+            <section
+              key={group.title || "all"}
+              // The first group continues from the summary on page 1; every
+              // later one starts its own sheet, whatever blank space that leaves
+              // behind.
+              className={
+                options.groupBySection && groupIndex > 0
+                  ? "print-page-break-before"
+                  : undefined
+              }
+            >
+              {options.groupBySection ? (
+                <h3 className="print-break-inside-avoid mb-1 mt-4 border-b border-gray-400 pb-1 text-sm font-bold print:mt-0">
+                  {group.title}
+                </h3>
               ) : null}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns}
-                  className="border border-gray-400 px-2 py-6 text-center"
-                >
-                  No students to list.
-                </td>
-              </tr>
-            ) : (
-              groups.map((group) => {
-                const startIndex = runningIndex;
-                runningIndex += group.rows.length;
-                return (
-                  <SectionGroup
-                    key={group.title || "all"}
-                    title={group.title}
-                    rows={group.rows}
-                    startIndex={startIndex}
-                    columns={columns}
-                    options={options}
-                    showHeading={options.groupBySection}
-                  />
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </section>
+
+              <RosterTable
+                rows={group.rows}
+                startIndex={startIndex}
+                includeSignature={options.includeSignature}
+              />
+
+              {options.groupBySection ? (
+                <p className="print-break-inside-avoid border border-t-0 border-gray-400 bg-gray-50 px-2 py-1 text-right text-xs font-semibold">
+                  {group.title} subtotal: {attended} of {group.rows.length}{" "}
+                  attended
+                </p>
+              ) : null}
+            </section>
+          );
+        })
+      )}
 
       {/* ================= Signatories ================= */}
       <section className="print-break-inside-avoid mt-10 grid grid-cols-2 gap-12 text-sm">
