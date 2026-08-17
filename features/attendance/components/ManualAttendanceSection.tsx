@@ -7,6 +7,8 @@ import { fullName } from "@/globals/utils/formatting";
 import SearchBar from "@/features/attendance/components/SearchBar";
 import { useRecordOfStudentInEvent } from "@/globals/hooks/useRecords";
 import StudentDetails from "@/features/attendance/components/StudentDetails";
+import { surface } from "@/globals/constants/designTokens";
+import { cn } from "@/globals/libs/shad-cn";
 
 type StudentDetailsProps = {
   /** The student scanned in the scanner */
@@ -64,9 +66,9 @@ const ManualAttendanceSection = ({
   if (!selectedEvent) return null;
 
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-lg border overflow-hidden">
+    <div className={cn(surface.card, "flex flex-col overflow-hidden")}>
       {/* Search Header */}
-      <div className="border-b bg-gray-100 p-4">
+      <div className="border-b border-slate-200 bg-slate-100 p-4">
         <SearchBar
           onQueryChange={setQuery}
           placeholder="Search student by name..."

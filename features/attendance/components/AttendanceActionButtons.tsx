@@ -141,6 +141,7 @@ const AttendanceActionButtons = ({
             onClick={() => handleAction(action)}
             disabled={isDisabled}
             variant={"outline"}
+            size="lg"
             title={title}
             className={`${color} flex items-center justify-center text-xs rounded-full transition-colors hover:scale-110 active:scale-95 ${
               isDisabled ? "opacity-30 grayscale" : ""

@@ -5,6 +5,7 @@ import AttendancePageHeader from "@/features/attendance/components/AttendancePag
 import AttendanceSection from "@/features/attendance/components/AttendanceSection";
 import AttendanceRecordsTable from "@/features/attendance/components/AttendanceRecordsTable";
 import { useFetchEvent } from "@/globals/hooks/useEvents";
+import { page } from "@/globals/constants/designTokens";
 
 const AttendancePage = () => {
   // Hold only the id and derive ONE live event object from it, so the header,
@@ -15,14 +16,16 @@ const AttendancePage = () => {
   const selectedEvent = liveEvent ?? null;
 
   return (
-    <div className="flex flex-col flex-1 bg-white p-6 gap-4 overflow-y-scroll min-h-svh">
-      <AttendancePageHeader
-        selectedEvent={selectedEvent}
-        onChangeEvent={(event) => setSelectedEventId(event.id)}
-      />
-      <AttendanceSection selectedEvent={selectedEvent} />
-      <AttendanceRecordsTable selectedEvent={selectedEvent} />
-    </div>
+    <section className={page.surface}>
+      <div className={page.containerWide}>
+        <AttendancePageHeader
+          selectedEvent={selectedEvent}
+          onChangeEvent={(event) => setSelectedEventId(event.id)}
+        />
+        <AttendanceSection selectedEvent={selectedEvent} />
+        <AttendanceRecordsTable selectedEvent={selectedEvent} />
+      </div>
+    </section>
   );
 };
 

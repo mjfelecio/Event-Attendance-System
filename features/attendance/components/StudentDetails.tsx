@@ -5,15 +5,18 @@ import { Event } from "@/globals/types/events";
 import { memo } from "react";
 import AttendanceStatusCard from "@/features/attendance/components/AttendanceStatusCard";
 import { capitalizeLabel } from "@/globals/utils/text";
-import { fullName } from "@/globals/utils/formatting";
+import { formatSection, fullName, normalizeName } from "@/globals/utils/formatting";
 import { labelForGroup } from "@/globals/constants/groups";
 import { Record } from "@/globals/types/records";
 import { useAuth } from "@/globals/contexts/AuthContext";
+import { cn } from "@/globals/libs/shad-cn";
 
 type DetailRowProps = {
   label: string;
   value: string | number;
   show?: boolean;
+  /** Extra classes for the value span - used to force-uppercase acronym-style codes (program/strand). */
+  valueClassName?: string;
 };
 
 function formatDate(date: Date) {
@@ -26,31 +29,33 @@ function formatDate(date: Date) {
   });
 }
 
-const DetailRow = ({ label, value, show = true }: DetailRowProps) => {
+const DetailRow = ({ label, value, show = true, valueClassName }: DetailRowProps) => {
   if (!show) return null;
   return (
     <div className="flex flex-col">
-      <span className="text-xs uppercase tracking-wide text-gray-400">
+      <span className="text-xs uppercase tracking-wide text-slate-400">
         {label}
       </span>
-      <span className="text-base font-medium text-gray-900">{value}</span>
+      <span className={cn("text-base font-medium text-slate-900", valueClassName)}>
+        {value}
+      </span>
     </div>
   );
 };
 
 const LoadingState = () => (
-  <div className="flex-1 flex items-center justify-center">
+  <div className="flex min-h-[240px] flex-1 items-center justify-center">
     <div className="flex items-center gap-3">
-      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
-      <p className="text-gray-600 text-lg">Loading student details...</p>
+      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-slate-900" />
+      <p className="text-slate-600 text-lg">Loading student details...</p>
     </div>
   </div>
 );
 
 const EmptyState = () => (
-  <div className="flex-1 flex items-center justify-center gap-4 flex-col">
-    <FaUser className="text-gray-300 text-6xl" />
-    <p className="text-gray-400 text-2xl font-medium">No Student Found</p>
+  <div className="flex min-h-[240px] flex-1 flex-col items-center justify-center gap-4">
+    <FaUser className="text-slate-300 text-6xl" />
+    <p className="text-slate-400 text-2xl font-medium">No Student Found</p>
   </div>
 );
 
@@ -87,22 +92,21 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
   const isCollege = schoolLevel === "COLLEGE";
   const isSHS = schoolLevel === "SHS";
   // program or strand + year + section letter
-  const fullSection = `${
-    isCollege ? program : strand
-  } - ${section} • ${id}`;
+  const programOrStrand = (isCollege ? program : strand)?.toUpperCase() ?? "";
+  const fullSection = `${programOrStrand} - ${formatSection(section)} • ${id}`;
   const timeIn = record?.timein ? formatDate(new Date(record?.timein)) : "N/A";
   const timeOut = record?.timeout
     ? formatDate(new Date(record?.timeout))
     : "N/A";
 
   return (
-    <div className="flex flex-1 w-full bg-white rounded-xl">
+    <div className="flex w-full flex-1 flex-col sm:flex-row">
       {/* Left side (Attendance Status n' stuff) */}
-      <div className="flex flex-col gap-4 pt-6 p-2 bg-gray-50/50 items-center">
+      <div className="flex flex-row items-center justify-center gap-4 border-b border-slate-200 bg-slate-50/50 p-4 sm:w-28 sm:shrink-0 sm:flex-col sm:justify-start sm:border-b-0 sm:border-r sm:pt-6 sm:p-2">
         <AttendanceStatusCard status={record ? "present" : "absent"} />
 
         <div className="flex flex-col gap-4 items-center">
-          <p className="font-medium border-b-2">Actions</p>
+          <p className="font-medium border-b-2 border-slate-200">Actions</p>
           <AttendanceActionButtons
             recordId={record?.id}
             eventId={event.id}
@@ -116,51 +120,64 @@ const StudentDetails = ({ event, student, record, isLoading }: Props) => {
       </div>
 
       {/* Right side (Student details) */}
-      <div className="flex-1 bg-white border-l p-6">
+      <div className="flex-1 p-4 sm:p-6">
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
               {fullNameDisplay}
             </h2>
-            <p className="text-gray-500 mt-1 text-md">{fullSection}</p>
+            <p className="text-slate-500 mt-1 text-sm sm:text-base">{fullSection}</p>
           </div>
         </div>
 
         {/* Student Info Grid */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 sm:gap-4">
           <DetailRow
             label="Type"
             value={`${capitalizeLabel(schoolLevel)} Student`}
           />
           {isCollege && (
-            <DetailRow label="Program" value={program || "N/A"} />
+            <DetailRow
+              label="Program"
+              value={program || "N/A"}
+              valueClassName="uppercase"
+            />
           )}
-          {isSHS && <DetailRow label="Strand" value={strand || "N/A"} />}
+          {isSHS && (
+            <DetailRow
+              label="Strand"
+              value={strand || "N/A"}
+              valueClassName="uppercase"
+            />
+          )}
           <DetailRow
             label="Year & Section"
-            value={`${labelForGroup("YEAR", yearLevel)} - ${section}`}
+            value={`${labelForGroup("YEAR", yearLevel)} - ${formatSection(section)}`}
           />
-          <DetailRow label="Department" value={department || "N/A"} />
-          <DetailRow label="House" value={house || "N/A"} />
+          <DetailRow
+            label="Department"
+            value={normalizeName(department) || "N/A"}
+          />
+          <DetailRow label="House" value={normalizeName(house) || "N/A"} />
         </div>
 
         {/* Attendance record / status row */}
         {record && (
           <>
-            <div className="mt-6 border-t-2 border-t-gray-100 pt-2 flex justify-between items-center">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">
+            <div className="mt-6 border-t border-t-slate-200 pt-2 flex justify-between items-center">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">
                 Time In at
               </p>
-              <span className="text-base font-medium text-gray-900">
+              <span className="text-base font-medium text-slate-900">
                 {timeIn}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">
                 Time Out at
               </p>
-              <span className="text-base font-medium text-gray-900">
+              <span className="text-base font-medium text-slate-900">
                 {timeOut}
               </span>
             </div>

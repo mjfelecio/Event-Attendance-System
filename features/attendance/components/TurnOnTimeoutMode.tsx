@@ -33,6 +33,7 @@ const TurnOnTimeoutMode = ({ eventId, isTimeout, canToggle = true }: Props) => {
       variant={isTimeout ? "secondary" : "destructive"}
       disabled={isPending}
       onClick={handleClick}
+      className="h-auto w-full whitespace-normal py-2 text-center leading-snug"
     >
       {isPending
         ? "Switching..."
