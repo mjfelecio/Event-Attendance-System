@@ -6,20 +6,18 @@ import {
   BarChart3,
   CalendarDays,
   ChevronLeft,
-  ChevronRight,
   LayoutDashboard,
   LogOut,
   Menu,
   QrCode,
-  Settings,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/globals/contexts/AuthContext";
 import { useSidebar } from "@/globals/contexts/SidebarContext";
+import { useLogout } from "@/globals/hooks/useLogout";
 import { cn } from "@/globals/libs/shad-cn";
-import { toastDanger } from "@/globals/components/shared/toasts";
 
 type NavigationItem = {
   text: string;
@@ -40,7 +38,6 @@ const navigationItems: NavigationItem[] = [
   { text: "Manage List", route: "/manage-list", icon: Users },
   { text: "Attendance", route: "/attendance", icon: QrCode },
   { text: "Reports", route: "/reports", icon: BarChart3 },
-  { text: "Settings", route: "/settings", icon: Settings },
 ];
 
 const NavigationButton = ({
@@ -73,26 +70,17 @@ const NavigationButton = ({
   );
 };
 
+/** Desktop-only fixed nav rail (`lg:` and up). Mobile uses `MobileTopBar` +
+ * `MobileBottomNav` instead — see docs/design-system.md responsive guidance. */
 const Sidebar = () => {
   const { toggleExpanded, isExpanded } = useSidebar();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
+  const handleLogout = useLogout();
   const router = useRouter();
   const pathname = usePathname();
 
-  const sidebarWidth = isExpanded ? "not-print:w-72" : "not-print:w-20";
   const isRouteActive = (route: string) =>
     pathname === route || pathname.startsWith(`${route}/`);
-
-  const handleLogout = async () => {
-    // Only navigate away if the server actually cleared the session; otherwise
-    // surface the failure rather than showing a logged-out UI over a live cookie.
-    const ok = await logout();
-    if (ok) {
-      router.replace("/login");
-    } else {
-      toastDanger("Couldn't sign out. Please try again.");
-    }
-  };
 
   const initials = (user?.name ?? "Organizer")
     .split(" ")
@@ -102,11 +90,20 @@ const Sidebar = () => {
     .join("");
 
   return (
-    <div className={cn("shrink-0 transition-all duration-300", sidebarWidth)}>
+    <>
+      {/* Reserves space in the desktop flex row so the fixed rail doesn't
+          overlap content. */}
+      <div
+        className={cn(
+          "hidden shrink-0 transition-all duration-300 lg:block",
+          isExpanded ? "lg:w-72" : "lg:w-20"
+        )}
+      />
+
       <aside
         className={cn(
-          "print:hidden fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r border-white/10 bg-slate-950/95 p-3 text-slate-100 shadow-[0_20px_60px_rgba(2,6,23,0.5)] backdrop-blur-xl transition-all duration-300",
-          sidebarWidth,
+          "print:hidden fixed inset-y-0 left-0 z-40 hidden h-screen flex-col border-r border-white/10 bg-slate-950/95 p-3 text-slate-100 shadow-[0_20px_60px_rgba(2,6,23,0.5)] backdrop-blur-xl transition-all duration-300 lg:flex",
+          isExpanded ? "lg:w-72" : "lg:w-20"
         )}
       >
         <div className="rounded-2xl border border-white/10 bg-white/5 p-2">
@@ -202,7 +199,7 @@ const Sidebar = () => {
           </button>
         </div>
       </aside>
-    </div>
+    </>
   );
 };
 
