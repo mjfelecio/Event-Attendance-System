@@ -30,6 +30,8 @@ type ComboBoxProps = {
   searchFallbackMsg: string;
   selectedValue: string;
   onSelect: (value: string) => void;
+  /** Extra classes for the trigger button - e.g. "w-full" inside a grid/flex cell. */
+  className?: string;
 };
 
 const ComboBox = ({
@@ -37,7 +39,8 @@ const ComboBox = ({
   onSelect,
   placeholder,
   searchFallbackMsg,
-  selectedValue
+  selectedValue,
+  className
 }: ComboBoxProps) => {
   const [open, setOpen] = React.useState(false);
 
@@ -48,7 +51,7 @@ const ComboBox = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="min-w-[200px] justify-between"
+          className={cn("min-w-[200px] justify-between", className)}
         >
           {selectedValue
             ? choices.find((choice) => choice.value === selectedValue)?.label

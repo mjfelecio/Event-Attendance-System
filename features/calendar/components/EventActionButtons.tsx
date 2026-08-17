@@ -51,7 +51,7 @@ export default function EventActionButtons({
           {isEdit && hasId && (
             <Button
               type="button" variant="outline"
-              className="h-10 border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+              className="h-10 border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
               onClick={onDelete} disabled={isBusy}
             >
               <Trash2 className="size-4 mr-2" />
@@ -82,8 +82,10 @@ export default function EventActionButtons({
           </div>
         </div>
 
-        {/* Primary Save Button (Triggers standard form submit) */}
-        <Button type="submit" className="h-11 w-full bg-slate-900 text-white" disabled={isBusy}>
+        {/* Primary Save Button (Triggers standard form submit) - default
+            Button variant, so it renders in the app's indigo-600 primary
+            rather than stock shadcn's near-black. */}
+        <Button type="submit" className="h-11 w-full" disabled={isBusy}>
           {isSaving ? <><Loader2 className="size-4 mr-2 animate-spin" />Saving...</> : (isEdit ? "Save changes" : "Save draft")}
         </Button>
       </div>
