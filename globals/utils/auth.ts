@@ -23,6 +23,9 @@ const authSessionSchema = z.object({
   role: userRoleEnum,
   status: userStatusEnum,
   rejectionReason: z.string().nullable().optional(),
+  // Optional so sessions signed before this field existed still verify;
+  // an absent value reads as "no forced change pending".
+  mustChangePassword: z.boolean().optional(),
 });
 
 export type AuthSession = z.infer<typeof authSessionSchema>;
@@ -155,6 +158,7 @@ export async function getFreshAuthSession(): Promise<AuthSession | null> {
       role: true,
       status: true,
       rejectionReason: true,
+      mustChangePassword: true,
     },
   });
 

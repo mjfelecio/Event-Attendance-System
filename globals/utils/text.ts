@@ -10,6 +10,19 @@ const KNOWN_ACRONYMS = new Set(["SHS"]);
 export const capitalizeLabel = (value: string): string =>
   KNOWN_ACRONYMS.has(value) ? value : capitalize(value);
 
+/**
+ * "Computer Studies" -> "computer-studies". The canonical way to derive a
+ * `Group.slug` from a name. Note that not every existing group follows it -
+ * strands are slugified from their code, so "Computer System Servicing" is
+ * stored as `css` - which is why the group form lets the slug be edited.
+ */
+export const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+
 /** "fooBar-baz" -> "FOO BAR BAZ" (words split, uppercased, space-joined). */
 export const upperCase = (value: string): string =>
   value

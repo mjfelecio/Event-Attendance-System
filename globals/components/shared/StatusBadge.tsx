@@ -61,6 +61,17 @@ export const EVENT_STATUS_TONE = {
   REJECTED: "danger",
 } as const satisfies Record<string, Tone>;
 
+/**
+ * Canonical mapping from a `User.status` to a tone, for the operator console's
+ * user table. Same rule as `EVENT_STATUS_TONE`: resolve the status through this
+ * map rather than inlining tones at the call site.
+ */
+export const USER_STATUS_TONE = {
+  PENDING: "info",
+  ACTIVE: "success",
+  REJECTED: "danger",
+} as const satisfies Record<string, Tone>;
+
 type StatusBadgeProps = {
   /** Semantic colour. Pick by meaning, never by preferred hue. */
   tone?: Tone;
