@@ -30,6 +30,8 @@ export async function GET(
       select: {
         id: true,
         name: true,
+        // The selection boards navigate by slug; the event drawer uses the id.
+        slug: true,
       },
       orderBy: {
         name: "asc",
