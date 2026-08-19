@@ -22,15 +22,29 @@ export type GroupResolution =
   | { ok: false; error: string };
 
 /**
+ * Every stored slug is lowercase - the seed derives them with `slugify` and the
+ * create-group schema lowercases - so a CSV that spells a section "BSIT-3A"
+ * refers to exactly the same group as `bsit-3a`. Matching case-sensitively
+ * would reject a whole roster over capitalisation, and the error ("Unknown
+ * group(s): BSIT-3A") gives an operator no hint that the group they just added
+ * *is* the right one. Normalising here can never produce a wrong match, since
+ * slugs are unique and already lowercase.
+ */
+const normalizeSlug = (value: string) => value.trim().toLowerCase();
+
+/**
  * Validates that every group slug referenced by these students exists AND
  * belongs to the category of the column that referenced it, then returns a
- * slug -> id map. Shared by the single-student and bulk-import write paths so
- * both enforce the same integrity rules (a HOUSE slug can't be smuggled into
- * the section column, and unknown slugs are rejected rather than dropped).
+ * slug -> id map keyed by the value the caller passed in. Shared by the
+ * single-student and bulk-import write paths so both enforce the same
+ * integrity rules (a HOUSE slug can't be smuggled into the section column, and
+ * unknown slugs are rejected rather than dropped).
  */
 export async function validateStudentGroupSlugs(
   students: StudentGroupFields[],
 ): Promise<GroupResolution> {
+  // Keyed by the raw value so callers can keep looking groups up by whatever
+  // the form or the CSV actually contained.
   const referenced = new Set<string>();
   for (const s of students) {
     for (const field of Object.keys(
@@ -44,12 +58,14 @@ export async function validateStudentGroupSlugs(
   if (referenced.size === 0) return { ok: true, slugToId: new Map() };
 
   const groups = await prisma.group.findMany({
-    where: { slug: { in: [...referenced] } },
+    where: { slug: { in: [...referenced].map(normalizeSlug) } },
     select: { id: true, slug: true, category: true },
   });
-  const bySlug = new Map(groups.map((g) => [g.slug, g]));
+  const byNormalizedSlug = new Map(groups.map((g) => [g.slug, g]));
 
-  const unknown = [...referenced].filter((slug) => !bySlug.has(slug));
+  const groupFor = (raw: string) => byNormalizedSlug.get(normalizeSlug(raw));
+
+  const unknown = [...referenced].filter((slug) => !groupFor(slug));
   if (unknown.length > 0) {
     return {
       ok: false,
@@ -62,7 +78,7 @@ export async function validateStudentGroupSlugs(
     for (const [field, expected] of Object.entries(FIELD_CATEGORY)) {
       const slug = s[field as keyof StudentGroupFields];
       if (!slug) continue;
-      const group = bySlug.get(slug)!;
+      const group = groupFor(slug)!;
       if (group.category !== expected) {
         mismatches.add(
           `"${slug}" is a ${group.category.toLowerCase()}, not a ${expected.toLowerCase()} (column "${field}")`,
@@ -77,6 +93,8 @@ export async function validateStudentGroupSlugs(
     };
   }
 
-  const slugToId = new Map([...bySlug].map(([slug, g]) => [slug, g.id]));
+  const slugToId = new Map(
+    [...referenced].map((raw) => [raw, groupFor(raw)!.id] as const),
+  );
   return { ok: true, slugToId };
 }
