@@ -71,7 +71,9 @@ never by preferred hue.
 | `danger` | Failure, absent | `REJECTED` |
 
 Resolve an `Event.status` through `EVENT_STATUS_TONE` in
-`globals/components/shared/StatusBadge.tsx` rather than hardcoding a colour.
+`globals/components/shared/StatusBadge.tsx` rather than hardcoding a colour. The same
+file exports `USER_STATUS_TONE` (`PENDING`/`ACTIVE`/`REJECTED`) for the operator
+console's user table — same rule, same reason.
 
 ### Typography
 

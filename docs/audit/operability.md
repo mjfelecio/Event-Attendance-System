@@ -52,6 +52,12 @@ one person on-site knows how to add a `Group` row via Prisma Studio as a fallbac
 
 **Release blocker:** yes.
 
+**RESOLVED (2026-08-17, issue #39).** There is now an "Add group" button:
+**Settings → Groups**. See [`data-integrity.md#data-02`](./data-integrity.md#data-02)
+for the full account, and
+[`../deployment/operator-runbook.md`](../deployment/operator-runbook.md) §2 for the
+Prisma Studio fallback that remains as a safety net.
+
 ---
 
 ## OPS-03 — Signup rate limit can lock out onboarding {#ops-03}
@@ -117,13 +123,26 @@ item for whoever has database access, so it can be done in under a minute if nee
 **Release blocker:** no, if the runbook step is prepared. **Backlog ticket:** yes, for
 an actual password-reset flow post-beta.
 
+**RESOLVED (2026-08-17, issue #46).** An admin now resets any account from
+**Settings → Users → Reset password**: the server generates a temporary password,
+shows it once, and sets `User.mustChangePassword`, which gates the app shell
+(`app/(main)/layout.tsx`) until the user picks their own via
+`POST /api/auth/change-password`. Any signed-in user can also change their own
+password from Settings → Account. The plaintext-into-Prisma-Studio procedure is
+retained as a fallback in
+[`../deployment/operator-runbook.md`](../deployment/operator-runbook.md) §3, for
+when no admin can sign in. A self-service `/forgot-password` token flow was
+deliberately *not* built — there is no mail path on a LAN laptop.
+
 ---
 
 ## OPS-06 — Settings page is a placeholder; almost nothing is self-service {#ops-06}
 
 **Severity:** P2
 **Confidence:** CONFIRMED
-**Location:** `app/(main)/settings/page.tsx` — "Settings aren't available yet."
+**Location:** no `settings` route existed. *(The placeholder this finding originally
+cited, `app/(main)/settings/page.tsx`, had already been deleted in `0d64105` by the
+time the finding was actioned — the page was gone, not merely empty.)*
 
 **Problem:** there is no in-app path to check environment configuration, manage groups,
 reset a password, deactivate a stuck-active organizer, or view active (non-pending)
@@ -144,6 +163,23 @@ the event has that document and comfort using `pnpm db:studio`.
 
 **Release blocker:** no, if a runbook exists. **Backlog ticket:** yes — this is the
 throughline for several future "admin console" features.
+
+**LARGELY RESOLVED (2026-08-17, issue #46).** `/settings` is now the operator
+console, reachable from the sidebar and the mobile account menu:
+
+- **Account** (everyone) — change your own password.
+- **Groups** (admin) — full create/rename/delete of the group vocabulary; see OPS-02.
+- **Users** (admin) — the full directory of every user with role and status, plus
+  password reset. Read-only otherwise.
+- **System** (admin) — which database file is in use, whether `AUTH_SECRET` is set
+  and valid, the server clock (see OPS-11), and row counts. Reports configuration
+  *health* only; no secret value is ever returned.
+
+**Still not self-service, and still runbook-only** (see
+[`../deployment/operator-runbook.md`](../deployment/operator-runbook.md) §4):
+deactivating or re-activating a user who is already `ACTIVE`, and changing a user's
+role. `PATCH /api/admin/organizers/[organizerId]` still 409s on any non-PENDING
+user, so those remain direct database edits.
 
 ---
 
