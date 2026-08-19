@@ -1,32 +1,32 @@
 import {
   DEPARTMENTS,
-  HOUSES as HOUSE_INFO,
-  SHS_STRANDS as STRAND_INFO,
+  HOUSES,
+  SHS_STRANDS,
 } from "@/globals/constants/groups";
-import { slugify } from "@/features/manage-list/utils/mapStudentToRow";
+import { slugify } from "@/globals/utils/text";
 
-export const COLLEGE_DEPARTMENTS = DEPARTMENTS.map((d) => ({
-  title: d.name,
-  abbreviation: d.abbreviation,
-  slug: d.slug,
-  logo: d.logo,
-}));
+/**
+ * Presentation lookups for the selection boards.
+ *
+ * The boards render one tile per `Group` row from the database - that is the
+ * source of truth, and it is what lets an operator add a department in Settings
+ * and immediately reach its roster. These maps only supply the artwork and
+ * grouping that the `Group` table has no column for. A slug that is missing
+ * from a map is not an error: the tile falls back to initials, and an unknown
+ * strand track falls into the "Other" panel.
+ */
 
-// Selection boards match rows via slugify(student.shsStrand), so each board
-// entry's slug must equal slugify(<strand code>).
-export const SHS_STRANDS = {
-  academics: STRAND_INFO.filter((s) => s.track === "ACADEMIC").map((s) => ({
-    title: s.name,
-    slug: slugify(s.code)!,
-  })),
-  tvl: STRAND_INFO.filter((s) => s.track === "TECHVOC").map((s) => ({
-    title: s.name,
-    slug: slugify(s.code)!,
-  })),
+export const GROUP_LOGO_BY_SLUG: Record<string, string> = {
+  ...Object.fromEntries(DEPARTMENTS.map((d) => [d.slug, d.logo])),
+  ...Object.fromEntries(HOUSES.map((h) => [h.slug, h.logo])),
 };
 
-export const HOUSES = HOUSE_INFO.map((h) => ({
-  name: h.name,
-  slug: h.slug,
-  logo: h.logo,
-}));
+export const DEPARTMENT_ABBREVIATION_BY_SLUG: Record<string, string> =
+  Object.fromEntries(DEPARTMENTS.map((d) => [d.slug, d.abbreviation]));
+
+export type StrandTrack = "ACADEMIC" | "TECHVOC";
+
+// Strand slugs are slugify(code), not slugify(name) - "Computer System
+// Servicing" is stored as `css`.
+export const STRAND_TRACK_BY_SLUG: Record<string, StrandTrack> =
+  Object.fromEntries(SHS_STRANDS.map((s) => [slugify(s.code), s.track]));

@@ -1,9 +1,14 @@
-import Image from "next/image";
-import SelectionBoardFrame from "@/features/manage-list/components/SelectionBoardFrame";
+"use client";
+
 import Link from "next/link";
-import { HOUSES } from "@/features/manage-list/constants/categories";
+import SelectionBoardFrame from "@/features/manage-list/components/SelectionBoardFrame";
+import GroupTileArt from "@/features/manage-list/components/GroupTileArt";
+import { useFetchGroupsByCategory } from "@/globals/hooks/useGroups";
+import { Skeleton } from "@/globals/components/shad-cn/skeleton";
 
 const HouseSelectionBoard = () => {
+  const { data: houses, isLoading, isError } = useFetchGroupsByCategory("HOUSE");
+
   return (
     <div className="flex w-full flex-col gap-6 text-center">
       <header>
@@ -20,36 +25,47 @@ const HouseSelectionBoard = () => {
 
       <SelectionBoardFrame>
         <div className="mx-auto grid w-full max-w-6xl grid-cols-1 place-items-center gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {HOUSES.map((house) => (
-            <Link
-              key={house.slug}
-              href={{
-                pathname: "/manage-list/manage-student",
-                query: {
-                  category: "HOUSE", 
-                  house: house.slug,
-                },
-              }}
-              className="group relative flex min-h-[250px] w-full max-w-[230px] flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-6 text-center shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-2 hover:border-indigo-200 hover:shadow-[0_18px_34px_rgba(37,99,235,0.16)]"
-            >
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_58%)] opacity-60 transition group-hover:opacity-100" />
-              <div className="flex items-center justify-center">
-                <div className="relative h-40 w-40">
-                  <Image
-                    src={house.logo}
-                    alt={`${house.name} logo`}
-                    fill
-                    sizes="10rem"
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-              <p className="relative text-2xl font-semibold uppercase tracking-[0.12em] text-slate-800">
-                {house.name}
-              </p>
-            </Link>
-          ))}
+          {isLoading
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="min-h-[250px] w-full max-w-[230px] rounded-2xl"
+                />
+              ))
+            : houses?.map((house) => (
+                <Link
+                  key={house.slug}
+                  href={{
+                    pathname: "/manage-list/manage-student",
+                    query: {
+                      category: "HOUSE",
+                      house: house.slug,
+                    },
+                  }}
+                  className="group relative flex min-h-[250px] w-full max-w-[230px] flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-6 text-center shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-2 hover:border-indigo-200 hover:shadow-[0_18px_34px_rgba(37,99,235,0.16)]"
+                >
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_58%)] opacity-60 transition group-hover:opacity-100" />
+                  <div className="flex items-center justify-center">
+                    <GroupTileArt slug={house.slug} name={house.name} />
+                  </div>
+                  <p className="relative text-2xl font-semibold uppercase tracking-[0.12em] text-slate-800">
+                    {house.name}
+                  </p>
+                </Link>
+              ))}
         </div>
+
+        {isError ? (
+          <p className="mt-4 text-sm text-rose-600">
+            Couldn&apos;t load houses. Please retry.
+          </p>
+        ) : null}
+
+        {!isLoading && !isError && houses?.length === 0 ? (
+          <p className="mt-4 text-sm text-slate-500">
+            No houses yet. Add one in Settings.
+          </p>
+        ) : null}
       </SelectionBoardFrame>
     </div>
   );
