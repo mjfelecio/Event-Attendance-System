@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   QrCode,
+  Settings,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -38,6 +39,9 @@ const navigationItems: NavigationItem[] = [
   { text: "Manage List", route: "/manage-list", icon: Users },
   { text: "Attendance", route: "/attendance", icon: QrCode },
   { text: "Reports", route: "/reports", icon: BarChart3 },
+  // Shown to everyone: organizers get their own account controls there, admins
+  // additionally get the group, user, and system panels.
+  { text: "Settings", route: "/settings", icon: Settings },
 ];
 
 const NavigationButton = ({

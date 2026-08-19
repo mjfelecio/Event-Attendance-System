@@ -7,6 +7,7 @@ import Sidebar from "@/globals/components/shared/Sidebar";
 import MobileTopBar from "@/globals/components/shared/MobileTopBar";
 import MobileBottomNav from "@/globals/components/shared/MobileBottomNav";
 import { useAuth } from "@/globals/contexts/AuthContext";
+import ChangePasswordForm from "@/features/settings/components/ChangePasswordForm";
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading, logout } = useAuth();
@@ -50,6 +51,40 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             className="w-full rounded-lg bg-slate-900 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
             onClick={async () => {
               // Navigate only if logout actually succeeded server-side.
+              if (await logout()) {
+                router.replace("/login");
+              }
+            }}
+          >
+            Return to login
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  // An admin-issued temporary password gets the user in, and no further. The
+  // gate lifts as soon as ChangePasswordForm refreshes the session.
+  if (user.mustChangePassword) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center bg-slate-100 text-slate-700 p-6">
+        <div className="max-w-md w-full rounded-2xl bg-white shadow-lg border border-slate-200 p-8 space-y-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Choose a new password
+            </h1>
+            <p className="mt-2 text-sm text-slate-600">
+              You signed in with a temporary password issued by an
+              administrator. Pick your own to continue.
+            </p>
+          </div>
+
+          <ChangePasswordForm submitLabel="Set password and continue" />
+
+          <button
+            type="button"
+            className="w-full rounded-lg border border-slate-200 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+            onClick={async () => {
               if (await logout()) {
                 router.replace("/login");
               }
