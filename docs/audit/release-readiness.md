@@ -30,7 +30,7 @@ group-vocabulary gap.
 | [SEC-01](./security.md#sec-01) | `Secure` cookie flag on a `next start` production build drops sessions over LAN HTTP | Every device except the host laptop can't stay logged in | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
 | [SEC-02](./security.md#sec-02) | QR camera requires a secure context; LAN HTTP doesn't qualify | QR scanning doesn't work on any device except the host laptop | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
 | SEC-11 | `AUTH_SECRET` unset; production build throws on login, surfacing as `500 "Database error occurred."` | Login fails with an error naming the wrong subsystem | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
-| [DATA-01](./data-integrity.md#data-01) | Bulk import transaction has no timeout override; likely fails at 2,000+ rows | Cannot load the real student roster in one operation | [#38](https://github.com/mjfelecio/Event-Attendance-System/issues/38) |
+| [DATA-01](./data-integrity.md#data-01) | Bulk import transaction has no timeout override; likely fails at 2,000+ rows | ~~Cannot load the real student roster in one operation~~ **RESOLVED 2026-08-20** — explicit `transactionOptions` set and verified at full scale (`scripts/benchmark/`) | [#38](https://github.com/mjfelecio/Event-Attendance-System/issues/38) |
 | [DATA-02](./data-integrity.md#data-02) | No way to add a missing `Group` (section/department/etc.) without a destructive reseed | Bulk import hard-rejects the entire batch if the seeded vocabulary doesn't match the real school | [#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39) |
 
 **SEC-01, SEC-02, and SEC-11 share one trigger**: switching to a production build for
@@ -39,9 +39,13 @@ setting `AUTH_SECRET` resolves all three. This is the single highest-leverage th
 resolve this week — it's an infrastructure/ops decision, not a large code change.
 
 **DATA-01 and DATA-02 both live on the path of "get the real roster into the system"**
-— the one task that absolutely must succeed before doors open. Resolve both before
-attempting the real import, and do a full-scale rehearsal (see smoke tests below), not
-a small sample.
+— the one task that absolutely must succeed before doors open. DATA-01 is **resolved
+(2026-08-20)**: the import is verified against the production build at the full
+2,000-student scale using a committed fixture and harness (`scripts/benchmark/`), and
+the transaction options were hardened. DATA-02 still needs its operational half:
+reconcile the real school's sections/departments/programs/strands/houses against
+Settings → Groups *before* importing, then do a full-scale rehearsal with the actual
+roster (see smoke tests below), not a small sample.
 
 ---
 
@@ -93,11 +97,14 @@ review and cannot confirm runtime behavior.
    a few minutes of navigation; open the QR camera and confirm it activates. Do this
    with whatever HTTPS/workaround solution is chosen (see SEC-01/SEC-02 fix
    directions), not against plain HTTP.
-2. **Full-scale bulk import rehearsal.** Build (or obtain) the actual ~2,000-row
-   student CSV, with the real section/department/house/strand names the school
-   actually uses. Import it and time it. If it fails or times out, that's DATA-01
-   confirmed — fix before proceeding. If it fails with `Unknown group(s)`, that's
-   DATA-02 confirmed — resolve the group vocabulary first, then retry.
+2. **Full-scale bulk import rehearsal.** A generic 2,000-row import is already
+   proven against the production build — re-verify anytime with the committed
+   fixture (`pnpm benchmark:import`, see `scripts/benchmark/README.md`). The
+   rehearsal that matters for the event is importing the **real** ~2,000-row
+   student CSV, with the actual section/department/house/strand names the school
+   uses, and timing it. If it fails with `Unknown group(s)`, that's DATA-02 —
+   reconcile the group vocabulary in Settings → Groups first, then retry. The
+   import may take up to a minute.
 3. **Concurrent scan test.** With 2–3 devices logged in as different organizers,
    simultaneously scan the *same* student's QR code against the *same* approved event.
    Confirm exactly one record is created, no duplicate, no error surfaced to either
@@ -165,13 +172,13 @@ Run this sequence once, fully, before trusting the system with real students:
   how to reset a password via direct DB edit, how to restart the server if it goes
   down, and where the backup copies are. None of this is hard to write down; all of it
   is hard to improvise live.
-- **No load test has been run at the stated scale** (2,000+ students, 2–5 concurrent
-  operators) — this audit is a static read of the code, not a runtime benchmark. The
-  bulk-import concern (DATA-01) is the one place this audit has high confidence a
-  scale problem will actually manifest; the live scanning/reporting path is architected
-  in a way (compare-and-set writes, no long transactions, indexed queries) that gives
-  reasonable confidence it will hold up, but hasn't been empirically verified at 2,000
-  students either.
+- **Load verification is partial.** The bulk-import path is now verified at the
+  full 2,000-student scale against the production build (`scripts/benchmark/`),
+  including an idempotent re-import and all-or-nothing rollback on an invalid row.
+  The live scanning/reporting path (2–5 concurrent operators) has **not** been
+  empirically verified at 2,000 students; it is architected to hold up
+  (compare-and-set writes, no long transactions, indexed queries), but a concurrent
+  scan rehearsal (see smoke tests above) is the proof.
 
 ---
 

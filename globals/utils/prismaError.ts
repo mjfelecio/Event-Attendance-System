@@ -63,6 +63,18 @@ function handleKnownRequestError(
         message: "One of the provided values is too long or invalid.",
       };
 
+    // Transaction could not start within maxWait, or expired within timeout
+    // (P2028). Atomicity guarantees nothing from the timed-out transaction was
+    // committed, so the operation can be safely retried — important for the bulk
+    // roster import, where a large single transaction is expected to take longer
+    // than a typical request.
+    case "P2028":
+      return {
+        status: 503,
+        message:
+          "The database transaction did not complete and was rolled back. Retrying the operation is safe.",
+      };
+
     default:
       return {
         status: 500,

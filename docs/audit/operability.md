@@ -89,13 +89,16 @@ whether trying again will make it worse (it won't — upserts are idempotent —
 operator has no way to know that from the error alone) or whether the file needs to be
 split.
 
-**Recommended fix direction:** see data-integrity.md. At minimum, if the timeout fix
-isn't shipped in time, document for operators that large imports should be split into
-smaller batches (e.g., 200–300 rows at a time) as a manual workaround, and that
-retrying a failed batch is safe (upserts won't create duplicates).
+**Recommended fix direction:** see data-integrity.md. **RESOLVED 2026-08-20 (with
+DATA-01):** a full-roster import is verified to work end-to-end (benchmark fixture +
+harness in `scripts/benchmark/`), the importer now says a full roster can take up to
+a minute so a slow run isn't mistaken for a hang, and a transaction failure returns a
+clear `503 "…rolled back. Retrying the operation is safe."` instead of the opaque
+"Database error occurred." — so operators no longer need to guess whether to split
+the file or retry. The chunked-import UI with per-chunk progress remains backlog.
 
-**Release blocker:** yes. **Backlog ticket:** yes, for a proper chunked-import UI with
-progress feedback.
+**Release blocker:** resolved (with DATA-01). **Backlog ticket:** yes, for a proper
+chunked-import UI with progress feedback.
 
 ---
 
