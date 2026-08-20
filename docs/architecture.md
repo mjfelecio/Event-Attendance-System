@@ -839,8 +839,6 @@ you later. Listed here so a future reader doesn't treat it as live.
 |---|---|
 | `globals/utils/eventValidation.ts` | **Dead.** Validates `includedGroups`/`excludedGroups` as *JSON strings* — columns removed in the schema overhaul. Zero importers. Superseded by `eventGroups.ts`. |
 | `buildEventStudentFilter.ts::isStudentInEvent` | **Dead.** No importers. Duplicates the eligibility rule against flattened student fields. |
-| `features/students/utils/mapStudentToRow.ts` | **Effectively dead.** References removed columns (`shsStrand`, `collegeProgram`, `department`, `houseSlug`, `status`). Only its `slugify` export is imported (by `constants/categories.ts`). |
-| `features/students/hooks/useStudentTableControls.ts` and the `StudentRow` type | **Dead.** No component imports them. `StudentRow.status` describes a `Student.status` column that no longer exists. |
 | `globals/hooks/useGroups.ts::useFetchGroupsForStudent` | **Broken and unused.** Calls `/api/groups/forStudent/[id]`, which does not exist. |
 | `features/reports/components/EventMetadataCard.tsx` | Renders the raw `event.createdById` under the "Organizer" label, although both event endpoints already return `organizerName`. |
 | `globals/components/shared/dataTable/config.ts` | Comment points at a `PAGE_SIZES` constant in `manage-student/page.tsx` that doesn't exist on `main`. |

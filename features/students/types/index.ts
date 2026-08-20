@@ -1,4 +1,3 @@
-import { YearLevel } from "@prisma/client";
 import { LucideIcon } from "lucide-react";
 
 export type StudentListCategory = "ALL" | "COLLEGE" | "SHS" | "HOUSE";
@@ -14,22 +13,6 @@ export type StudentStat = {
 
 export type StudentSortField = "updatedAt" | "lastName" | "yearLevel";
 export type StudentSortDirection = "asc" | "desc";
-
-export type ManageStudentContext = {
-  category: StudentListCategory;
-  item?: string;
-  label?: string;
-  q?: string;
-  page?: string;
-  pageSize?: string;
-  sort?: string;
-  direction?: string;
-  department?: string;
-  program?: string;
-  house?: string;
-  section?: string;
-  level?: string;
-};
 
 export type StudentFilterState = {
   department: string;
@@ -60,25 +43,4 @@ export type StudentPagination = {
   totalRows: number;
   selectionTotal: number;
   totalPages: number;
-};
-
-export type StudentRow = {
-  studentNumber: string;
-  lastName: string;
-  firstName: string;
-  middleName?: string;
-  program?: string;
-  programSlug?: string;
-  collegeProgram?: string;
-  shsStrand?: string;
-  department?: string;
-  departmentSlug?: string;
-  house?: string;
-  houseSlug?: string;
-  section: string;
-  yearLevelLabel: string;
-  yearLevel: YearLevel;
-  schoolLevel: "COLLEGE" | "SHS";
-  status: "ACTIVE" | "INACTIVE" | "GRADUATED" | "DROPPED";
-  updatedAt: string;
 };
