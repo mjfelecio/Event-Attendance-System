@@ -17,7 +17,7 @@ type Props<TData> = {
  *
  * The built-in toolbar for client-managed tables: an optional title plus an
  * optional search box and trailing slot. Features that need richer controls
- * (Manage List) render their own external toolbar instead and disable this one
+ * (Student List) render their own external toolbar instead and disable this one
  * via the DataTable `showToolbar` prop, so titles/search are never duplicated.
  */
 const DataTableToolbar = <TData,>({

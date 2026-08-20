@@ -69,7 +69,7 @@ TypeScript says if you skip this.
 
 ## Known exception — don't extend it
 
-`features/manage-list/components/StudentImporter.tsx` bypasses all of the above: raw
+`features/students/components/StudentImporter.tsx` bypasses all of the above: raw
 `fetch()` inline in the component, manual envelope parsing, manual
 `queryClient.invalidateQueries()` calls. This is a genuine inconsistency, not a
 considered exception — new bulk-mutation code should use a `useMutation` hook (mirroring

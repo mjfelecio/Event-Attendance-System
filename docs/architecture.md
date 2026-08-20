@@ -35,7 +35,7 @@ Browser (organizer laptop / phone on the LAN)
 │                                                                │
 │  app/(auth)/*       client pages: login, signup, logout        │
 │  app/(main)/*       client pages: dashboard, calendar,         │
-│                     manage-list, attendance, reports, settings │
+│                     students,    attendance, reports, settings │
 │    └─ two server components (see §5)                           │
 │                                                                │
 │  app/api/**/route.ts   ALL mutations and nearly all reads      │
@@ -88,7 +88,7 @@ features/               Feature-owned UI. Nothing here is imported cross-feature
   attendance/           …except attendance/components/DataCard, which reports reuse
   auth/
   calendar/
-  manage-list/
+students/
   reports/
 
 globals/                Everything shared
@@ -219,7 +219,7 @@ controls that would 403 — they are not the security boundary.
 
 ### The two server components
 
-1. **`app/(main)/manage-list/manage-which/page.tsx`** — trivial; reads `searchParams`
+1. **`app/(main)/students/select-category/page.tsx`** — trivial; reads `searchParams`
    and picks a selection board or redirects. No data access.
 2. **`app/(main)/reports/events/[id]/print/page.tsx`** — the important one. It queries
    Prisma *directly*, bypassing the API layer entirely, and therefore carries its own
@@ -839,8 +839,8 @@ you later. Listed here so a future reader doesn't treat it as live.
 |---|---|
 | `globals/utils/eventValidation.ts` | **Dead.** Validates `includedGroups`/`excludedGroups` as *JSON strings* — columns removed in the schema overhaul. Zero importers. Superseded by `eventGroups.ts`. |
 | `buildEventStudentFilter.ts::isStudentInEvent` | **Dead.** No importers. Duplicates the eligibility rule against flattened student fields. |
-| `features/manage-list/utils/mapStudentToRow.ts` | **Effectively dead.** References removed columns (`shsStrand`, `collegeProgram`, `department`, `houseSlug`, `status`). Only its `slugify` export is imported (by `constants/categories.ts`). |
-| `features/manage-list/hooks/useStudentTableControls.ts` and the `StudentRow` type | **Dead.** No component imports them. `StudentRow.status` describes a `Student.status` column that no longer exists. |
+| `features/students/utils/mapStudentToRow.ts` | **Effectively dead.** References removed columns (`shsStrand`, `collegeProgram`, `department`, `houseSlug`, `status`). Only its `slugify` export is imported (by `constants/categories.ts`). |
+| `features/students/hooks/useStudentTableControls.ts` and the `StudentRow` type | **Dead.** No component imports them. `StudentRow.status` describes a `Student.status` column that no longer exists. |
 | `globals/hooks/useGroups.ts::useFetchGroupsForStudent` | **Broken and unused.** Calls `/api/groups/forStudent/[id]`, which does not exist. |
 | `features/reports/components/EventMetadataCard.tsx` | Renders the raw `event.createdById` under the "Organizer" label, although both event endpoints already return `organizerName`. |
 | `globals/components/shared/dataTable/config.ts` | Comment points at a `PAGE_SIZES` constant in `manage-student/page.tsx` that doesn't exist on `main`. |

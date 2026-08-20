@@ -94,7 +94,7 @@ roster data during an event. There is no ownership concept for students.
 
 Everything downstream of eligibility: `buildEventStudentFilter`, event stats, the
 attendance records endpoint (both variants), the print report, the manual-attendance
-search, the Manage List roster and its stat cards, and every CSV export.
+search, the Student List roster and its stat cards, and every CSV export.
 
 ---
 

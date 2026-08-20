@@ -23,7 +23,7 @@ const navigationItems: NavigationItem[] = [
   { text: "Dashboard", route: "/dashboard", icon: LayoutDashboard },
   { text: "Calendar", route: "/calendar", icon: CalendarDays },
   { text: "Attendance", route: "/attendance", icon: QrCode, emphasized: true },
-  { text: "Students", route: "/manage-list", icon: Users },
+  { text: "Students", route: "/students", icon: Users },
   { text: "Reports", route: "/reports", icon: BarChart3 },
 ];
 

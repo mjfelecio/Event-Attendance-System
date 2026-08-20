@@ -95,7 +95,7 @@ const PatternsSection = () => {
         title="Data table — the shared DataTable"
         note={
           <>
-            The standard table for the whole app. Manage List&apos;s student
+            The standard table for the whole app. The Student List&apos;s student
             list uses a separate feature-local table
             (<code>StudentsDataTable</code>) — that&apos;s a known duplication,
             not a pattern to copy. <strong>New tables use this one.</strong>
@@ -214,7 +214,7 @@ const PatternsSection = () => {
       {/* ---------------------------------------------------------- TOOLBAR */}
       <Specimen
         title="Toolbar — title, counters, actions, search"
-        note="The Manage List table header, which is the app's most complete toolbar. Counters on the right of the title; actions left, search right on the row below."
+        note="The Student List table header, which is the app's most complete toolbar. Counters on the right of the title; actions left, search right on the row below."
         onSlate
         code={`<div className={surface.panel}>
   <div className={surface.panelGlow} />
@@ -267,7 +267,7 @@ const PatternsSection = () => {
       {/* ----------------------------------------------------- PAGE LAYOUTS */}
       <Specimen
         title="Page pattern — Overview / landing"
-        note="Hero header, then a panel of interactive cards that navigate deeper. Manage List and the Dashboard both follow this."
+        note="Hero header, then a panel of interactive cards that navigate deeper. The Student List and the Dashboard both follow this."
         onSlate
       >
         <div className="w-full space-y-3 text-xs">
@@ -297,7 +297,7 @@ const PatternsSection = () => {
 
       <Specimen
         title="Page pattern — List / management"
-        note="The workhorse. Toolbar panel (title + counters + actions + search) sitting directly above the table. This is what Manage List's roster screens are."
+        note="The workhorse. Toolbar panel (title + counters + actions + search) sitting directly above the table. This is what the Student List's roster screens are."
         onSlate
       >
         <div className="w-full space-y-2 text-xs">

@@ -18,14 +18,14 @@ The app was built over a long period, partly with AI assistance, and accumulated
 several parallel visual languages. This system does not invent a new one. It
 documents the best of what already exists.
 
-**The Manage List pages are the source of truth.** They are the most deliberate,
+**The Student List pages are the source of truth.** They are the most deliberate,
 internally consistent screens in the app, and everything below was extracted from
 them:
 
-- `app/(main)/manage-list/page.tsx` — overview/landing
-- `app/(main)/manage-list/manage-which/page.tsx` — selection sub-page
-- `app/(main)/manage-list/manage-student/page.tsx` — data-heavy roster
-- `features/manage-list/components/**` — the components those pages compose
+- `app/(main)/students/page.tsx` — overview/landing
+- `app/(main)/students/select-category/page.tsx` — selection sub-page
+- `app/(main)/students/student-list/page.tsx` — data-heavy roster
+- `features/students/components/**` — the components those pages compose
 
 The Dashboard independently adopted much of the same language, which is good
 corroboration. Attendance, Reports, and Calendar diverge — see
@@ -53,7 +53,7 @@ introduce a bespoke primary hex.
 The shadcn `--primary` CSS variable resolves to indigo-600, so `<Button>`,
 `<Checkbox>`, and `<Switch>` inherit it. This was changed as part of establishing
 this system — it was previously stock shadcn neutral (near-black), which meant the
-primitive layer visually contradicted every hand-styled action in Manage List.
+primitive layer visually contradicted every hand-styled action in the Student List.
 
 **Neutrals are slate.** `slate-900` headings, `slate-600` body, `slate-500`
 supporting copy, `slate-200` borders, `slate-50` inset surfaces.
@@ -132,7 +132,7 @@ Live examples: [`/design-system`](../app/(main)/design-system/page.tsx) →
 | Multi-select | `CheckboxGroup` | Several checkboxes in a row |
 | Status / count chip | `StatusBadge` | Inline `rounded-full bg-x-50` |
 | Page title | `PageHeader` | A bare `<h1>` |
-| Table | `DataTable` (shared) | `StudentsDataTable` (Manage List only) |
+| Table | `DataTable` (shared) | `StudentsDataTable` (Student List only) |
 | Confirmation | `useConfirm()` | A bespoke dialog |
 | Form panel | `Sheet` | `Drawer` (legacy) |
 | Transient feedback | `toastSuccess` / `Warning` / `Danger` | `alert()` |
@@ -181,15 +181,15 @@ rules are short and binding:
 
 ### Overview / landing
 Hero `PageHeader`, then a panel of `cardInteractive` tiles that navigate deeper.
-*Reference: Manage List landing, Dashboard.*
+*Reference: Student List landing, Dashboard.*
 
 ### List / management
 Toolbar panel (title + counter chips + actions + search) directly above a table.
-The workhorse pattern. *Reference: `manage-student`.*
+The workhorse pattern. *Reference: `student-list`.*
 
 ### Selection / sub-page
 Back link, plain `PageHeader`, then a `SelectionBoardFrame` panel of choice cards.
-*Reference: `manage-which`.*
+*Reference: `select-category`.*
 
 ### Form
 Forms live in a `Sheet`, not on their own route. Multi-step forms use a step
@@ -229,7 +229,7 @@ at `md`, titles step at `md`, toolbars collapse at `lg`/`xl`.
 
 **Known to need responsive work** (not in scope here):
 
-- Manage List toolbar — pills wrap, but search competes for room below `md`
+- Student List toolbar — pills wrap, but search competes for room below `md`
 - `StudentsDataTable` — no horizontal scroll container; wide rosters overflow
 - Attendance page — the primary mobile surface, built at desktop width
 - Calendar — FullCalendar's month grid is unusable below `sm`
@@ -245,10 +245,10 @@ is deliberately out of scope. **Follow the "preferred" column in new work.**
 | Deviation | Where | Preferred |
 |---|---|---|
 | Two table implementations | `StudentsDataTable` vs shared `DataTable` | Shared `DataTable` |
-| Two page shells | Manage List/Dashboard/Reports use `page.surface`; Attendance `bg-white p-6` | `page.surface` |
+| Two page shells | Student List/Dashboard/Reports use `page.surface`; Attendance `bg-white p-6` | `page.surface` |
 | Event-status colours duplicated | Dashboard `chipClass`, calendar `EventCard` | `EVENT_STATUS_TONE` |
 | `Sheet` and `Drawer` coexist | `StudentFormDrawer` vs `EventDrawer` | `Sheet` |
-| Manage List `Pagination` duplicates the shared one | `StudentsDataTable/Pagination.tsx` | Shared `DataTablePagination` |
+| Student List `Pagination` duplicates the shared one | `StudentsDataTable/Pagination.tsx` | Shared `DataTablePagination` |
 | Dark mode is dead code | `globals.css` `.dark` block and a `prefers-color-scheme` rule that sets inverted values; nothing activates either | Don't write `dark:` variants |
 
 Each has a tracked backlog issue under the `ui` label.
@@ -269,8 +269,8 @@ If you are asked to *"create a new screen for X"*, these are binding.
 6. **Don't add a new component** when an existing one satisfies the requirement.
 7. **If a genuinely new pattern is required**, say so explicitly and propose it as
    an addition to this system rather than quietly inventing it.
-8. **Treat the Manage List pages and `/design-system` as canonical.** When this
-   document and the code disagree, the Manage List pages win, and this document
+8. **Treat the Student List pages and `/design-system` as canonical.** When this
+   document and the code disagree, the Student List pages win, and this document
    should be corrected.
 9. **Preserve the existing architecture** unless there's a concrete benefit to
    changing it.

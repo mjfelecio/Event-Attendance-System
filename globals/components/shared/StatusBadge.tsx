@@ -19,7 +19,7 @@ export type Tone =
 
 /**
  * Tone → badge classes. Soft fill + matching border and text, which is the
- * treatment Manage List's counter chips use.
+ * treatment the Student List's counter chips use.
  */
 const TONE_CLASS: Record<Tone, string> = {
   neutral: "border-slate-200 bg-white text-slate-600",
