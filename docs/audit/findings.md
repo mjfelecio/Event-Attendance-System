@@ -35,7 +35,7 @@ enterprise hardening. Three root causes account for every P0.
 | [SEC-02](./security.md#sec-02) | Security / Deployment | QR camera cannot open on any non-`localhost` device over HTTP | CONFIRMED (platform spec) / LIKELY | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
 | SEC-11 *(new)* | Security / Deployment | `AUTH_SECRET` is unset and throws in production builds, surfacing as a misleading `500 "Database error occurred."` | CONFIRMED | [#37](https://github.com/mjfelecio/Event-Attendance-System/issues/37) |
 | [DATA-01](./data-integrity.md#data-01) | Data integrity | Bulk student import has no custom transaction timeout; likely fails outright at 2,000+ rows | CONFIRMED (code) / LIKELY (scale) | [#38](https://github.com/mjfelecio/Event-Attendance-System/issues/38) |
-| [DATA-02](./data-integrity.md#data-02) | Data integrity / Operability | No way to add a missing `Group` (section/department/etc.) without a fully destructive reseed or a direct DB edit | CONFIRMED | [#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39) |
+| [DATA-02](./data-integrity.md#data-02) | Data integrity / Operability | ~~No way to add a missing `Group` (section/department/etc.) without a fully destructive reseed or a direct DB edit~~ **RESOLVED 2026-08-17** — Settings → Groups | CONFIRMED | [#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39) |
 
 All five trace back to three root causes: **(1)** the app is being run over plain HTTP
 on a LAN in a production build, which two independent browser platform rules punish and
@@ -64,6 +64,7 @@ one deployment task.
 | [SEC-03](./security.md#sec-03) / [DATA-05](./data-integrity.md#data-05) | Authorization / Data integrity | Admin can silently change an APPROVED event's category/audience after attendance already exists | CONFIRMED | [#40](https://github.com/mjfelecio/Event-Attendance-System/issues/40) |
 | [SEC-05](./security.md#sec-05) / [OPS-03](./operability.md#ops-03) | Security / Operability | Signup rate limit is a single network-wide bucket (5 signups / 10 min, for everyone) | CONFIRMED | [#43](https://github.com/mjfelecio/Event-Attendance-System/issues/43) |
 | [DATA-04](./data-integrity.md#data-04) | Data integrity | No backup strategy for the single SQLite file | CONFIRMED (absence) | [#41](https://github.com/mjfelecio/Event-Attendance-System/issues/41) |
+| [DATA-12](./data-integrity.md#data-12) *(new)* | Data integrity | ~~A scoped event with zero groups matched the entire school instead of nobody~~ **FIXED 2026-08-17** | CONFIRMED | found while fixing [#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39) |
 | [OPS-08](./operability.md#ops-08) | Operability | No process supervision for the server — closing the terminal or laptop sleep takes down attendance for everyone | CONFIRMED (absence) | [#42](https://github.com/mjfelecio/Event-Attendance-System/issues/42) |
 
 ---
@@ -74,8 +75,8 @@ one deployment task.
 |---|---|---|---|---|
 | [DATA-03](./data-integrity.md#data-03) / [OPS-07](./operability.md#ops-07) | Data integrity / Operability | Deleting a student with attendance history gives a misleading error message | CONFIRMED | [#44](https://github.com/mjfelecio/Event-Attendance-System/issues/44) |
 | [DATA-06](./data-integrity.md#data-06) | Data integrity | Eligibility is always computed live — roster corrections retroactively rewrite past events' reports | CONFIRMED (by design) | [#45](https://github.com/mjfelecio/Event-Attendance-System/issues/45) |
-| [OPS-05](./operability.md#ops-05) | Operability | No self-service password reset — recovery is a direct DB edit | CONFIRMED (absence) | [#46](https://github.com/mjfelecio/Event-Attendance-System/issues/46) |
-| [OPS-06](./operability.md#ops-06) | Operability | Settings page is a placeholder; almost nothing is fixable in-app | CONFIRMED | [#46](https://github.com/mjfelecio/Event-Attendance-System/issues/46) |
+| [OPS-05](./operability.md#ops-05) | Operability | ~~No self-service password reset — recovery is a direct DB edit~~ **RESOLVED 2026-08-17** — admin-issued temporary passwords + self-service change | CONFIRMED (absence) | [#46](https://github.com/mjfelecio/Event-Attendance-System/issues/46) |
+| [OPS-06](./operability.md#ops-06) | Operability | ~~Settings page is a placeholder; almost nothing is fixable in-app~~ **LARGELY RESOLVED 2026-08-17** — `/settings` operator console; user deactivation and role changes remain runbook-only | CONFIRMED | [#46](https://github.com/mjfelecio/Event-Attendance-System/issues/46) |
 
 ---
 

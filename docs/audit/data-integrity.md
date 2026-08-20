@@ -106,6 +106,36 @@ Studio (`pnpm db:studio`) as a documented runbook step, so it can be done quickl
 missing section surfaces mid-week. A minimal "add group" admin screen is the right
 long-term fix but is out of scope for this week.
 
+**RESOLVED (2026-08-17, issue #39).** Groups are now operator-managed from
+**Settings → Groups**, backed by `POST /api/groups`,
+`PATCH|DELETE /api/groups/[groupId]`, and `GET /api/groups/manage` — all admin-only
+via `requireRole(user, "ADMIN")`. Notes on the resolution:
+
+- **No restart or reseed.** `validateStudentGroupSlugs` was always a pure database
+  lookup, so a group created in the console is usable by the importer immediately.
+  The group query caches previously had a 5-minute `staleTime` and *no* invalidation
+  anywhere; all group keys now share a `["groups"]` prefix that every mutation
+  invalidates, so a new group also appears in the student form and event drawer at
+  once.
+- **Delete is guarded.** Students are reassigned to a replacement group of the same
+  category (or deliberately left unassigned). Deletion is refused outright with
+  `409 GROUP_IN_USE_BY_EVENTS` while any event targets the group, because the
+  `_EventGroups` join cascades and would silently rewrite that event's audience.
+- **A latent bug was fixed alongside it.** `buildEventStudentFilter` returned an
+  unfiltered `where` when a scoped event had zero groups, matching the *entire*
+  roster rather than nobody — a silent scope explosion reachable for the first time
+  once groups became deletable. It now fails closed. See DATA-12.
+- **The selection boards are no longer constants-driven.** They render one tile per
+  `Group` row, so a department added in the console is reachable by navigation and
+  not just by hand-editing a URL. `globals/constants/groups.ts` is now seed data plus
+  tile artwork; the `Group` table is the source of truth.
+
+The Prisma Studio procedure survives as a fallback in
+[`../deployment/operator-runbook.md`](../deployment/operator-runbook.md) §2, along
+with the pre-onboarding step of reconciling the seeded vocabulary against the real
+school's structure — still worth doing, since the seed ships only 4 sections and 4 of
+13 programs.
+
 **Release blocker:** yes — this needs a resolved plan (not necessarily a code change)
 before roster onboarding begins. **Backlog ticket:** yes, for a proper group-management
 UI post-beta.
@@ -312,6 +342,41 @@ for the week, redirect its output to a log file (`pnpm start >> attendance-serve
 instead of hard-delete) is appropriately backlog.
 
 **Release blocker:** no. **Backlog ticket:** yes.
+
+---
+
+## DATA-12 — A scoped event with zero groups matched the entire school {#data-12}
+
+**Severity:** P1 (was latent; became reachable with DATA-02's fix)
+**Confidence:** CONFIRMED — **fixed 2026-08-17**
+**Location:** `globals/utils/buildEventStudentFilter.ts`
+
+**Problem:** the group filter was only applied when the event had at least one included
+group:
+
+```ts
+const includedSlugs = event.includedGroups.map((g) => g.slug);
+if (includedSlugs.length > 0) {
+  where.groups = { some: { slug: { in: includedSlugs } } };
+}
+return where;   // <- empty `where` when the list is empty: matches EVERY student
+```
+
+A `DEPARTMENT` event whose groups had all been removed therefore resolved to an
+**unfiltered** query — the whole roster — rather than to nobody. It is a silent scope
+explosion, not a crash: nothing errors, the numbers are simply wrong. It propagates to
+`GET /api/events/[eventId]/stats`, the absent-students list in
+`GET /api/events/[eventId]/records`, the scan eligibility gate in `POST /api/records`,
+and `GET /api/students`.
+
+**Why it was found now:** the `_EventGroups` join cascades, so this state was only
+reachable by editing the database directly — until DATA-02's fix put a delete button on
+groups. Discovered while designing that flow.
+
+**Fix:** the function now fails closed, returning a filter that matches no students
+(`where.id = { in: [] }`) when a scoped event has no groups. Deleting a group that an
+event targets is *also* refused outright (see DATA-02), so this is the second line of
+defence rather than the first.
 
 ---
 

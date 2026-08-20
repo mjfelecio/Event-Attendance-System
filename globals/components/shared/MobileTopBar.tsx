@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LogOut, Settings } from "lucide-react";
 
 import { useAuth } from "@/globals/contexts/AuthContext";
 import { useLogout } from "@/globals/hooks/useLogout";
@@ -24,6 +25,7 @@ import {
 const MobileTopBar = () => {
   const { user } = useAuth();
   const handleLogout = useLogout();
+  const router = useRouter();
 
   const initials = (user?.name ?? "Organizer")
     .split(" ")
@@ -47,9 +49,9 @@ const MobileTopBar = () => {
         </p>
       </div>
 
-      {/* Catch-all account menu - only Logout today, but this is where
-          future account-scoped actions (e.g. Settings) belong once they
-          exist, rather than adding more standalone icon buttons here. */}
+      {/* Catch-all account menu. Account-scoped actions belong here rather
+          than as more standalone icon buttons; Settings lives here instead of
+          in MobileBottomNav, which is already at its item budget. */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -69,6 +71,10 @@ const MobileTopBar = () => {
             {user?.name ?? "Organizer"}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => router.push("/settings")}>
+            <Settings />
+            Settings
+          </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut />
             Logout

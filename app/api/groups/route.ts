@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SchoolLevel, YearLevel } from "@prisma/client";
+import { Prisma, SchoolLevel, YearLevel } from "@prisma/client";
 import { prisma } from "@/globals/libs/prisma";
 import { respondWithError } from "@/globals/utils/httpError";
-import { ok } from "@/globals/utils/api";
+import { err, ok } from "@/globals/utils/api";
+import { requireAuth, requireRole } from "@/globals/utils/auth";
+import { createGroupSchema } from "@/globals/schemas/groupSchema";
 
 /**
  * GET /api/groups
@@ -45,6 +47,41 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json(ok(categorizedOptions), { status: 200 });
   } catch (error) {
+    return respondWithError(error);
+  }
+}
+
+/**
+ * POST /api/groups
+ * Creates a group. Admin only - the group vocabulary decides who events can
+ * target, so it is configuration rather than roster data.
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const user = await requireAuth();
+    requireRole(user, "ADMIN");
+
+    const data = createGroupSchema.parse(await req.json());
+
+    const group = await prisma.group.create({
+      data,
+      select: { id: true, name: true, slug: true, category: true },
+    });
+
+    return NextResponse.json(ok(group), { status: 201 });
+  } catch (error) {
+    // Slug is globally unique across every category, so a collision is a user
+    // error, not a 500.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        err("A group with that slug already exists.", "DUPLICATE"),
+        { status: 409 },
+      );
+    }
+
     return respondWithError(error);
   }
 }

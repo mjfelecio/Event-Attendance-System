@@ -1,27 +1,47 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchApi } from "../utils/api";
-import { EventCategory, Group } from "@prisma/client";
+import { EventCategory } from "@prisma/client";
 import { Option } from "../types/primitives";
+import { queryKeys } from "../utils/queryKeys";
+import {
+  CreateGroupValues,
+  GroupCategory,
+  UpdateGroupValues,
+} from "../schemas/groupSchema";
 
-type GroupsByCategory = Record<EventCategory, Group[]>;
+/** One row of `GET /api/groups/byCategory/[category]`. */
+export type GroupChoice = {
+  id: string;
+  name: string;
+  slug: string;
+};
 
-export const useFetchGroupsForStudent = (studentId?: string) => {
-  return useQuery({
-    queryKey: ["groups", "byStudentId", studentId],
-    enabled: !!studentId,
-    queryFn: () => {
-      return fetchApi<GroupsByCategory>(`/api/groups/forStudent/${studentId}`);
-    },
-    staleTime: 0,
-  });
+export type GroupReferencingEvent = {
+  id: string;
+  title: string;
+  status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+};
+
+/** One row of the operator console's group table. */
+export type ManagedGroup = {
+  id: string;
+  name: string;
+  slug: string;
+  // Narrower than EventCategory: ALL/COLLEGE/SHS are event-only and can never
+  // appear on a group.
+  category: GroupCategory;
+  studentCount: number;
+  eventCount: number;
+  /** Events targeting this group; all of them block deletion. */
+  events: GroupReferencingEvent[];
 };
 
 export const useFetchGroupsByCategory = (eventCategory?: EventCategory) => {
   return useQuery({
-    queryKey: ["groups", "by-category", eventCategory],
+    queryKey: queryKeys.groups.byCategory(eventCategory ?? ""),
     enabled: !!eventCategory,
     queryFn: () => {
-      return fetchApi<Group[]>(`/api/groups/byCategory/${eventCategory}`);
+      return fetchApi<GroupChoice[]>(`/api/groups/byCategory/${eventCategory}`);
     },
     staleTime: 1000 * 60 * 5,
   });
@@ -29,10 +49,89 @@ export const useFetchGroupsByCategory = (eventCategory?: EventCategory) => {
 
 export const useFetchGroups = () => {
   return useQuery({
-    queryKey: ["student-filters"],
+    queryKey: queryKeys.groups.options(),
     queryFn: () => {
-      return fetchApi<Record<EventCategory, Option[]>>("/api/groups");
+      // The route also returns synthesized SCHOOL_LEVEL / YEAR_LEVEL keys
+      // alongside the real group categories.
+      return fetchApi<Record<string, Option[]>>("/api/groups");
     },
     staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useManageGroups = () => {
+  return useQuery({
+    queryKey: queryKeys.groups.manage(),
+    queryFn: () => fetchApi<ManagedGroup[]>("/api/groups/manage"),
+  });
+};
+
+/**
+ * Every group mutation invalidates the whole `["groups"]` prefix. The pickers
+ * cache for five minutes, so without this a group created to unblock an import
+ * would not show up in the student form or the event drawer in time.
+ */
+const useInvalidateGroups = () => {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.groups.all() });
+};
+
+export const useCreateGroup = () => {
+  const invalidateGroups = useInvalidateGroups();
+
+  return useMutation({
+    mutationFn: (values: CreateGroupValues) =>
+      fetchApi<ManagedGroup>("/api/groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      }),
+    onSuccess: invalidateGroups,
+  });
+};
+
+export const useUpdateGroup = () => {
+  const invalidateGroups = useInvalidateGroups();
+
+  return useMutation({
+    mutationFn: ({
+      groupId,
+      ...values
+    }: UpdateGroupValues & { groupId: string }) =>
+      fetchApi<ManagedGroup>(`/api/groups/${groupId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      }),
+    onSuccess: invalidateGroups,
+  });
+};
+
+export const useDeleteGroup = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      groupId,
+      reassignToGroupId = null,
+    }: {
+      groupId: string;
+      reassignToGroupId?: string | null;
+    }) =>
+      fetchApi<{
+        id: string;
+        reassignedStudents: number;
+        unassignedStudents: number;
+      }>(`/api/groups/${groupId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reassignToGroupId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.groups.all() });
+      // Deleting a group rewrites its students' memberships either way.
+      queryClient.invalidateQueries({ queryKey: queryKeys.students.all() });
+    },
   });
 };

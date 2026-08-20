@@ -18,13 +18,20 @@ export const buildEventStudentFilter = (
   // For everything else, we query the 'groups' relation by slug
   const includedSlugs: string[] = event.includedGroups.map((g) => g.slug);
 
-  if (includedSlugs.length > 0) {
-    where.groups = {
-      some: {
-        slug: { in: includedSlugs },
-      },
-    };
+  // Fail closed. A scoped event that has lost every group (its groups were
+  // deleted) targets NOBODY, not everybody - returning an unfiltered `where`
+  // here would silently widen a department event to the whole school across
+  // stats, the absent list, and the scan eligibility gate.
+  if (includedSlugs.length === 0) {
+    where.id = { in: [] };
+    return where;
   }
+
+  where.groups = {
+    some: {
+      slug: { in: includedSlugs },
+    },
+  };
 
   return where;
 };

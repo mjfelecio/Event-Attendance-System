@@ -52,7 +52,20 @@ export const queryKeys = {
     overview: (from: string, to: string, category = "ALL_CATEGORIES") =>
       ["reports", "overview", from, to, category] as const,
   },
+  groups: {
+    // Every group key shares this prefix on purpose: one mutation invalidates
+    // the form options, the per-category pickers, and the management table
+    // together, so a newly created group is never hidden behind a staleTime.
+    all: () => ["groups"] as const,
+    options: () => ["groups", "options"] as const,
+    byCategory: (category: string) =>
+      ["groups", "byCategory", category] as const,
+    manage: () => ["groups", "manage"] as const,
+  },
   admin: {
+    all: () => ["admin"] as const,
     pendingOrganizers: () => ["admin", "pendingOrganizers"] as const,
+    users: () => ["admin", "users"] as const,
+    system: () => ["admin", "system"] as const,
   },
 };

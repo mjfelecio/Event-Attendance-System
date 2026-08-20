@@ -56,26 +56,19 @@ export async function POST(req: Request) {
       );
     }
 
-    await setAuthSession({
+    const session = {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
       status: user.status,
       rejectionReason: user.rejectionReason,
-    });
+      mustChangePassword: user.mustChangePassword,
+    };
 
-    return NextResponse.json(
-      ok({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        rejectionReason: user.rejectionReason,
-      }),
-      { status: 200 }
-    );
+    await setAuthSession(session);
+
+    return NextResponse.json(ok(session), { status: 200 });
   } catch (error) {
     return respondWithError(error);
   }

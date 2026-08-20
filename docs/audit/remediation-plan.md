@@ -34,11 +34,13 @@ everything else, so it should happen first.
    week rather than defer, given how directly it blocks roster onboarding.
 3. **Resolve the group-vocabulary gap** — [DATA-02](./data-integrity.md#data-02) →
    **[#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39)**.
-   Confirm the real school's sections/departments/programs/strands/houses against
-   `globals/constants/groups.ts` and re-seed with the corrected list *before* any real
-   data entry begins, or prepare the Prisma Studio fallback procedure and make sure
-   someone on-site can execute it. This is primarily an operational/data task, not a
-   code change.
+   **DONE 2026-08-17, in code after all:** groups are now created, renamed, and deleted
+   from **Settings → Groups**, so no reseed is involved. Two operational steps remain:
+   reconcile the real school's sections/departments/programs/strands/houses against
+   Settings → Groups *before* any real data entry begins (the seed ships only 4 sections
+   and 4 of 13 programs), and make sure someone on-site has read
+   [`../deployment/operator-runbook.md`](../deployment/operator-runbook.md) §2 for the
+   Prisma Studio fallback.
 4. **Prepare the four should-fix mitigations as runbook items**, even if no code
    changes: back up the SQLite file periodically during the event
    ([DATA-04](./data-integrity.md#data-04) →
@@ -76,11 +78,17 @@ week.
   `DELETE /api/students/[id]`, mirroring the existing event-delete guard
   ([DATA-03](./data-integrity.md#data-03) / [OPS-07](./operability.md#ops-07) →
   [#44](https://github.com/mjfelecio/Event-Attendance-System/issues/44)).
-- Build a minimal self-service password reset flow, a group-management screen, and
-  basic user management — the durable replacement for Phase 0's Prisma Studio runbook
+- ~~Build a minimal self-service password reset flow, a group-management screen, and
+  basic user management — the durable replacement for Phase 0's Prisma Studio runbook~~
   ([OPS-05](./operability.md#ops-05) / [OPS-06](./operability.md#ops-06) /
   [DATA-02](./data-integrity.md#data-02) →
   [#46](https://github.com/mjfelecio/Event-Attendance-System/issues/46)).
+  **DONE 2026-08-17** — shipped as the `/settings` operator console (Account, Groups,
+  Users, System). Password recovery is admin-issued temporary passwords rather than a
+  self-service token flow: there is no mail path on a LAN laptop. **Deactivating or
+  re-activating an already-`ACTIVE` user, and changing a user's role, were left out**
+  and remain runbook-only
+  ([`../deployment/operator-runbook.md`](../deployment/operator-runbook.md) §4).
 - Add real process supervision for the server (`pm2` or an OS service) instead of the
   Phase 0 manual mitigation ([OPS-08](./operability.md#ops-08) →
   [#42](https://github.com/mjfelecio/Event-Attendance-System/issues/42)).

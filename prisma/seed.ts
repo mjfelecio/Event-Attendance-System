@@ -11,6 +11,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 // so seeded groups match what the selection boards query (relative import: the
 // seed runs under tsx, and groups.ts has no dependencies of its own).
 import { HOUSES, SHS_STRANDS } from "../globals/constants/groups";
+import { slugify } from "../globals/utils/text";
 
 // Fail fast rather than silently seeding a throwaway in-memory database that
 // the app never sees.
@@ -28,13 +29,6 @@ const prisma = new PrismaClient({ adapter });
 // Utility functions
 const randomChoice = <T>(arr: T[]): T =>
   arr[Math.floor(Math.random() * arr.length)];
-
-const slugify = (value: string): string =>
-  value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
 
 // Name-derived groups: the DB slug is slugify(name), which is exactly what
 // each consumer queries for these categories.

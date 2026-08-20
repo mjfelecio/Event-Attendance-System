@@ -92,6 +92,9 @@ model User {
   password        String
   status          UserStatus @default(PENDING)
   rejectionReason String?
+  // Set when an admin issues a temporary password; cleared once the user
+  // picks their own. Gates the app shell until then.
+  mustChangePassword Boolean @default(false)
   createdEvents   Event[]    @relation("EventCreator")
   reviewedEvents  Event[]    @relation("EventReviewer")
   createdRecords  Record[]   @relation("RecordCreator")

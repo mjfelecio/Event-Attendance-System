@@ -140,15 +140,26 @@ validates slugs and returns a slug→id map for the actual `connect`.
 
 ### Who can create / update / delete
 
-**Nobody, through the application.** There is no `POST`, `PATCH`, or `DELETE` route for
-groups — only `GET /api/groups` and `GET /api/groups/byCategory/[category]`, both
-**unauthenticated**. Groups exist only because `prisma/seed.ts` created them (a
-destructive operation that wipes every table) or because someone edited the database
-directly.
+**Admins**, from **Settings → Groups**:
 
-This has a direct operational consequence: **a student import can only reference sections
-and houses that already exist as `Group` rows.** An unknown slug rejects the entire batch
-with `Unknown group(s): …`.
+| Route | Who | Notes |
+|---|---|---|
+| `GET /api/groups` | anyone | **Unauthenticated.** Form-select options, keyed by category. |
+| `GET /api/groups/byCategory/[category]` | anyone | **Unauthenticated.** `{ id, name, slug }`. |
+| `GET /api/groups/manage` | ADMIN | Console table rows, with student counts and referencing events. |
+| `POST /api/groups` | ADMIN | `slug` is globally unique → `409 DUPLICATE`. |
+| `PATCH /api/groups/[groupId]` | ADMIN | **Renames only.** The slug is immutable. |
+| `DELETE /api/groups/[groupId]` | ADMIN | See below. |
+
+**Deletion has two guards.** It is refused with `409 GROUP_IN_USE_BY_EVENTS` while any
+event targets the group — the `_EventGroups` join cascades, so deleting anyway would
+silently rewrite that event's audience. Students are moved to a replacement group of the
+same category, or deliberately left without one.
+
+Still true, and still the thing that bites first: **a student import can only reference
+sections and houses that already exist as `Group` rows.** An unknown slug rejects the
+entire batch with `Unknown group(s): …`. The difference is that recovering now takes a
+minute in the UI rather than a destructive reseed.
 
 ### Who depends on it
 
@@ -426,5 +437,5 @@ Ranked by how much damage getting them wrong would do.
 10. **Role and status come from the database on every request**, so revoking access is
     immediate.
 11. **Students never authenticate.** A QR code is a bare student ID.
-12. **Group vocabulary is seed-only.** No section exists until someone puts it in the
-    database.
+12. **Group vocabulary is admin-managed.** No section exists until someone creates it —
+    in Settings → Groups, or in the seed. It is data, not code.

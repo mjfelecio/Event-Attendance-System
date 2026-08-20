@@ -18,6 +18,8 @@ export type AuthUser = {
   role: "ADMIN" | "ORGANIZER";
   status: UserStatus;
   rejectionReason?: string | null;
+  /** True while an admin-issued temporary password is still in place. */
+  mustChangePassword?: boolean;
 };
 
 type LoginResult =
@@ -29,6 +31,12 @@ type AuthContextValue = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<boolean>;
+  /**
+   * Re-reads the session from the server. The session is otherwise fetched
+   * exactly once on mount, so anything that changes the stored user mid-session
+   * (a password change clearing `mustChangePassword`) must call this.
+   */
+  refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -106,12 +114,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return true;
   };
 
+  const refresh = async () => {
+    setUser(await fetchSession());
+  };
+
   const value = useMemo(
     () => ({
       user,
       isLoading,
       login,
       logout,
+      refresh,
     }),
     [user, isLoading]
   );
