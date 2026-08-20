@@ -17,7 +17,7 @@ const AI_RULES = [
   "Don't introduce arbitrary new visual styles because they're convenient.",
   "Don't add a new component when an existing one satisfies the requirement.",
   "If a genuinely new pattern is needed, propose it as an addition to the system.",
-  "Treat the Manage List pages and this page as the canonical visual references.",
+  "Treat the Student List pages and this page as the canonical visual references.",
   "Preserve the existing architecture unless there's a concrete benefit to changing it.",
   "Prefer incremental improvements over rewrites.",
 ];
@@ -25,7 +25,7 @@ const AI_RULES = [
 const RESPONSIVE_RULES = [
   {
     title: "Breakpoints in use",
-    body: "sm 640 · md 768 · lg 1024 · xl 1280. Manage List steps padding at md (p-6 → md:p-8) and titles at md (3xl → md:4xl). Toolbars collapse at lg/xl.",
+    body: "sm 640 · md 768 · lg 1024 · xl 1280. The Student List steps padding at md (p-6 → md:p-8) and titles at md (3xl → md:4xl). Toolbars collapse at lg/xl.",
   },
   {
     title: "Mobile-first classes",
@@ -46,7 +46,7 @@ const RESPONSIVE_RULES = [
 ];
 
 const NEEDS_RESPONSIVE_WORK = [
-  "Manage List toolbar — action pills wrap but the search field competes for room below md.",
+  "Student List toolbar — action pills wrap but the search field competes for room below md.",
   "StudentsDataTable — no horizontal scroll container; wide rosters overflow on phones.",
   "Attendance page — the primary mobile surface, but built at desktop width.",
   "Calendar — FullCalendar's month grid is unusable below sm without a view switch.",
@@ -57,12 +57,12 @@ const DEVIATIONS = [
   {
     tone: "warning" as const,
     title: "Two table implementations",
-    body: "StudentsDataTable (Manage List) and the shared DataTable share no code. Use the shared DataTable for anything new.",
+    body: "StudentsDataTable (Student List) and the shared DataTable share no code. Use the shared DataTable for anything new.",
   },
   {
     tone: "warning" as const,
     title: "Three page shells",
-    body: "Manage List + Dashboard use the radial-gradient shell; Attendance uses flat bg-white p-6; Reports uses bare p-4. New pages use page.surface.",
+    body: "Student List + Dashboard use the radial-gradient shell; Attendance uses flat bg-white p-6; Reports uses bare p-4. New pages use page.surface.",
   },
   {
     tone: "warning" as const,

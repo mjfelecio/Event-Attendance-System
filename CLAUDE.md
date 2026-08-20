@@ -25,7 +25,7 @@ modifying any UI.** Full rules are there; the essentials:
 2. Follow the established page-level patterns rather than inventing a layout.
 3. Primary colour is Tailwind **indigo-600**; import tokens from
    `globals/constants/designTokens.ts`.
-4. The **Manage List** pages and the `/design-system` page are the canonical
+4. The **Students** pages and the `/design-system` page are the canonical
    visual references.
 5. Don't introduce new visual styles because they're convenient, and don't
    "bring a page in line with the design system" as an unrequested side effect —

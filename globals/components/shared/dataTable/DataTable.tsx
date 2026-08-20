@@ -89,7 +89,7 @@ type DataTableProps<TData, TValue> = {
 
   /**
    * A feature-specific toolbar rendered in the shared card, in place of the
-   * built-in one. Lets a feature (Manage List) keep its own controls while
+   * built-in one. Lets a feature (Student List) keep its own controls while
    * living inside the same table shell, so the whole card looks unified rather
    * than a separate toolbar card floating above the table.
    */
@@ -142,7 +142,7 @@ type DataTableProps<TData, TValue> = {
  * ## Use this for any new table
  *
  * A second, feature-local table exists at
- * `features/manage-list/components/StudentsDataTable/`, used only by Manage
+ * `features/students/components/StudentsDataTable/`, used only by the Student
  * List's roster. The two share no code. That duplication is known and tracked -
  * **new tables use this component**, not that one.
  *

@@ -122,7 +122,7 @@ const ComponentsSection = () => {
       {/* ------------------------------------------------------ PILL ACTIONS */}
       <Specimen
         title="Pill actions — toolbar style"
-        note="The Manage List toolbar style. Use these only in a page/table toolbar row; anywhere else, use Button above."
+        note="The Student List toolbar style. Use these only in a page/table toolbar row; anywhere else, use Button above."
         code={`import { pill } from "@/globals/constants/designTokens";
 
 <button className={pill.primary}><Plus className="size-4" /> Add</button>
@@ -226,7 +226,7 @@ const ComponentsSection = () => {
 
       <Specimen
         title="Checkbox, switch, textarea & search"
-        note="Checkbox and Switch inherit indigo from --primary. SearchBar is the shared debounced search field; the rounded pill search in Manage List is a feature-local variant of the same idea."
+        note="Checkbox and Switch inherit indigo from --primary. SearchBar is the shared debounced search field; the rounded pill search in the Student List is a feature-local variant of the same idea."
       >
         <SpecimenItem label="Checkbox">
           <div className="flex items-center gap-2">

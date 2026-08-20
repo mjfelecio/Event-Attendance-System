@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
     // Bulk Student Fetch (List View).
     // When an eventId is supplied (manual-attendance list) the result must be
     // scoped to the event's eligible students, not the whole roster. Otherwise
-    // fall back to the category/group filters used by Manage List.
+    // fall back to the category/group filters used by the Student List.
     let where = buildStudentQuery(filters);
 
     if (eventId) {

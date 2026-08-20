@@ -12,7 +12,7 @@ type PageHeaderProps = {
   description?: string;
   /**
    * `hero` — indigo gradient block with white text. Use once, at the top of a
-   * landing/overview page (Manage List, Dashboard).
+   * landing/overview page (Students, Dashboard).
    *
    * `plain` — text on the page background. Use for sub-pages and anything
    * sitting inside or above a panel, so a screen never stacks two heroes.
@@ -27,7 +27,7 @@ type PageHeaderProps = {
  * PageHeader
  *
  * The canonical page title block. Two variants cover every header in the app:
- * the indigo gradient `hero` that opens Manage List and the Dashboard, and the
+ * the indigo gradient `hero` that opens the Students pages and the Dashboard, and the
  * `plain` text header used on sub-pages.
  *
  * ## Prefer this over

@@ -265,7 +265,7 @@ const FoundationsSection = () => (
 
     <Specimen
       title="Page shell"
-      note="The canonical full-page wrapper. Manage List and Dashboard use it; Attendance, Reports, and Calendar currently don't (see Known deviations)."
+      note="The canonical full-page wrapper. Student List and Dashboard use it; Attendance, Reports, and Calendar currently don't (see Known deviations)."
       code={`import { page } from "@/globals/constants/designTokens";
 
 <section className={page.surface}>

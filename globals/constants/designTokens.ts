@@ -1,7 +1,7 @@
 /**
  * Canonical design tokens for the Event Attendance System.
  *
- * These strings are the *literal* Tailwind class lists used by the Manage List
+ * These strings are the *literal* Tailwind class lists used by the Student List
  * pages, which `docs/design-system.md` designates as the visual source of truth.
  * They are exported here so new UI can import the real pattern instead of
  * re-deriving it (and drifting) from memory.
@@ -27,7 +27,7 @@
 /**
  * Page-level shells.
  *
- * `surface` is the canonical full-page background + padding used by Manage List
+ * `surface` is the canonical full-page background + padding used by the Student List
  * and the Dashboard. `container` centers content and caps line length.
  *
  * Note: Attendance, Reports, and Calendar currently use flat `bg-white` shells
@@ -51,7 +51,7 @@ export const page = {
  * (stats board, table header, selection board). `card` is the smaller,
  * interactive unit inside it.
  *
- * `panelGlow` is the decorative indigo wash Manage List layers inside panels —
+ * `panelGlow` is the decorative indigo wash the Student List layers inside panels —
  * render it as an absolutely-positioned sibling before the content, and keep
  * the content in a `relative` wrapper so it stacks above.
  */
@@ -96,14 +96,14 @@ export const type = {
 } as const;
 
 /**
- * Pill actions — the Manage List toolbar button style.
+ * Pill actions — the Student List toolbar button style.
  *
  * These are deliberately *not* the shad-cn `Button`. They are the compact,
  * uppercase, fully-rounded actions that sit in a table/page toolbar.
  *
  * **Prefer `<Button>` for ordinary actions** (dialog footers, forms, anything
  * in a card). Reach for a pill only when building a toolbar row that should
- * match Manage List's.
+ * match the Student List's.
  */
 export const pill = {
   /** Primary toolbar action (Add, Execute). Indigo-600 filled. */

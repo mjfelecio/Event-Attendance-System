@@ -43,7 +43,7 @@ Table v8, react-hook-form + Zod v4, shadcn/Radix UI components, FullCalendar,
 - `app/` — Next.js App Router routes. `(auth)` route group = unauthenticated pages;
   `(main)` = everything behind the sidebar. `app/api/**/route.ts` = all backend logic.
 - `features/*/` — one directory per UI feature (`attendance`, `calendar`,
-  `manage-list`, `reports`, `auth`), each with its own `components/`, `hooks/`,
+  `students`, `reports`, `auth`), each with its own `components/`, `hooks/`,
   `utils/`, `constants/`. Features do not import from each other except one narrow,
   known exception (`features/attendance/components/DataCard.tsx`, reused by reports).
 - `globals/` — anything shared across features: `utils/`, `hooks/`, `schemas/`,

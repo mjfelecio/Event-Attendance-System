@@ -18,7 +18,7 @@ description: Form, table, modal, and destructive-action UI conventions for the E
 >   re-derive class strings.
 > - Prefer an existing component over a new one; prefer an existing page pattern
 >   over a new layout.
-> - The **Manage List** pages are the canonical visual reference.
+> - The **Students** pages are the canonical visual reference.
 > - Never build Tailwind class names at runtime (`` `bg-${x}-500` `` ships
 >   unstyled).
 >
@@ -50,13 +50,13 @@ pattern to copy).
    unused anywhere on `main` — ready for when server-side pagination is needed). This
    is the one described in its own doc comment as "the standard, reusable table used
    throughout the application," and it's what the attendance and reports tables use.
-2. **`features/manage-list/components/StudentsDataTable/`** — a separate,
-   simpler, feature-local table used only by Manage List's student list. Shares no code
+2. **`features/students/components/StudentsDataTable/`** — a separate,
+   simpler, feature-local table used only by the Student List's roster. Shares no code
    with (1).
 
 **This is a real, undocumented-by-design inconsistency, not a layering choice** — see
 `docs/conventions.md`'s "How do I add a table?" section. **For any new table outside
-Manage List's student list, use (1).** Column definitions go in a `constants/` file
+the Student List's roster, use (1).** Column definitions go in a `constants/` file
 next to the feature (`ColumnDef<T>[]` arrays), not inlined in the rendering component.
 If a column renders a relation object (e.g. a `Group`), reduce it to a primitive via
 `accessorFn` first — rendering a raw relation object directly has crashed sorting

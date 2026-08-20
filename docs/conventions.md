@@ -21,7 +21,7 @@ mid-feature).
 
 Create `app/(group)/route-name/page.tsx`. Two route groups exist:
 `(auth)` for unauthenticated pages (`login`, `signup`, `logout`) and `(main)` for
-everything behind the sidebar (`dashboard`, `calendar`, `manage-list`, `attendance`,
+everything behind the sidebar (`dashboard`, `calendar`, `students`, `attendance`,
 `reports`, `settings`). Almost every page is a **client component** (`"use client"` at
 the top) that renders a feature component and wires it to TanStack Query hooks — the
 page file itself typically stays thin (see `app/(main)/attendance/page.tsx`,
@@ -36,7 +36,7 @@ exposed to an unauthenticated request, it must check auth itself, server-side.
 
 **Exception — server components.** Two pages break the "thin client page" pattern and
 query Prisma directly:
-- `app/(main)/manage-list/manage-which/page.tsx` — trivial, just reads `searchParams`.
+- `app/(main)/students/select-category/page.tsx` — trivial, just reads `searchParams`.
 - `app/(main)/reports/events/[id]/print/page.tsx` — the important one. Because it
   bypasses the API layer, it carries its **own copy** of authentication
   (`getFreshAuthSession()`) and authorization (a hand-rolled version of
@@ -271,7 +271,7 @@ this if you add a new "does this need to update while someone's actively scannin
 query.
 
 **Exception — one component bypasses this pattern entirely.**
-`features/manage-list/components/StudentImporter.tsx` does a raw `fetch()` to
+`features/students/components/StudentImporter.tsx` does a raw `fetch()` to
 `/api/bulk-import/students` inside a plain async function, manually parses the JSON
 envelope, and manually calls `queryClient.invalidateQueries(...)` four times — instead
 of a `useMutation` hook in `globals/hooks/useStudents.ts`. This is a genuine
@@ -468,14 +468,14 @@ uses.
    currently uses it** — it was built ahead of a server-paginated roster that hasn't
    landed. If you're adding a table for a dataset large enough to need server-side
    pagination, this is the component with that capability already built in.
-2. **`features/manage-list/components/StudentsDataTable/`** — a separate,
+2. **`features/students/components/StudentsDataTable/`** — a separate,
    simpler, feature-local implementation (its own header/body/pagination
-   sub-components) used only by Manage List's student list. It does not share code
+   sub-components) used only by the Student List's roster. It does not share code
    with (1).
 
 This is a real inconsistency, not a layered/intentional design (there's no comment or
-doc explaining why Manage List has its own table). If you're adding a new table and it
-isn't specifically extending Manage List's student list, use (1) — it's the one
+doc explaining why the Student List has its own table). If you're adding a new table and it
+isn't specifically extending the Student List's roster, use (1) — it's the one
 described in its own doc comment as "the standard, reusable table used throughout the
 application," and it's the one every other feature actually uses.
 

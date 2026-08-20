@@ -133,9 +133,10 @@ no meaningful user-facing risk.
   copy (carried forward from the architecture pass, `architecture.md` §17.9) — a
   larger refactor, appropriately deferred.
 - Clean up the dead/stale code inventoried in `architecture.md` §19
-  (`eventValidation.ts`, `mapStudentToRow.ts`, `useStudentTableControls.ts`,
-  `useFetchGroupsForStudent`, the `categoryGroups.ts` leftovers, the incorrect README
-  seed credentials) — no functional risk, purely a maintainability cleanup.
+  (`eventValidation.ts`, `useFetchGroupsForStudent`, the `categoryGroups.ts` leftovers,
+  the incorrect README seed credentials) — no functional risk, purely a maintainability
+  cleanup. (`mapStudentToRow.ts` and `useStudentTableControls.ts` were removed in the
+  manage-list → students rename.)
 
 ---
 

@@ -4,7 +4,7 @@
  * **The `Group` table is the source of truth, not this file.** Every write path
  * and every picker reads the database: `validateStudentGroupSlugs` resolves
  * student slugs against it, `validateEventGroupIds` resolves event group ids,
- * and the student form, event drawer, and manage-list selection boards all
+ * and the student form, event drawer, and students selection boards all
  * render options fetched from `/api/groups`. Groups are created and deleted by
  * admins in Settings, so a group can perfectly well exist without appearing
  * here.
@@ -13,7 +13,7 @@
  * - the vocabulary `prisma/seed.ts` inserts into a fresh database, and
  * - the per-slug artwork and grouping the `Group` table has no column for
  *   (department logos and abbreviations, house logos, a strand's track),
- *   consumed through `features/manage-list/constants/categories.ts`.
+ *   consumed through `features/students/constants/categories.ts`.
  *
  * Adding an entry here does **not** create a group. It only gives an existing
  * group nicer presentation the next time the boards render it.
