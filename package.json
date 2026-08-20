@@ -12,6 +12,9 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
+    "benchmark:roster": "tsx scripts/benchmark/generate-roster.ts",
+    "benchmark:probe": "tsx scripts/benchmark/direct-transaction.ts",
+    "benchmark:import": "tsx scripts/benchmark/http-import-benchmark.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -132,9 +132,11 @@ organizers. Once a user is ACTIVE, this runbook is the only route.
 - **"Unknown group(s): …"** — a missing group. See §2.
 - **"Group category mismatch"** — a value is in the wrong column (a house name
   in the section column). Fix the CSV.
-- **"Database error occurred." on a very large file** — split it into batches of
-  200–300 rows. **Retrying is safe**: imports upsert, so a re-run never creates
-  duplicates.
+- **"Database error occurred." on a very large file** — unexpected now: a full
+  2,000-student import runs in a single transaction and can take up to a minute
+  (keep the tab open). If it instead says **"The database transaction did not
+  complete and was rolled back. Retrying the operation is safe."**, just retry —
+  imports upsert, so a re-run never creates duplicates.
 
 ---
 

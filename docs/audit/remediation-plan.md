@@ -27,11 +27,14 @@ everything else, so it should happen first.
    Either deployment decision is viable; *not deciding* is the actual risk. Rehearse the
    chosen path on a real second device before the event.
 2. **Fix the bulk-import transaction** — [DATA-01](./data-integrity.md#data-01) →
-   **[#38](https://github.com/mjfelecio/Event-Attendance-System/issues/38)**. Pass
-   an explicit longer `timeout`/`maxWait` to the `$transaction` call in
-   `app/api/bulk-import/students/route.ts`, or restructure it into chunked commits.
-   This is a small, contained code change — a good candidate to actually implement this
-   week rather than defer, given how directly it blocks roster onboarding.
+   **[#38](https://github.com/mjfelecio/Event-Attendance-System/issues/38)**.
+   **DONE 2026-08-20:** benchmarking showed the 5s timeout never fires for the
+   synchronous better-sqlite3 adapter (a 2,000-row import commits in ~10s through
+   the API), but the 2s `maxWait` can fail a second concurrent import with P2028.
+   `globals/libs/prisma.ts` now sets
+   `transactionOptions: { timeout: 120_000, maxWait: 30_000 }`, P2028 maps to a
+   clear retry-safe message, and the fix plus a reusable 2,000-row fixture/harness
+   (`scripts/benchmark/`) were verified against the production build.
 3. **Resolve the group-vocabulary gap** — [DATA-02](./data-integrity.md#data-02) →
    **[#39](https://github.com/mjfelecio/Event-Attendance-System/issues/39)**.
    **DONE 2026-08-17, in code after all:** groups are now created, renamed, and deleted

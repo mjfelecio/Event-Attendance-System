@@ -140,8 +140,9 @@ export default function StudentImporter({ onImportSuccess }: Props) {
           </CardContent>
 
           <CardFooter className="flex justify-between items-center bg-slate-50/50 border-t p-4 px-6">
-            <p className="text-[10px] text-slate-400 font-medium max-w-[200px]">
-              Processing occurs in a single transaction. Invalid rows will roll back the entire batch.
+            <p className="text-[10px] text-slate-400 font-medium max-w-[260px]">
+              Single transaction — invalid rows roll back the entire batch. A full
+              2,000-student roster can take up to a minute to import; leave the tab open.
             </p>
             <div className="flex gap-3">
               <Button

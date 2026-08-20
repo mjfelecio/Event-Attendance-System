@@ -17,7 +17,7 @@ one file that holds everything.
 ## DATA-01 — Bulk import has no transaction timeout override, likely fails at scale {#data-01}
 
 **Severity:** P0 — release blocker
-**Confidence:** CONFIRMED (code) / LIKELY (fails specifically at the stated 2,000+ scale — needs runtime verification)
+**Confidence:** CONFIRMED (code) / LIKELY (scale) — **RESOLVED 2026-08-20, issue #38**
 **Location:** `app/api/bulk-import/students/route.ts:46-86`
 
 ```ts
@@ -50,23 +50,42 @@ information about which rows would have succeeded**, and **zero students importe
 an all-or-nothing failure at the exact moment the roster most needs to get loaded before
 the event.
 
-**Reproduction (needs runtime verification):** build a CSV/JSON payload of 2,000
-distinct, schema-valid students referencing real seeded group slugs, POST it to
-`/api/bulk-import/students`, and time it. If it exceeds ~5s, this will reproduce
-exactly as described. This is the single most important item in
-[`release-readiness.md`](./release-readiness.md)'s smoke-test list.
+**Verified behavior (2026-08-20):** exercised with a realistic 2,000-student fixture
+(`scripts/benchmark/roster-2000.json`) through both the real API and a standalone
+probe (`scripts/benchmark/direct-transaction.ts`). Two things became clear:
 
-**Recommended fix direction:** pass an explicit longer `timeout` (and `maxWait`) to
-`$transaction`, e.g. `{ timeout: 120_000 }`, or — better — switch to Prisma's
-*interactive* transaction form (a callback, not an array) which gives more control, or
-batch the import into chunks of a few hundred rows each committed separately so a
-failure partway through doesn't lose everything already processed. Whichever approach
-is chosen, it needs to be exercised once against a realistic 2,000-row file before the
-beta, not left as an assumption.
+- **The 5s timeout does not fire for the synchronous better-sqlite3 adapter.** The
+  batch runs as a microtask chain that blocks the event-loop's timer phase, so the
+  engine's timeout timer cannot interrupt it. A full 2,000-row import completes and
+  commits — measured ~10s through the API (fresh and idempotent re-run) and ~24–54s
+  through the raw probe, with 10,004–14,005 SQL statements and no rollback.
+- **The 2s `maxWait` is the real latent failure.** Two imports at once (a double-fire,
+  or two organizers importing concurrently) queue on the single SQLite writer; the
+  second fails after 2s with P2028 ("Unable to start a transaction in the given time."),
+  which previously surfaced as the opaque `500 "Database error occurred."`.
 
-**Release blocker:** yes. **Backlog ticket:** this specific fix should happen *before*
-beta given the stated onboarding requirement; treat any further robustness work
-(partial-success reporting, chunked progress UI) as backlog.
+**RESOLVED (2026-08-20, issue #38).** `globals/libs/prisma.ts` now sets explicit
+`transactionOptions: { timeout: 120_000, maxWait: 30_000 }` — the one place that
+governs batch-transaction options — so a full-roster import (and any import queued
+behind one) completes instead of erroring. Notes on the resolution:
+
+- **The array form is kept.** The whole roster stays in a single transaction: invalid
+  rows still roll back the entire batch (the all-or-nothing contract the UI documents),
+  and upserts keep the import idempotent — retrying never creates duplicates.
+- **P2028 now maps to a clear, retry-safe message.** `handlePrismaError` returns
+  `503 "The database transaction did not complete and was rolled back. Retrying the
+  operation is safe."` instead of the generic `500 "Database error occurred."`.
+- **Verified against the production build.** `scripts/benchmark/http-import-benchmark.ts`
+  ran the full fresh import (2,000 students created), a re-run (idempotent — still
+  2,000, no duplicates), and an invalid-row import (whole batch rejected, nothing
+  changed). See `scripts/benchmark/README.md`.
+- **Operator copy updated.** The importer now notes a full roster can take up to a
+  minute to import, so a slow run isn't mistaken for a hang.
+
+**Release blocker:** yes — this was the one place the audit had high confidence a scale
+problem would manifest at roster onboarding; it is now resolved and exercised at the
+full stated scale. **Backlog ticket:** the chunked/progress UI remains backlog
+(OPS-04).
 
 ---
 
