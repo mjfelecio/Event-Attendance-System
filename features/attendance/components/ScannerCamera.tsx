@@ -12,6 +12,10 @@ type ScannerCameraProps = {
   onRead: (id: string) => void;
   isPending: boolean;
   onClose: () => void;
+  /** Included in the duplicate-scan debounce key so a scan intended for a
+   * newly-selected event isn't swallowed as a "duplicate" of a scan of the
+   * same student made under the previous event within the debounce window. */
+  eventId?: string;
 };
 
 /**
@@ -20,9 +24,19 @@ type ScannerCameraProps = {
  * after the user opens the camera - keeping it off the attendance page's
  * initial bundle.
  */
-const ScannerCamera = ({ onRead, isPending, onClose }: ScannerCameraProps) => {
-  const lastScannedRef = useRef<{ value: string; timestamp: number }>({
+const ScannerCamera = ({
+  onRead,
+  isPending,
+  onClose,
+  eventId,
+}: ScannerCameraProps) => {
+  const lastScannedRef = useRef<{
+    value: string;
+    eventId?: string;
+    timestamp: number;
+  }>({
     value: "",
+    eventId: undefined,
     timestamp: 0,
   });
 
@@ -35,17 +49,20 @@ const ScannerCamera = ({ onRead, isPending, onClose }: ScannerCameraProps) => {
 
       if (!rawValue) return;
 
-      // Debounce duplicate scans within 1 second
+      // Debounce duplicate scans within 1 second, scoped to the current
+      // event so switching events doesn't swallow a genuine re-scan.
       const timeSinceLastScan = now - lastScannedRef.current.timestamp;
       const isDuplicate =
-        rawValue === lastScannedRef.current.value && timeSinceLastScan < 1000;
+        rawValue === lastScannedRef.current.value &&
+        eventId === lastScannedRef.current.eventId &&
+        timeSinceLastScan < 1000;
 
       if (!isDuplicate) {
-        lastScannedRef.current = { value: rawValue, timestamp: now };
+        lastScannedRef.current = { value: rawValue, eventId, timestamp: now };
         onRead(rawValue);
       }
     },
-    [onRead, isPending]
+    [onRead, isPending, eventId]
   );
 
   return (
