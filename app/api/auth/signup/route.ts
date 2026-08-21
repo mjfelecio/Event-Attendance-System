@@ -15,8 +15,11 @@ export async function POST(req: Request) {
     const email = parsed.email.trim().toLowerCase();
     const password = parsed.password;
 
-    // 5 signups per client per 10 minutes
-    if (!rateLimit(`signup:${clientKey(req)}`, 5, 10 * 60_000)) {
+    // No reverse proxy in front of this deployment, so clientKey() cannot
+    // distinguish devices on the LAN and this bucket is effectively shared
+    // by everyone. Sized to comfortably cover onboarding a whole staff in
+    // one sitting rather than one person's realistic signup rate.
+    if (!rateLimit(`signup:${clientKey(req)}`, 20, 10 * 60_000)) {
       return NextResponse.json(
         err("Too many signup attempts. Try again in a few minutes."),
         { status: 429 }
