@@ -112,7 +112,7 @@ export async function POST(req: Request) {
         if (code !== "P2002") throw createError;
       }
     } else if (!existing.timein) {
-      await prisma.record.updateMany({
+      const res = await prisma.record.updateMany({
         where: { id: existing.id, timein: null },
         data: { timein: now, lastModifiedById: user.id },
       });
@@ -120,7 +120,7 @@ export async function POST(req: Request) {
       const current = await prisma.record.findUnique({
         where: { eventId_studentId: { eventId, studentId } },
       });
-      return NextResponse.json(ok({ ...current, changed: true }), {
+      return NextResponse.json(ok({ ...current, changed: res.count > 0 }), {
         status: 200,
       });
     }
