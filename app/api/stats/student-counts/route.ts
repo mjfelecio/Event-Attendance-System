@@ -1,6 +1,7 @@
 import { prisma } from "@/globals/libs/prisma";
-import { err, ok } from "@/globals/utils/api";
-import { handlePrismaError } from "@/globals/utils/prismaError";
+import { ok } from "@/globals/utils/api";
+import { requireAuth } from "@/globals/utils/auth";
+import { respondWithError } from "@/globals/utils/httpError";
 import { NextResponse } from "next/server";
 
 /**
@@ -9,6 +10,8 @@ import { NextResponse } from "next/server";
  */
 export async function GET() {
   try {
+    await requireAuth();
+
     const [total, house, college, shs] = await Promise.all([
       prisma.student.count(),
 
@@ -33,9 +36,7 @@ export async function GET() {
     };
 
     return NextResponse.json(ok(stats), { status: 200 });
-  } catch (e) {
-    const { status, message } = handlePrismaError(e);
-    console.error("[STATS_GET_STUDENT_COUNTS]", message);
-    return NextResponse.json(err(message), { status });
+  } catch (error) {
+    return respondWithError(error);
   }
 }

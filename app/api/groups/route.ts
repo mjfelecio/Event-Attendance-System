@@ -13,6 +13,8 @@ import { createGroupSchema } from "@/globals/schemas/groupSchema";
  */
 export async function GET(_req: NextRequest) {
   try {
+    await requireAuth();
+
     // Fetch all groups from the database
     const groups = await prisma.group.findMany({
       orderBy: { name: "asc" },
