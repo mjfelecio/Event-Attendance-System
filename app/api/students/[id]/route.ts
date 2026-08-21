@@ -41,6 +41,20 @@ export async function DELETE(
     await requireAuth();
     const { id } = await params;
 
+    const attendanceCount = await prisma.record.count({
+      where: { studentId: id },
+    });
+
+    if (attendanceCount > 0) {
+      return NextResponse.json(
+        err(
+          "Cannot delete this student because attendance has already been recorded for them.",
+          "STUDENT_HAS_RECORDS"
+        ),
+        { status: 409 }
+      );
+    }
+
     await prisma.student.delete({ where: { id } });
     return NextResponse.json(ok(null), { status: 200 });
   } catch (error) {

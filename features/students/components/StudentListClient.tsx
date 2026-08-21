@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import StudentsDataTable from "./StudentsDataTable";
 import { getStudentColumns } from "./StudentsDataTable/studentTableColumn";
 import { Student } from "@/globals/types/students";
+import { ApiError } from "@/globals/utils/api";
 import { toastDanger, toastSuccess } from "@/globals/components/shared/toasts";
 import StudentFormDrawer from "./StudentFormDrawer";
 import { StudentFormValues } from "@/globals/schemas/studentSchema";
@@ -64,7 +65,11 @@ const StudentListClient = ({
       await deleteStudent(studentId);
       toastSuccess("Student deleted");
     } catch (error) {
-      toastDanger(`Failed to delete: ${studentId}`);
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : `Failed to delete: ${studentId}`;
+      toastDanger(message);
     }
   }, []);
 
