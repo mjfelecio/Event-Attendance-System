@@ -25,6 +25,8 @@ type ScannerProps = {
   onRead: (id: string) => void;
   /** Whether a record is currently being saved */
   isPending?: boolean;
+  /** The event scans are currently being recorded against, if any. */
+  eventId?: string;
 };
 
 /**
@@ -49,7 +51,7 @@ const CameraOffState = ({ onOpen }: { onOpen: () => void }) => (
 /**
  * Scanner component for QR code and barcode scanning
  */
-const Scanner = ({ onRead, isPending = false }: ScannerProps) => {
+const Scanner = ({ onRead, isPending = false, eventId }: ScannerProps) => {
   const [cameraOpen, setCameraOpen] = useState(false);
 
   return (
@@ -64,6 +66,7 @@ const Scanner = ({ onRead, isPending = false }: ScannerProps) => {
           onRead={onRead}
           isPending={isPending}
           onClose={() => setCameraOpen(false)}
+          eventId={eventId}
         />
       ) : (
         <CameraOffState onOpen={() => setCameraOpen(true)} />

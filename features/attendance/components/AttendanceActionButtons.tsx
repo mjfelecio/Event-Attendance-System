@@ -128,10 +128,10 @@ const AttendanceActionButtons = ({
         // - "absent": nothing to delete when there's no record.
         // - "present" in timeout mode: can't time out without a time-in, and
         //   can't time out again once already done.
+        // - "present" in normal mode: already timed in, nothing left to do.
         const presentDisabled =
           action === "present" &&
-          isTimeout &&
-          (!hasTimeIn || hasTimeOut);
+          (isTimeout ? !hasTimeIn || hasTimeOut : hasTimeIn);
         const isDisabled =
           isLoading || (action === "absent" && !recordId) || presentDisabled;
 

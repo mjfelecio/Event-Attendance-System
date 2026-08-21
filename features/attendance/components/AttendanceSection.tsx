@@ -126,7 +126,11 @@ export default function AttendanceSection({ selectedEvent }: Props) {
 
   return (
     <div className="grid w-full gap-3 lg:grid-cols-[1fr_1.2fr]">
-      <Scanner onRead={handleScan} isPending={isSavingRecord} />
+      <Scanner
+        onRead={handleScan}
+        isPending={isSavingRecord}
+        eventId={selectedEvent.id}
+      />
 
       <ManualAttendanceSection
         selectedEvent={selectedEvent}

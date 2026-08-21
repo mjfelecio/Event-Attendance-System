@@ -1,6 +1,7 @@
 import { prisma } from "@/globals/libs/prisma";
 import { err, ok } from "@/globals/utils/api";
-import { handlePrismaError } from "@/globals/utils/prismaError";
+import { requireAuth } from "@/globals/utils/auth";
+import { respondWithError } from "@/globals/utils/httpError";
 import { EventCategory } from "@prisma/client";
 import { NextResponse } from "next/server";
 
@@ -14,6 +15,8 @@ export async function GET(
 ) {
   const { category } = await params;
   try {
+    await requireAuth();
+
     if (!Object.values(EventCategory).includes(category as EventCategory)) {
       return NextResponse.json(
         err("Invalid category provided", "INVALID_CATEGORY"),
@@ -39,10 +42,7 @@ export async function GET(
     });
 
     return NextResponse.json(ok(groups), { status: 200 });
-  } catch (e) {
-    const { status, message } = handlePrismaError(e);
-
-    console.error("[GROUPS_GET_BY_CATEGORY]", message);
-    return NextResponse.json(err(message), { status });
+  } catch (error) {
+    return respondWithError(error);
   }
 }

@@ -20,8 +20,8 @@ const rejectionSchema = z.object({ reason: z.string().min(1) });
 
 const patchSchema = z
   .object({
-    title: z.string().trim().min(1),
-    location: z.string().nullable().optional(),
+    title: z.string().trim().min(1).max(200),
+    location: z.string().max(200).nullable().optional(),
     category: z.enum([
       "ALL",
       "COLLEGE",
@@ -34,7 +34,7 @@ const patchSchema = z
       "YEAR",
     ]),
     includedGroups: z.array(z.string()).nullable().optional(),
-    description: z.string().nullable().optional(),
+    description: z.string().max(2000).nullable().optional(),
     start: z.coerce.date(),
     end: z.coerce.date(),
     allDay: z.boolean().optional().default(false),
