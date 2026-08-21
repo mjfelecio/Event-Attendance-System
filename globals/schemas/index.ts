@@ -8,13 +8,13 @@ import z from "zod";
 export const eventSchema = z
   .object({
     id: z.string().optional(),
-    title: z.string().min(1, "Title is required"),
-    location: z.string().nullable(),
+    title: z.string().min(1, "Title is required").max(200, "Title is too long"),
+    location: z.string().max(200, "Location is too long").nullable(),
     category: z.enum(EventCategory),
     includedGroups: z.array(z.string()), // group id array
     start: z.date(),
     end: z.date(),
-    description: z.string().nullable(),
+    description: z.string().max(2000, "Description is too long").nullable(),
     allDay: z.boolean(),
   })
   // Validate that end date is after start date

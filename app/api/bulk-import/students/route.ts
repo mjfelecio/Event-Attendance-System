@@ -31,6 +31,26 @@ export async function POST(request: Request) {
 
     const students = parseResult.data;
 
+    // Reject batches with a duplicate id up front, rather than silently
+    // letting the second occurrence overwrite the first inside the transaction.
+    const seenIds = new Set<string>();
+    const duplicateIds = new Set<string>();
+    for (const student of students) {
+      if (seenIds.has(student.id)) {
+        duplicateIds.add(student.id);
+      }
+      seenIds.add(student.id);
+    }
+    if (duplicateIds.size > 0) {
+      return NextResponse.json(
+        err(
+          `Duplicate student ID(s) within the import batch: ${[...duplicateIds].join(", ")}`,
+          "DUPLICATE_IN_BATCH",
+        ),
+        { status: 400 },
+      );
+    }
+
     // Validate + resolve every referenced group slug in one shot, using the
     // same shared validator the single-student endpoint uses: each slug must
     // exist and match its column's category, or the whole batch is rejected.

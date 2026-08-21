@@ -6,11 +6,25 @@ export const studentSchema = z
     // Step 1
     id: z
       .string()
+      .trim()
       .min(1, "Student ID is required")
       .length(11, "ID must be 11 characters"),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    middleName: z.string().optional().or(z.literal("")),
+    firstName: z
+      .string()
+      .trim()
+      .min(1, "First name is required")
+      .max(100, "First name is too long"),
+    lastName: z
+      .string()
+      .trim()
+      .min(1, "Last name is required")
+      .max(100, "Last name is too long"),
+    middleName: z
+      .string()
+      .trim()
+      .max(100, "Middle name is too long")
+      .optional()
+      .or(z.literal("")),
 
     // Step 2 & 3
     schoolLevel: z.enum(SchoolLevel),
