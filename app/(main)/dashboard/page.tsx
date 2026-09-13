@@ -63,34 +63,11 @@ type StatusMeta = {
   glowClass: string;
 };
 
-const toneMap: Record<
-  MetricTone,
-  { iconWrap: string; valueClass: string; borderClass: string }
-> = {
-  blue: {
-    iconWrap:
-      "bg-[linear-gradient(135deg,#1d4ed8_0%,#2563eb_100%)] text-white",
-    valueClass: "text-blue-700",
-    borderClass: "border-blue-100",
-  },
-  emerald: {
-    iconWrap:
-      "bg-[linear-gradient(135deg,#047857_0%,#10b981_100%)] text-white",
-    valueClass: "text-emerald-700",
-    borderClass: "border-emerald-100",
-  },
-  amber: {
-    iconWrap:
-      "bg-[linear-gradient(135deg,#a16207_0%,#f59e0b_100%)] text-white",
-    valueClass: "text-amber-700",
-    borderClass: "border-amber-100",
-  },
-  rose: {
-    iconWrap:
-      "bg-[linear-gradient(135deg,#be123c_0%,#f43f5e_100%)] text-white",
-    valueClass: "text-rose-700",
-    borderClass: "border-rose-100",
-  },
+const toneMap: Record<MetricTone, { iconWrap: string }> = {
+  blue: { iconWrap: "bg-blue-50 text-blue-700" },
+  emerald: { iconWrap: "bg-emerald-50 text-emerald-700" },
+  amber: { iconWrap: "bg-amber-50 text-amber-700" },
+  rose: { iconWrap: "bg-rose-50 text-rose-700" },
 };
 
 const MetricCard = ({
@@ -103,23 +80,13 @@ const MetricCard = ({
   const toneStyle = toneMap[tone];
 
   return (
-    <article
-      className={cn(
-        "rounded-xl border bg-white p-3 shadow-[0_16px_32px_rgba(15,23,42,0.06)] sm:rounded-2xl sm:p-5",
-        toneStyle.borderClass
-      )}
-    >
+    <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-[0_16px_32px_rgba(15,23,42,0.06)] sm:rounded-2xl sm:p-5">
       <div className="flex items-start justify-between gap-2 sm:gap-4">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 sm:text-xs sm:tracking-[0.16em]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-indigo-600 sm:text-xs sm:tracking-[0.16em]">
             {label}
           </p>
-          <p
-            className={cn(
-              "mt-1 text-2xl font-bold leading-none sm:mt-3 sm:text-4xl",
-              toneStyle.valueClass
-            )}
-          >
+          <p className="mt-1 text-2xl font-bold leading-none text-slate-900 sm:mt-2 sm:text-4xl">
             {value}
           </p>
           <p className="mt-1 text-[11px] text-slate-500 sm:mt-2 sm:text-xs">

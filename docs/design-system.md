@@ -197,8 +197,10 @@ indicator, validate per step with `methods.trigger([...])`, and pin Back/Next in
 the footer. *Reference: `StudentFormDrawer`.*
 
 ### Dashboard / metrics
-A row of metric cards above grouped sections. Metric value takes the tone colour;
-the icon tile carries a matching gradient. *Reference: Dashboard.*
+A row of metric cards above grouped sections. The value is `slate-900` and the
+card border is neutral `slate-200`; tone survives **only** as a soft-fill icon
+tile (the same `bg-x-50 text-x-700` treatment as `StatusBadge`). No gradients on
+the icon tile, no tone-coloured value, no pastel border. *Reference: Dashboard.*
 
 ### Attendance (live operator screen)
 The one screen operated under time pressure by someone who didn't build the app.

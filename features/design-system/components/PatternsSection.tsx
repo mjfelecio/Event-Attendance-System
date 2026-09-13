@@ -337,27 +337,34 @@ const PatternsSection = () => {
 
       <Specimen
         title="Page pattern — Dashboard / overview metrics"
-        note="A row of metric cards above grouped sections. Metric value takes the tone colour; the icon tile carries a matching gradient."
+        note="A row of metric cards above grouped sections. The value is slate-900 with a neutral border; tone survives only as a soft-fill icon tile — the same bg-x-50 text-x-700 treatment used by StatusBadge."
         onSlate
       >
         <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { tone: "text-blue-700", border: "border-blue-100", label: "Eligible", v: "128" },
-            { tone: "text-emerald-700", border: "border-emerald-100", label: "Present", v: "96" },
-            { tone: "text-amber-700", border: "border-amber-100", label: "Pending", v: "3" },
-            { tone: "text-rose-700", border: "border-rose-100", label: "Absent", v: "32" },
+            { tone: "bg-blue-50 text-blue-700", label: "Eligible", v: "128" },
+            { tone: "bg-emerald-50 text-emerald-700", label: "Present", v: "96" },
+            { tone: "bg-amber-50 text-amber-700", label: "Pending", v: "3" },
+            { tone: "bg-rose-50 text-rose-700", label: "Absent", v: "32" },
           ].map((m) => (
             <div
               key={m.label}
-              className={cn(
-                "rounded-2xl border bg-white p-4 shadow-[0_16px_32px_rgba(15,23,42,0.06)]",
-                m.border,
-              )}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_16px_32px_rgba(15,23,42,0.06)]"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                {m.label}
-              </p>
-              <p className={cn("mt-2 text-3xl font-bold leading-none", m.tone)}>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-indigo-600">
+                  {m.label}
+                </p>
+                <div
+                  className={cn(
+                    "flex size-8 items-center justify-center rounded-lg",
+                    m.tone,
+                  )}
+                >
+                  <span className="size-3 rounded-full bg-current" />
+                </div>
+              </div>
+              <p className="mt-2 text-3xl font-bold leading-none text-slate-900">
                 {m.v}
               </p>
             </div>
